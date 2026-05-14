@@ -14,7 +14,191 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      lessons: {
+        Row: {
+          created_at: string
+          description: string | null
+          estimated_duration_mins: number
+          featured: boolean
+          id: string
+          ms_form_url: string | null
+          resource_bucket: Json
+          slots: Json
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          estimated_duration_mins?: number
+          featured?: boolean
+          id?: string
+          ms_form_url?: string | null
+          resource_bucket?: Json
+          slots?: Json
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          estimated_duration_mins?: number
+          featured?: boolean
+          id?: string
+          ms_form_url?: string | null
+          resource_bucket?: Json
+          slots?: Json
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      responses: {
+        Row: {
+          created_at: string
+          id: string
+          response_data: Json
+          response_type: string
+          screen_role: string
+          session_id: string | null
+          slot_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          response_data?: Json
+          response_type: string
+          screen_role: string
+          session_id?: string | null
+          slot_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          response_data?: Json
+          response_type?: string
+          screen_role?: string
+          session_id?: string | null
+          slot_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "responses_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "responses_slot_id_fkey"
+            columns: ["slot_id"]
+            isOneToOne: false
+            referencedRelation: "slots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sessions: {
+        Row: {
+          created_at: string
+          current_slot_index: number
+          ended_at: string | null
+          host_code: string
+          id: string
+          lesson_id: string | null
+          one_screen_mode: boolean
+          screen1_code: string
+          screen1_connected: boolean
+          screen2_code: string
+          screen2_connected: boolean
+          state: Json
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          current_slot_index?: number
+          ended_at?: string | null
+          host_code: string
+          id?: string
+          lesson_id?: string | null
+          one_screen_mode?: boolean
+          screen1_code: string
+          screen1_connected?: boolean
+          screen2_code: string
+          screen2_connected?: boolean
+          state?: Json
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          current_slot_index?: number
+          ended_at?: string | null
+          host_code?: string
+          id?: string
+          lesson_id?: string | null
+          one_screen_mode?: boolean
+          screen1_code?: string
+          screen1_connected?: boolean
+          screen2_code?: string
+          screen2_connected?: boolean
+          state?: Json
+          status?: string
+        }
+        Relationships: []
+      }
+      slots: {
+        Row: {
+          created_at: string
+          duration_mins: number
+          end_behaviour: string
+          host_content: Json
+          id: string
+          lead_phase: string | null
+          lesson_id: string | null
+          order_index: number
+          pause_before_advance: boolean
+          screen1_content: Json
+          screen2_content: Json
+          session_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          duration_mins?: number
+          end_behaviour?: string
+          host_content?: Json
+          id?: string
+          lead_phase?: string | null
+          lesson_id?: string | null
+          order_index: number
+          pause_before_advance?: boolean
+          screen1_content?: Json
+          screen2_content?: Json
+          session_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          duration_mins?: number
+          end_behaviour?: string
+          host_content?: Json
+          id?: string
+          lead_phase?: string | null
+          lesson_id?: string | null
+          order_index?: number
+          pause_before_advance?: boolean
+          screen1_content?: Json
+          screen2_content?: Json
+          session_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "slots_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
