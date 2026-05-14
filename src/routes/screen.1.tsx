@@ -50,7 +50,7 @@ export function ScreenJoin({ role }: { role: "screen1" | "screen2" }) {
     }
     const { error: upErr } = await supabase
       .from("sessions")
-      .update({ [connectedColumn]: true })
+      .update({ [connectedColumn]: true } as never)
       .eq("id", data.id);
     if (upErr) {
       setBusy(false);
@@ -88,7 +88,7 @@ export function ScreenJoin({ role }: { role: "screen1" | "screen2" }) {
 
     // Mark disconnected on leave
     const onLeave = () => {
-      supabase.from("sessions").update({ [connectedColumn]: false }).eq("id", sessionId);
+      supabase.from("sessions").update({ [connectedColumn]: false } as never).eq("id", sessionId);
     };
     window.addEventListener("beforeunload", onLeave);
 

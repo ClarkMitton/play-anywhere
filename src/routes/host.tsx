@@ -98,11 +98,11 @@ function HostScreen() {
         current_slot_index: 0,
         state: {
           slot: {
-            host: { type: "text_slide", text: "Welcome", size: "xl" } as SlotContent,
-            screen1: { type: "teacher_note", text: "Sync test live ✓\nUse the buttons below to push different slides." } as SlotContent,
-            screen2: { type: "text_slide", text: "Tap to begin", size: "lg" } as SlotContent,
+            host: { type: "text_slide", text: "Welcome", size: "xl" },
+            screen1: { type: "teacher_note", text: "Sync test live ✓\nUse the buttons below to push different slides." },
+            screen2: { type: "text_slide", text: "Tap to begin", size: "lg" },
           },
-        },
+        } as never,
       })
       .eq("id", session.id);
   };
@@ -116,11 +116,11 @@ function HostScreen() {
       .update({
         state: {
           slot: {
-            host: { type: "text_slide", text: label.toUpperCase(), size: "xl" } as SlotContent,
-            screen1: { type: "teacher_note", text: `Now showing: ${label}` } as SlotContent,
-            screen2: { type: "text_slide", text: label, size: "lg", color: "var(--orange)" } as SlotContent,
+            host: { type: "text_slide", text: label.toUpperCase(), size: "xl" },
+            screen1: { type: "teacher_note", text: `Now showing: ${label}` },
+            screen2: { type: "text_slide", text: label, size: "lg", color: "var(--orange)" },
           },
-        },
+        } as never,
       })
       .eq("id", session.id);
   };
