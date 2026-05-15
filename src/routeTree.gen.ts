@@ -15,6 +15,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as Screen2RouteImport } from './routes/screen.2'
 import { Route as Screen1RouteImport } from './routes/screen.1'
 import { Route as ApiProxyRouteImport } from './routes/api/proxy'
+import { Route as AdminTestRouteImport } from './routes/admin.test'
 import { Route as AdminDesignerLessonIdRouteImport } from './routes/admin.designer.$lessonId'
 
 const HostRoute = HostRouteImport.update({
@@ -47,6 +48,11 @@ const ApiProxyRoute = ApiProxyRouteImport.update({
   path: '/api/proxy',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminTestRoute = AdminTestRouteImport.update({
+  id: '/test',
+  path: '/test',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminDesignerLessonIdRoute = AdminDesignerLessonIdRouteImport.update({
   id: '/designer/$lessonId',
   path: '/designer/$lessonId',
@@ -57,6 +63,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
   '/host': typeof HostRoute
+  '/admin/test': typeof AdminTestRoute
   '/api/proxy': typeof ApiProxyRoute
   '/screen/1': typeof Screen1Route
   '/screen/2': typeof Screen2Route
@@ -66,6 +73,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
   '/host': typeof HostRoute
+  '/admin/test': typeof AdminTestRoute
   '/api/proxy': typeof ApiProxyRoute
   '/screen/1': typeof Screen1Route
   '/screen/2': typeof Screen2Route
@@ -76,6 +84,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
   '/host': typeof HostRoute
+  '/admin/test': typeof AdminTestRoute
   '/api/proxy': typeof ApiProxyRoute
   '/screen/1': typeof Screen1Route
   '/screen/2': typeof Screen2Route
@@ -87,6 +96,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/host'
+    | '/admin/test'
     | '/api/proxy'
     | '/screen/1'
     | '/screen/2'
@@ -96,6 +106,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/host'
+    | '/admin/test'
     | '/api/proxy'
     | '/screen/1'
     | '/screen/2'
@@ -105,6 +116,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/host'
+    | '/admin/test'
     | '/api/proxy'
     | '/screen/1'
     | '/screen/2'
@@ -164,6 +176,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiProxyRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/test': {
+      id: '/admin/test'
+      path: '/test'
+      fullPath: '/admin/test'
+      preLoaderRoute: typeof AdminTestRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/designer/$lessonId': {
       id: '/admin/designer/$lessonId'
       path: '/designer/$lessonId'
@@ -175,10 +194,12 @@ declare module '@tanstack/react-router' {
 }
 
 interface AdminRouteChildren {
+  AdminTestRoute: typeof AdminTestRoute
   AdminDesignerLessonIdRoute: typeof AdminDesignerLessonIdRoute
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
+  AdminTestRoute: AdminTestRoute,
   AdminDesignerLessonIdRoute: AdminDesignerLessonIdRoute,
 }
 
@@ -195,3 +216,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
