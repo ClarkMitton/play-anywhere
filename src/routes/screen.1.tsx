@@ -4,7 +4,7 @@
 // Step 13: Blocks joining if session is already in one_screen_mode.
 
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { sessionChannel } from "@/lib/realtime";
 import { sounds } from "@/lib/audio";
@@ -19,11 +19,13 @@ export const Route = createFileRoute("/screen/1")({
   validateSearch: (search: Record<string, unknown>) => ({
     code: typeof search.code === "string" ? search.code : undefined,
   }),
-  component: () => {
-    const { code } = Route.useSearch();
-    return <ScreenJoin role="screen1" autoCode={code} />;
-  },
+  component: Screen1RouteComponent,
 });
+
+function Screen1RouteComponent() {
+  const { code } = Route.useSearch();
+  return <ScreenJoin role="screen1" autoCode={code} />;
+}
 
 type SessionRow = {
   id: string;
@@ -58,12 +60,12 @@ export function ScreenJoin({ role, autoCode }: { role: "screen1" | "screen2"; au
   const connectedColumn = role === "screen1" ? "screen1_connected" : "screen2_connected";
   const label = role === "screen1" ? "Touch Screen 1" : "Touch Screen 2";
 
-  const markConnected = async (id: string) => {
+  const markConnected = useCallback(async (id: string) => {
     await supabase
       .from("sessions")
       .update({ [connectedColumn]: true } as never)
       .eq("id", id);
-  };
+  }, [connectedColumn]);
 
   const join = async (code: string) => {
     setBusy(true);
@@ -141,7 +143,7 @@ export function ScreenJoin({ role, autoCode }: { role: "screen1" | "screen2"; au
       window.clearInterval(keepAlive);
       supabase.removeChannel(ch);
     };
-  }, [sessionId, connectedColumn]);
+  }, [sessionId, connectedColumn, markConnected]);
 
   // Load lesson metadata when session has a lesson_id
   useEffect(() => {
