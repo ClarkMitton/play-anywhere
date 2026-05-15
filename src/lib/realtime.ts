@@ -9,6 +9,7 @@ import type { RealtimeChannel } from "@supabase/supabase-js";
 export type BroadcastEvent =
   | { type: "wheel_spin"; payload: { items: string[]; result: string } }
   | { type: "reveal_results"; payload: { slotId: string } }
+  | { type: "session_dismiss"; payload: { ts: number } }
   | { type: "force_sync"; payload: { from: string } }
   | { type: "ping"; payload: { from: string; ts: number } };
 

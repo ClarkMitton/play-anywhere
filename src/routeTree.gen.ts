@@ -14,6 +14,7 @@ import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as Screen2RouteImport } from './routes/screen.2'
 import { Route as Screen1RouteImport } from './routes/screen.1'
+import { Route as AdminDesignerLessonIdRouteImport } from './routes/admin.designer.$lessonId'
 
 const HostRoute = HostRouteImport.update({
   id: '/host',
@@ -40,40 +41,67 @@ const Screen1Route = Screen1RouteImport.update({
   path: '/screen/1',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminDesignerLessonIdRoute = AdminDesignerLessonIdRouteImport.update({
+  id: '/designer/$lessonId',
+  path: '/designer/$lessonId',
+  getParentRoute: () => AdminRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/admin': typeof AdminRoute
+  '/admin': typeof AdminRouteWithChildren
   '/host': typeof HostRoute
   '/screen/1': typeof Screen1Route
   '/screen/2': typeof Screen2Route
+  '/admin/designer/$lessonId': typeof AdminDesignerLessonIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/admin': typeof AdminRoute
+  '/admin': typeof AdminRouteWithChildren
   '/host': typeof HostRoute
   '/screen/1': typeof Screen1Route
   '/screen/2': typeof Screen2Route
+  '/admin/designer/$lessonId': typeof AdminDesignerLessonIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/admin': typeof AdminRoute
+  '/admin': typeof AdminRouteWithChildren
   '/host': typeof HostRoute
   '/screen/1': typeof Screen1Route
   '/screen/2': typeof Screen2Route
+  '/admin/designer/$lessonId': typeof AdminDesignerLessonIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/admin' | '/host' | '/screen/1' | '/screen/2'
+  fullPaths:
+    | '/'
+    | '/admin'
+    | '/host'
+    | '/screen/1'
+    | '/screen/2'
+    | '/admin/designer/$lessonId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/admin' | '/host' | '/screen/1' | '/screen/2'
-  id: '__root__' | '/' | '/admin' | '/host' | '/screen/1' | '/screen/2'
+  to:
+    | '/'
+    | '/admin'
+    | '/host'
+    | '/screen/1'
+    | '/screen/2'
+    | '/admin/designer/$lessonId'
+  id:
+    | '__root__'
+    | '/'
+    | '/admin'
+    | '/host'
+    | '/screen/1'
+    | '/screen/2'
+    | '/admin/designer/$lessonId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  AdminRoute: typeof AdminRoute
+  AdminRoute: typeof AdminRouteWithChildren
   HostRoute: typeof HostRoute
   Screen1Route: typeof Screen1Route
   Screen2Route: typeof Screen2Route
@@ -116,12 +144,29 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof Screen1RouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/designer/$lessonId': {
+      id: '/admin/designer/$lessonId'
+      path: '/designer/$lessonId'
+      fullPath: '/admin/designer/$lessonId'
+      preLoaderRoute: typeof AdminDesignerLessonIdRouteImport
+      parentRoute: typeof AdminRoute
+    }
   }
 }
 
+interface AdminRouteChildren {
+  AdminDesignerLessonIdRoute: typeof AdminDesignerLessonIdRoute
+}
+
+const AdminRouteChildren: AdminRouteChildren = {
+  AdminDesignerLessonIdRoute: AdminDesignerLessonIdRoute,
+}
+
+const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  AdminRoute: AdminRoute,
+  AdminRoute: AdminRouteWithChildren,
   HostRoute: HostRoute,
   Screen1Route: Screen1Route,
   Screen2Route: Screen2Route,
@@ -129,3 +174,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
