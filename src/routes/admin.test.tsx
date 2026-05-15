@@ -47,6 +47,30 @@ function TestMode() {
   const startTest = useCallback(async () => {
     if (!selectedLessonId) return;
     setBusy(true);
+
+    // Pre-load first slot so we can launch the session immediately —
+    // skips the lobby ("Waiting for both screens") that races realtime
+    // updates inside the test iframes.
+    const { data: slotRows } = await supabase
+      .from("slots")
+      .select("host_content, screen1_content, screen2_content")
+      .eq("lesson_id", selectedLessonId)
+      .is("session_id", null)
+      .order("order_index")
+      .limit(1);
+    const first = slotRows?.[0] as
+      | { host_content: unknown; screen1_content: unknown; screen2_content: unknown }
+      | undefined;
+    const initialState = first
+      ? {
+          slot: {
+            host: first.host_content,
+            screen1: first.screen1_content,
+            screen2: first.screen2_content,
+          },
+        }
+      : {};
+
     const { data, error } = await supabase
       .from("sessions")
       .insert({
@@ -54,8 +78,11 @@ function TestMode() {
         host_code: generateCode(),
         screen1_code: generateCode(),
         screen2_code: generateCode(),
-        status: "waiting",
-        state: {},
+        status: first ? "active" : "waiting",
+        current_slot_index: 0,
+        screen1_connected: true,
+        screen2_connected: true,
+        state: initialState as never,
       })
       .select("id, screen1_code, screen2_code")
       .single();
