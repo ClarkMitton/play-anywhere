@@ -193,6 +193,23 @@ function HostScreen() {
     return () => { supabase.removeChannel(ch); };
   }, [session?.id]);
 
+  // Realtime can occasionally miss a join update while screens already show
+  // “Waiting for Host”; poll as a small fallback while in the lobby.
+  useEffect(() => {
+    if (!session || session.status !== "waiting") return;
+    let cancelled = false;
+    const refreshSession = async () => {
+      const { data } = await supabase.from("sessions").select("*").eq("id", session.id).single();
+      if (!cancelled && data) setSession(data as SessionRow);
+    };
+    refreshSession();
+    const poll = window.setInterval(refreshSession, 3000);
+    return () => {
+      cancelled = true;
+      window.clearInterval(poll);
+    };
+  }, [session?.id, session?.status]);
+
   // ── Step 13: 60s countdown ─────────────────────
 
   useEffect(() => {
