@@ -269,7 +269,9 @@ function HostScreen() {
       .eq("id", session.id);
   };
 
-  const origin = typeof window !== "undefined" ? window.location.origin : "";
+  // Resolve origin AFTER hydration to avoid SSR/CSR mismatch
+  const [origin, setOrigin] = useState("");
+  useEffect(() => { setOrigin(window.location.origin); }, []);
   const screen1Url = `${origin}/screen/1`;
   const screen2Url = `${origin}/screen/2`;
   const bothConnected = !!session?.screen1_connected && !!session?.screen2_connected;
