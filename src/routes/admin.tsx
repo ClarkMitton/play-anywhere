@@ -2,7 +2,7 @@
 // PIN-protected (4158). Three tabs: Lessons, Data, Settings.
 // Stage designer navigation wires to /admin/designer/$lessonId (created in Step 8).
 
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Outlet, useMatchRoute } from "@tanstack/react-router";
 import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
