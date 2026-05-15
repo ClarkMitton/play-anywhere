@@ -16,7 +16,13 @@ import type { RealtimeChannel } from "@supabase/supabase-js";
 
 export const Route = createFileRoute("/screen/1")({
   head: () => ({ meta: [{ title: "Touch Screen 1 · Immersive Learning" }] }),
-  component: () => <ScreenJoin role="screen1" />,
+  validateSearch: (search: Record<string, unknown>) => ({
+    code: typeof search.code === "string" ? search.code : undefined,
+  }),
+  component: () => {
+    const { code } = Route.useSearch();
+    return <ScreenJoin role="screen1" autoCode={code} />;
+  },
 });
 
 type SessionRow = {
@@ -38,10 +44,11 @@ type LessonMeta = {
   slot_count: number;
 };
 
-export function ScreenJoin({ role }: { role: "screen1" | "screen2" }) {
+export function ScreenJoin({ role, autoCode }: { role: "screen1" | "screen2"; autoCode?: string }) {
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const autoJoinedRef = useRef(false);
   const [session, setSession] = useState<SessionRow | null>(null);
   const [lessonMeta, setLessonMeta] = useState<LessonMeta | null>(null);
   const [confirmEnd, setConfirmEnd] = useState(false);
