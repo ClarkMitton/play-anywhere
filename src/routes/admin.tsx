@@ -2,7 +2,7 @@
 // PIN-protected (4158). Three tabs: Lessons, Data, Settings.
 // Stage designer navigation wires to /admin/designer/$lessonId (created in Step 8).
 
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Outlet, useMatchRoute } from "@tanstack/react-router";
 import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -84,17 +84,24 @@ export const Route = createFileRoute("/admin")({
 });
 
 function AdminPage() {
-  // Persist unlock for the browser session so navigating to /admin/designer/...
-  // and back, or refreshing, doesn't re-prompt for the PIN every time.
-  const [unlocked, setUnlocked] = useState(() => {
-    if (typeof window === "undefined") return false;
-    return sessionStorage.getItem("admin_unlocked") === "1";
-  });
+  // Initialise to false on both server and client to avoid hydration mismatch.
+  // Then read sessionStorage after mount to restore the unlock for the session.
+  const [unlocked, setUnlocked] = useState(false);
+  useEffect(() => {
+    if (sessionStorage.getItem("admin_unlocked") === "1") setUnlocked(true);
+  }, []);
   const handleUnlock = () => {
     sessionStorage.setItem("admin_unlocked", "1");
     setUnlocked(true);
   };
+
+  // When a child route (e.g. /admin/designer/$lessonId) is active, render the
+  // Outlet instead of the AdminPanel so the child component actually mounts.
+  const matchRoute = useMatchRoute();
+  const onChildRoute = !matchRoute({ to: "/admin", fuzzy: false });
+
   if (!unlocked) return <PinEntry onUnlock={handleUnlock} />;
+  if (onChildRoute) return <Outlet />;
   return <AdminPanel />;
 }
 
