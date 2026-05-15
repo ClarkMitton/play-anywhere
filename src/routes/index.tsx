@@ -79,7 +79,7 @@ function Launcher() {
         </div>
         <Link to="/admin">
           <Button variant="outline" className="h-12 px-6 uppercase tracking-widest">
-            Admin
+            Build
           </Button>
         </Link>
       </header>
