@@ -58,6 +58,10 @@ export function ScreenJoin({ role, autoCode }: { role: "screen1" | "screen2"; au
   const connectedColumn = role === "screen1" ? "screen1_connected" : "screen2_connected";
   const label = role === "screen1" ? "Touch Screen 1" : "Touch Screen 2";
 
+  const markConnected = async (id: string) => {
+    await supabase.from("sessions").update({ [connectedColumn]: true } as never).eq("id", id);
+  };
+
   const join = async (code: string) => {
     setBusy(true);
     setError(null);
@@ -125,15 +129,12 @@ export function ScreenJoin({ role, autoCode }: { role: "screen1" | "screen2"; au
     );
     ch.subscribe();
 
-    const onLeave = () => {
-      supabase.from("sessions").update({ [connectedColumn]: false } as never).eq("id", sessionId);
-    };
-    window.addEventListener("beforeunload", onLeave);
+    markConnected(sessionId);
+    const keepAlive = window.setInterval(() => markConnected(sessionId), 4000);
 
     return () => {
       cancelled = true;
-      window.removeEventListener("beforeunload", onLeave);
-      onLeave();
+      window.clearInterval(keepAlive);
       supabase.removeChannel(ch);
     };
   }, [sessionId, connectedColumn]);
