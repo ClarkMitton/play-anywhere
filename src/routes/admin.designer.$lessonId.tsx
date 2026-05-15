@@ -58,6 +58,7 @@ const CONTENT_TYPES_HOST = [
   { value: "youtube", label: "YouTube" },
   { value: "video_upload", label: "Video Upload" },
   { value: "embed", label: "Embed (iframe)" },
+  { value: "webpage", label: "Webpage (proxied)" },
   { value: "html_upload", label: "HTML Upload" },
   { value: "confidence_checker", label: "Confidence Checker" },
   { value: "wheel_spinner", label: "Wheel Spinner" },
