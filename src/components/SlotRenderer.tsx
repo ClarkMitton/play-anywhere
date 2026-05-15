@@ -17,6 +17,7 @@ export type SlotContent =
   | { type: "video_upload"; url: string; file_name?: string }
   | { type: "image"; url: string; file_name?: string }
   | { type: "embed"; url: string }
+  | { type: "webpage"; url: string }
   | { type: "html_upload"; url: string; file_name?: string }
   | { type: "confidence_checker"; prompt: string; optional_qualitative?: boolean }
   | { type: "wheel_spinner"; items: string[] }
