@@ -197,6 +197,24 @@ export function SlotRenderer({
       );
     }
 
+    case "webpage": {
+      const c = content as Extract<SlotContent, { type: "webpage" }>;
+      if (!c.url) return <Waiting screen={screen} />;
+      const proxied = `/api/proxy?url=${encodeURIComponent(c.url)}`;
+      return (
+        <div className="min-h-screen w-full bg-background animate-slot-in">
+          <iframe
+            key={c.url}
+            src={proxied}
+            className="w-full h-screen border-0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; fullscreen; gyroscope; picture-in-picture"
+            allowFullScreen
+            title="Web page"
+          />
+        </div>
+      );
+    }
+
     case "confidence_checker": {
       const c = content as Extract<SlotContent, { type: "confidence_checker" }>;
       if (screen === "screen2")
