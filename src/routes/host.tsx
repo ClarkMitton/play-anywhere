@@ -51,13 +51,51 @@ type LessonMeta = {
   slot_count: number;
 };
 
+type SlotDef = {
+  id: string;
+  order_index: number;
+  host_content: SlotContent;
+  screen1_content: SlotContent;
+  screen2_content: SlotContent;
+};
+
 const SCREEN2_WAIT_SECS = 60;
+
+function SlotNavBar({
+  currentIndex,
+  total,
+  onPrev,
+  onNext,
+  onEnd,
+}: {
+  currentIndex: number;
+  total: number;
+  onPrev: () => void;
+  onNext: () => void;
+  onEnd: () => void;
+}) {
+  return (
+    <div className="mx-auto max-w-2xl bg-card/80 backdrop-blur-xl border border-border rounded-full px-6 py-3 flex items-center justify-between gap-4">
+      <Button size="sm" variant="outline" onClick={onPrev} disabled={currentIndex <= 0 || total === 0}>
+        ← Prev
+      </Button>
+      <span className="text-sm font-mono text-muted-foreground tabular-nums">
+        {total === 0 ? "No slots" : `Slot ${currentIndex + 1} of ${total}`}
+      </span>
+      <Button size="sm" variant="outline" onClick={onNext} disabled={currentIndex >= total - 1 || total === 0}>
+        Next →
+      </Button>
+      <Button size="sm" variant="destructive" onClick={onEnd}>End</Button>
+    </div>
+  );
+}
 
 function HostScreen() {
   const { session: sessionParam } = Route.useSearch();
   const navigate = useNavigate();
   const [session, setSession] = useState<SessionRow | null>(null);
   const [lessonMeta, setLessonMeta] = useState<LessonMeta | null>(null);
+  const [slots, setSlots] = useState<SlotDef[]>([]);
   const channelRef = useRef<RealtimeChannel | null>(null);
 
   // Step 13: 60-second countdown before one-screen mode prompt
@@ -99,13 +137,13 @@ function HostScreen() {
     return () => { cancelled = true; };
   }, [sessionParam]);
 
-  // ── Load lesson metadata when session has lesson_id ─
+  // ── Load lesson metadata + slots when session has lesson_id ─
 
   useEffect(() => {
     if (!session?.lesson_id) return;
     let cancelled = false;
     (async () => {
-      const [{ data: lesson }, { count }] = await Promise.all([
+      const [{ data: lesson }, { data: slotRows }] = await Promise.all([
         supabase
           .from("lessons")
           .select("title, ms_form_url")
@@ -113,16 +151,19 @@ function HostScreen() {
           .single(),
         supabase
           .from("slots")
-          .select("id", { count: "exact", head: true })
+          .select("id, order_index, host_content, screen1_content, screen2_content")
           .eq("lesson_id", session.lesson_id!)
-          .is("session_id", null),
+          .is("session_id", null)
+          .order("order_index"),
       ]);
       if (cancelled) return;
+      const loadedSlots = (slotRows ?? []) as SlotDef[];
+      setSlots(loadedSlots);
       if (lesson) {
         setLessonMeta({
           title: (lesson as { title: string; ms_form_url: string | null }).title,
           ms_form_url: (lesson as { title: string; ms_form_url: string | null }).ms_form_url,
-          slot_count: count ?? 0,
+          slot_count: loadedSlots.length,
         });
       }
     })();
@@ -189,6 +230,11 @@ function HostScreen() {
 
   // ── Session actions ─────────────────────────────
 
+  const slotState = (s: SlotDef | undefined) =>
+    s
+      ? { host: s.host_content, screen1: s.screen1_content, screen2: s.screen2_content }
+      : { host: { type: "waiting" as const }, screen1: { type: "waiting" as const }, screen2: { type: "waiting" as const } };
+
   const launch = async () => {
     if (!session) return;
     sounds.launch();
@@ -197,13 +243,7 @@ function HostScreen() {
       .update({
         status: "active",
         current_slot_index: 0,
-        state: {
-          slot: {
-            host: { type: "text_slide", text: "Welcome", size: "xl" },
-            screen1: { type: "teacher_note", text: "Sync test live ✓\nUse the buttons below to push different slides." },
-            screen2: { type: "text_slide", text: "Tap to begin", size: "lg" },
-          },
-        } as never,
+        state: { slot: slotState(slots[0]) } as never,
       })
       .eq("id", session.id);
   };
@@ -217,13 +257,19 @@ function HostScreen() {
         one_screen_mode: true,
         status: "active",
         current_slot_index: 0,
-        state: {
-          slot: {
-            host: { type: "text_slide", text: "Welcome", size: "xl" },
-            screen1: { type: "teacher_note", text: "Running in one-screen mode." },
-            screen2: { type: "text_slide", text: "Tap to begin", size: "lg" },
-          },
-        } as never,
+        state: { slot: slotState(slots[0]) } as never,
+      })
+      .eq("id", session.id);
+  };
+
+  const pushSlot = async (index: number) => {
+    if (!session || index < 0 || index >= slots.length) return;
+    sounds.slotAdvance();
+    await supabase
+      .from("sessions")
+      .update({
+        current_slot_index: index,
+        state: { slot: slotState(slots[index]) } as never,
       })
       .eq("id", session.id);
   };
@@ -248,24 +294,6 @@ function HostScreen() {
     await supabase
       .from("sessions")
       .update({ status: "ended", ended_at: new Date().toISOString() })
-      .eq("id", session.id);
-  };
-
-  // Sync-test content push (temporary until real slot timeline is wired)
-  const pushTest = async (label: string) => {
-    if (!session) return;
-    sounds.slotAdvance();
-    await supabase
-      .from("sessions")
-      .update({
-        state: {
-          slot: {
-            host: { type: "text_slide", text: label.toUpperCase(), size: "xl" },
-            screen1: { type: "teacher_note", text: `Now showing: ${label}` },
-            screen2: { type: "text_slide", text: label, size: "lg", color: "var(--orange)" },
-          },
-        } as never,
-      })
       .eq("id", session.id);
   };
 
@@ -331,6 +359,16 @@ function HostScreen() {
             channel={channelRef.current ?? undefined}
           />
         </div>
+        {/* Floating slot navigation bar */}
+        <div className="fixed bottom-0 left-0 right-0 p-4 opacity-20 hover:opacity-100 transition-opacity z-50">
+          <SlotNavBar
+            currentIndex={Math.min(session.current_slot_index, Math.max(0, slots.length - 1))}
+            total={slots.length}
+            onPrev={() => pushSlot(session.current_slot_index - 1)}
+            onNext={() => pushSlot(session.current_slot_index + 1)}
+            onEnd={endSession}
+          />
+        </div>
       </div>
     );
   }
@@ -348,17 +386,15 @@ function HostScreen() {
           sessionId={session.id}
           channel={channelRef.current ?? undefined}
         />
-        {/* Floating control bar */}
+        {/* Floating slot navigation bar */}
         <div className="fixed bottom-0 left-0 right-0 p-4 opacity-20 hover:opacity-100 transition-opacity z-50">
-          <div className="mx-auto max-w-4xl bg-card/80 backdrop-blur-xl border border-border rounded-full px-6 py-3 flex items-center justify-between gap-4">
-            <div className="text-sm uppercase tracking-widest text-muted-foreground">Sync test</div>
-            <div className="flex gap-2">
-              {["Welcome", "Question 1", "Discuss", "Reveal"].map((l) => (
-                <Button key={l} size="sm" variant="outline" onClick={() => pushTest(l)}>{l}</Button>
-              ))}
-            </div>
-            <Button size="sm" variant="destructive" onClick={endSession}>End</Button>
-          </div>
+          <SlotNavBar
+            currentIndex={Math.min(session.current_slot_index, Math.max(0, slots.length - 1))}
+            total={slots.length}
+            onPrev={() => pushSlot(session.current_slot_index - 1)}
+            onNext={() => pushSlot(session.current_slot_index + 1)}
+            onEnd={endSession}
+          />
         </div>
       </div>
     );
