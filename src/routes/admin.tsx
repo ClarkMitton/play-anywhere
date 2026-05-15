@@ -224,12 +224,20 @@ function AdminPanel() {
           </div>
           <h1 className="text-3xl font-extrabold mt-1 text-glow">Immersive Learning</h1>
         </div>
-        <a
-          href="/"
-          className="text-sm text-muted-foreground hover:text-[color:var(--cyan)] transition-colors uppercase tracking-widest"
-        >
-          ← Launcher
-        </a>
+        <div className="flex items-center gap-3">
+          <a
+            href="/admin/test"
+            className="text-xs uppercase tracking-widest h-10 px-4 inline-flex items-center rounded-md border border-[color:var(--orange)]/50 text-[color:var(--orange)] hover:bg-[color:var(--orange)]/10 transition-colors"
+          >
+            ⚡ Test Mode
+          </a>
+          <a
+            href="/"
+            className="text-sm text-muted-foreground hover:text-[color:var(--cyan)] transition-colors uppercase tracking-widest"
+          >
+            ← Launcher
+          </a>
+        </div>
       </header>
 
       <div className="max-w-6xl mx-auto px-8 py-8">
