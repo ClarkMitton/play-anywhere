@@ -190,10 +190,13 @@ function HostScreen() {
 
   // ── Realtime subscription ───────────────────────
 
+  const activeSessionId = session?.id;
+  const activeSessionStatus = session?.status;
+
   useEffect(() => {
-    if (!session) return;
-    const sessionId = session.id;
-    const ch = sessionChannel(session.id);
+    if (!activeSessionId) return;
+    const sessionId = activeSessionId;
+    const ch = sessionChannel(sessionId);
     channelRef.current = ch;
 
     ch.on(
@@ -212,13 +215,13 @@ function HostScreen() {
     return () => {
       supabase.removeChannel(ch);
     };
-  }, [session?.id]);
+  }, [activeSessionId]);
 
   // Realtime can occasionally miss a join update while screens already show
   // “Waiting for Host”; poll as a small fallback while in the lobby.
   useEffect(() => {
-    if (!session || session.status !== "waiting") return;
-    const sessionId = session.id;
+    if (!activeSessionId || activeSessionStatus !== "waiting") return;
+    const sessionId = activeSessionId;
     let cancelled = false;
     const refreshSession = async () => {
       const { data } = await supabase.from("sessions").select("*").eq("id", sessionId).single();
@@ -230,7 +233,7 @@ function HostScreen() {
       cancelled = true;
       window.clearInterval(poll);
     };
-  }, [session?.id, session?.status]);
+  }, [activeSessionId, activeSessionStatus]);
 
   // ── Step 13: 60s countdown ─────────────────────
 
