@@ -60,12 +60,15 @@ export function ScreenJoin({ role, autoCode }: { role: "screen1" | "screen2"; au
   const connectedColumn = role === "screen1" ? "screen1_connected" : "screen2_connected";
   const label = role === "screen1" ? "Touch Screen 1" : "Touch Screen 2";
 
-  const markConnected = useCallback(async (id: string) => {
-    await supabase
-      .from("sessions")
-      .update({ [connectedColumn]: true } as never)
-      .eq("id", id);
-  }, [connectedColumn]);
+  const markConnected = useCallback(
+    async (id: string) => {
+      await supabase
+        .from("sessions")
+        .update({ [connectedColumn]: true } as never)
+        .eq("id", id);
+    },
+    [connectedColumn],
+  );
 
   const join = async (code: string) => {
     setBusy(true);
