@@ -67,11 +67,12 @@ export function SessionEndScreen({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // TS1: subscribe to session_dismiss from host / other screens
+  // TS1: subscribe to session_dismiss from host / other screens.
+  // Supabase v2 has no per-handler off(); the parent owns channel lifecycle,
+  // and component unmount on dismiss removes the listener with the channel.
   useEffect(() => {
     if (!channel || screen !== "screen1") return;
-    const handler = channel.on("broadcast", { event: "session_dismiss" }, () => onDismiss());
-    return () => { channel.off("broadcast", handler as never); };
+    channel.on("broadcast", { event: "session_dismiss" }, () => onDismiss());
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [channel, screen]);
 
