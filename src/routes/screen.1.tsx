@@ -4,7 +4,7 @@
 // Step 13: Blocks joining if session is already in one_screen_mode.
 
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { sessionChannel } from "@/lib/realtime";
 import { sounds } from "@/lib/audio";
@@ -19,11 +19,13 @@ export const Route = createFileRoute("/screen/1")({
   validateSearch: (search: Record<string, unknown>) => ({
     code: typeof search.code === "string" ? search.code : undefined,
   }),
-  component: () => {
-    const { code } = Route.useSearch();
-    return <ScreenJoin role="screen1" autoCode={code} />;
-  },
+  component: Screen1RouteComponent,
 });
+
+function Screen1RouteComponent() {
+  const { code } = Route.useSearch();
+  return <ScreenJoin role="screen1" autoCode={code} />;
+}
 
 type SessionRow = {
   id: string;
@@ -57,6 +59,16 @@ export function ScreenJoin({ role, autoCode }: { role: "screen1" | "screen2"; au
   const codeColumn = role === "screen1" ? "screen1_code" : "screen2_code";
   const connectedColumn = role === "screen1" ? "screen1_connected" : "screen2_connected";
   const label = role === "screen1" ? "Touch Screen 1" : "Touch Screen 2";
+
+  const markConnected = useCallback(
+    async (id: string) => {
+      await supabase
+        .from("sessions")
+        .update({ [connectedColumn]: true } as never)
+        .eq("id", id);
+    },
+    [connectedColumn],
+  );
 
   const join = async (code: string) => {
     setBusy(true);
@@ -118,25 +130,23 @@ export function ScreenJoin({ role, autoCode }: { role: "screen1" | "screen2"; au
         setSession((prev) => {
           const next = payload.new as SessionRow;
           if (prev?.status === "waiting" && next.status === "active") sounds.launch();
-          else if (prev && JSON.stringify(prev.state) !== JSON.stringify(next.state)) sounds.slotAdvance();
+          else if (prev && JSON.stringify(prev.state) !== JSON.stringify(next.state))
+            sounds.slotAdvance();
           return next;
         });
       },
     );
     ch.subscribe();
 
-    const onLeave = () => {
-      supabase.from("sessions").update({ [connectedColumn]: false } as never).eq("id", sessionId);
-    };
-    window.addEventListener("beforeunload", onLeave);
+    markConnected(sessionId);
+    const keepAlive = window.setInterval(() => markConnected(sessionId), 4000);
 
     return () => {
       cancelled = true;
-      window.removeEventListener("beforeunload", onLeave);
-      onLeave();
+      window.clearInterval(keepAlive);
       supabase.removeChannel(ch);
     };
-  }, [sessionId, connectedColumn]);
+  }, [sessionId, connectedColumn, markConnected]);
 
   // Load lesson metadata when session has a lesson_id
   useEffect(() => {
@@ -144,11 +154,7 @@ export function ScreenJoin({ role, autoCode }: { role: "screen1" | "screen2"; au
     let cancelled = false;
     (async () => {
       const [{ data: lesson }, { count }] = await Promise.all([
-        supabase
-          .from("lessons")
-          .select("title, ms_form_url")
-          .eq("id", session.lesson_id!)
-          .single(),
+        supabase.from("lessons").select("title, ms_form_url").eq("id", session.lesson_id!).single(),
         supabase
           .from("slots")
           .select("id", { count: "exact", head: true })
@@ -164,7 +170,9 @@ export function ScreenJoin({ role, autoCode }: { role: "screen1" | "screen2"; au
         });
       }
     })();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [session?.lesson_id]);
 
   const handleEndSession = async () => {
@@ -180,7 +188,9 @@ export function ScreenJoin({ role, autoCode }: { role: "screen1" | "screen2"; au
   if (error === "one_screen_mode") {
     return (
       <div className="min-h-screen bg-immersive bg-grid flex flex-col items-center justify-center p-12 text-center">
-        <div className="text-xs uppercase tracking-[0.5em] text-[color:var(--orange)] mb-6">Session in progress</div>
+        <div className="text-xs uppercase tracking-[0.5em] text-[color:var(--orange)] mb-6">
+          Session in progress
+        </div>
         <div className="text-4xl font-extrabold text-glow mb-6">
           Session already running in one-screen mode
         </div>
@@ -198,8 +208,12 @@ export function ScreenJoin({ role, autoCode }: { role: "screen1" | "screen2"; au
   if (!session || session.status === "waiting") {
     return (
       <div className="min-h-screen bg-immersive bg-grid flex flex-col items-center justify-center p-10">
-        <div className="text-xs uppercase tracking-[0.5em] text-[color:var(--success)] mb-6">{label} · Connected</div>
-        <div className="text-5xl font-extrabold text-glow text-center">Waiting for Host to launch…</div>
+        <div className="text-xs uppercase tracking-[0.5em] text-[color:var(--success)] mb-6">
+          {label} · Connected
+        </div>
+        <div className="text-5xl font-extrabold text-glow text-center">
+          Waiting for Host to launch…
+        </div>
       </div>
     );
   }
@@ -220,7 +234,9 @@ export function ScreenJoin({ role, autoCode }: { role: "screen1" | "screen2"; au
     );
   }
 
-  const content = (role === "screen1" ? session.state?.slot?.screen1 : session.state?.slot?.screen2) ?? { type: "waiting" };
+  const content = (role === "screen1"
+    ? session.state?.slot?.screen1
+    : session.state?.slot?.screen2) ?? { type: "waiting" };
 
   return (
     <div className="relative">
@@ -249,7 +265,9 @@ export function ScreenJoin({ role, autoCode }: { role: "screen1" | "screen2"; au
           {confirmEnd && (
             <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-6 backdrop-blur-sm">
               <div className="bg-card border-2 border-[color:var(--orange)] rounded-3xl p-10 max-w-md w-full text-center animate-slot-in">
-                <div className="text-xs uppercase tracking-[0.5em] text-[color:var(--orange)] mb-4">Confirm</div>
+                <div className="text-xs uppercase tracking-[0.5em] text-[color:var(--orange)] mb-4">
+                  Confirm
+                </div>
                 <h2 className="text-3xl font-extrabold mb-4">End this session?</h2>
                 <p className="text-muted-foreground mb-8">
                   All screens will show the session summary and the session cannot be resumed.

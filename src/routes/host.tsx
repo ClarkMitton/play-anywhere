@@ -76,16 +76,28 @@ function SlotNavBar({
 }) {
   return (
     <div className="mx-auto max-w-2xl bg-card/80 backdrop-blur-xl border border-border rounded-full px-6 py-3 flex items-center justify-between gap-4">
-      <Button size="sm" variant="outline" onClick={onPrev} disabled={currentIndex <= 0 || total === 0}>
+      <Button
+        size="sm"
+        variant="outline"
+        onClick={onPrev}
+        disabled={currentIndex <= 0 || total === 0}
+      >
         ← Prev
       </Button>
       <span className="text-sm font-mono text-muted-foreground tabular-nums">
         {total === 0 ? "No slots" : `Slot ${currentIndex + 1} of ${total}`}
       </span>
-      <Button size="sm" variant="outline" onClick={onNext} disabled={currentIndex >= total - 1 || total === 0}>
+      <Button
+        size="sm"
+        variant="outline"
+        onClick={onNext}
+        disabled={currentIndex >= total - 1 || total === 0}
+      >
         Next →
       </Button>
-      <Button size="sm" variant="destructive" onClick={onEnd}>End</Button>
+      <Button size="sm" variant="destructive" onClick={onEnd}>
+        End
+      </Button>
     </div>
   );
 }
@@ -115,7 +127,10 @@ function HostScreen() {
           .eq("id", sessionParam)
           .single();
         if (cancelled) return;
-        if (error) { console.error(error); return; }
+        if (error) {
+          console.error(error);
+          return;
+        }
         setSession(data as SessionRow);
       } else {
         const { data, error } = await supabase
@@ -130,11 +145,16 @@ function HostScreen() {
           .select()
           .single();
         if (cancelled) return;
-        if (error) { console.error(error); return; }
+        if (error) {
+          console.error(error);
+          return;
+        }
         setSession(data as SessionRow);
       }
     })();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [sessionParam]);
 
   // ── Load lesson metadata + slots when session has lesson_id ─
@@ -144,11 +164,7 @@ function HostScreen() {
     let cancelled = false;
     (async () => {
       const [{ data: lesson }, { data: slotRows }] = await Promise.all([
-        supabase
-          .from("lessons")
-          .select("title, ms_form_url")
-          .eq("id", session.lesson_id!)
-          .single(),
+        supabase.from("lessons").select("title, ms_form_url").eq("id", session.lesson_id!).single(),
         supabase
           .from("slots")
           .select("id, order_index, host_content, screen1_content, screen2_content")
@@ -167,19 +183,25 @@ function HostScreen() {
         });
       }
     })();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [session?.lesson_id]);
 
   // ── Realtime subscription ───────────────────────
 
+  const activeSessionId = session?.id;
+  const activeSessionStatus = session?.status;
+
   useEffect(() => {
-    if (!session) return;
-    const ch = sessionChannel(session.id);
+    if (!activeSessionId) return;
+    const sessionId = activeSessionId;
+    const ch = sessionChannel(sessionId);
     channelRef.current = ch;
 
     ch.on(
       "postgres_changes",
-      { event: "UPDATE", schema: "public", table: "sessions", filter: `id=eq.${session.id}` },
+      { event: "UPDATE", schema: "public", table: "sessions", filter: `id=eq.${sessionId}` },
       (payload) => {
         const next = payload.new as SessionRow;
         setSession((prev) => {
@@ -190,8 +212,28 @@ function HostScreen() {
       },
     );
     ch.subscribe();
-    return () => { supabase.removeChannel(ch); };
-  }, [session?.id]);
+    return () => {
+      supabase.removeChannel(ch);
+    };
+  }, [activeSessionId]);
+
+  // Realtime can occasionally miss a join update while screens already show
+  // “Waiting for Host”; poll as a small fallback while in the lobby.
+  useEffect(() => {
+    if (!activeSessionId || activeSessionStatus !== "waiting") return;
+    const sessionId = activeSessionId;
+    let cancelled = false;
+    const refreshSession = async () => {
+      const { data } = await supabase.from("sessions").select("*").eq("id", sessionId).single();
+      if (!cancelled && data) setSession(data as SessionRow);
+    };
+    refreshSession();
+    const poll = window.setInterval(refreshSession, 3000);
+    return () => {
+      cancelled = true;
+      window.clearInterval(poll);
+    };
+  }, [activeSessionId, activeSessionStatus]);
 
   // ── Step 13: 60s countdown ─────────────────────
 
@@ -216,8 +258,8 @@ function HostScreen() {
     return () => {
       if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
     };
-  // Restart only when session id changes or screen2 connects (to cancel)
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // Restart only when session id changes or screen2 connects (to cancel)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session?.id]);
 
   // Cancel countdown when screen2 connects
@@ -233,7 +275,11 @@ function HostScreen() {
   const slotState = (s: SlotDef | undefined) =>
     s
       ? { host: s.host_content, screen1: s.screen1_content, screen2: s.screen2_content }
-      : { host: { type: "waiting" as const }, screen1: { type: "waiting" as const }, screen2: { type: "waiting" as const } };
+      : {
+          host: { type: "waiting" as const },
+          screen1: { type: "waiting" as const },
+          screen2: { type: "waiting" as const },
+        };
 
   const launch = async () => {
     if (!session) return;
@@ -299,7 +345,9 @@ function HostScreen() {
 
   // Resolve origin AFTER hydration to avoid SSR/CSR mismatch
   const [origin, setOrigin] = useState("");
-  useEffect(() => { setOrigin(window.location.origin); }, []);
+  useEffect(() => {
+    setOrigin(window.location.origin);
+  }, []);
   const screen1Url = `${origin}/screen/1`;
   const screen2Url = `${origin}/screen/2`;
   const bothConnected = !!session?.screen1_connected && !!session?.screen2_connected;
@@ -334,7 +382,9 @@ function HostScreen() {
           <span className="text-xs uppercase tracking-widest text-[color:var(--orange)] font-bold">
             One-screen mode
           </span>
-          <Button size="sm" variant="destructive" onClick={endSession}>End session</Button>
+          <Button size="sm" variant="destructive" onClick={endSession}>
+            End session
+          </Button>
         </div>
         {/* Top 60% — host content */}
         <div className="relative" style={{ flex: "0 0 60%" }}>
@@ -347,7 +397,10 @@ function HostScreen() {
           />
         </div>
         {/* Bottom 40% — screen2 content */}
-        <div className="relative border-t-2 border-[color:var(--cyan)]/30" style={{ flex: "0 0 40%" }}>
+        <div
+          className="relative border-t-2 border-[color:var(--cyan)]/30"
+          style={{ flex: "0 0 40%" }}
+        >
           <div className="absolute top-2 left-3 text-[9px] uppercase tracking-widest text-[color:var(--cyan)] opacity-60 z-10">
             Touch Screen 2 view
           </div>
@@ -406,12 +459,16 @@ function HostScreen() {
     <div className="min-h-screen bg-immersive bg-grid p-8">
       <header className="flex items-center justify-between mb-12">
         <div>
-          <div className="text-xs uppercase tracking-[0.4em] text-[color:var(--cyan)]">Bradford College · Host</div>
+          <div className="text-xs uppercase tracking-[0.4em] text-[color:var(--cyan)]">
+            Bradford College · Host
+          </div>
           <h1 className="text-4xl font-extrabold mt-1 text-glow">Immersive Learning</h1>
         </div>
         <div className="text-right">
           <div className="text-xs uppercase tracking-widest text-muted-foreground">Session</div>
-          <div className="text-sm font-mono text-muted-foreground">{session?.id?.slice(0, 8) ?? "…"}</div>
+          <div className="text-sm font-mono text-muted-foreground">
+            {session?.id?.slice(0, 8) ?? "…"}
+          </div>
         </div>
       </header>
 
@@ -478,13 +535,27 @@ function HostScreen() {
   );
 }
 
-function CodeCard({ label, code, url, connected }: { label: string; code?: string; url: string; connected: boolean }) {
+function CodeCard({
+  label,
+  code,
+  url,
+  connected,
+}: {
+  label: string;
+  code?: string;
+  url: string;
+  connected: boolean;
+}) {
   return (
     <div className="bg-card/60 backdrop-blur border-2 border-border rounded-3xl p-10 text-center animate-slot-in">
       <StatusDot connected={connected} label={label} />
       <div className="my-8">
-        <div className="text-xs uppercase tracking-[0.4em] text-muted-foreground mb-3">Enter this code</div>
-        <div className="code-display text-7xl text-[color:var(--cyan)] text-glow">{code ?? "······"}</div>
+        <div className="text-xs uppercase tracking-[0.4em] text-muted-foreground mb-3">
+          Enter this code
+        </div>
+        <div className="code-display text-7xl text-[color:var(--cyan)] text-glow">
+          {code ?? "······"}
+        </div>
       </div>
       <div className="text-sm text-muted-foreground break-all">{url}</div>
     </div>
