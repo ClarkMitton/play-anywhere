@@ -58,6 +58,7 @@ const CONTENT_TYPES_HOST = [
   { value: "youtube", label: "YouTube" },
   { value: "video_upload", label: "Video Upload" },
   { value: "embed", label: "Embed (iframe)" },
+  { value: "webpage", label: "Webpage (proxied)" },
   { value: "html_upload", label: "HTML Upload" },
   { value: "confidence_checker", label: "Confidence Checker" },
   { value: "wheel_spinner", label: "Wheel Spinner" },
@@ -1797,20 +1798,54 @@ function ContentTypeForm({
         />
       );
 
-    case "embed":
+    case "embed": {
+      const extractUrl = (raw: string): string => {
+        const trimmed = raw.trim();
+        const match = trimmed.match(/<iframe[^>]*\ssrc\s*=\s*["']([^"']+)["']/i);
+        if (match) return match[1];
+        return trimmed;
+      };
       return (
         <div className="space-y-1.5">
           <Label className="text-[10px] uppercase tracking-widest text-muted-foreground">
-            URL to embed
+            URL or embed code
           </Label>
           <Input
             value={String(content.url ?? "")}
-            onChange={(e) => onChange({ url: e.target.value })}
-            placeholder="https://…"
+            onChange={(e) => onChange({ url: extractUrl(e.target.value) })}
+            onPaste={(e) => {
+              const pasted = e.clipboardData.getData("text");
+              const extracted = extractUrl(pasted);
+              if (extracted !== pasted) {
+                e.preventDefault();
+                onChange({ url: extracted });
+              }
+            }}
+            placeholder="https://… or paste full <iframe> snippet"
             className="bg-background/60 border-border focus-visible:border-[color:var(--cyan)]"
           />
           <p className="text-[10px] text-muted-foreground">
-            Rendered in a sandboxed iframe (allow-scripts, allow-same-origin).
+            Paste a URL or the full embed code — we extract the src automatically.
+          </p>
+        </div>
+      );
+    }
+
+    case "webpage":
+      return (
+        <div className="space-y-1.5">
+          <Label className="text-[10px] uppercase tracking-widest text-muted-foreground">
+            Webpage URL
+          </Label>
+          <Input
+            value={String(content.url ?? "")}
+            onChange={(e) => onChange({ url: e.target.value.trim() })}
+            placeholder="https://example.com"
+            className="bg-background/60 border-border focus-visible:border-[color:var(--cyan)]"
+          />
+          <p className="text-[10px] text-muted-foreground">
+            Loaded through a server proxy so sites that block iframes still render.
+            Logins, OAuth, and anti-bot pages won't work.
           </p>
         </div>
       );

@@ -17,6 +17,7 @@ export type SlotContent =
   | { type: "video_upload"; url: string; file_name?: string }
   | { type: "image"; url: string; file_name?: string }
   | { type: "embed"; url: string }
+  | { type: "webpage"; url: string }
   | { type: "html_upload"; url: string; file_name?: string }
   | { type: "confidence_checker"; prompt: string; optional_qualitative?: boolean }
   | { type: "wheel_spinner"; items: string[] }
@@ -191,6 +192,24 @@ export function SlotRenderer({
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; fullscreen; gyroscope; picture-in-picture"
             allowFullScreen
             title="HTML content"
+          />
+        </div>
+      );
+    }
+
+    case "webpage": {
+      const c = content as Extract<SlotContent, { type: "webpage" }>;
+      if (!c.url) return <Waiting screen={screen} />;
+      const proxied = `/api/proxy?url=${encodeURIComponent(c.url)}`;
+      return (
+        <div className="min-h-screen w-full bg-background animate-slot-in">
+          <iframe
+            key={c.url}
+            src={proxied}
+            className="w-full h-screen border-0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; fullscreen; gyroscope; picture-in-picture"
+            allowFullScreen
+            title="Web page"
           />
         </div>
       );
