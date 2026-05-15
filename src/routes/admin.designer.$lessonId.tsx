@@ -1831,6 +1831,25 @@ function ContentTypeForm({
       );
     }
 
+    case "webpage":
+      return (
+        <div className="space-y-1.5">
+          <Label className="text-[10px] uppercase tracking-widest text-muted-foreground">
+            Webpage URL
+          </Label>
+          <Input
+            value={String(content.url ?? "")}
+            onChange={(e) => onChange({ url: e.target.value.trim() })}
+            placeholder="https://example.com"
+            className="bg-background/60 border-border focus-visible:border-[color:var(--cyan)]"
+          />
+          <p className="text-[10px] text-muted-foreground">
+            Loaded through a server proxy so sites that block iframes still render.
+            Logins, OAuth, and anti-bot pages won't work.
+          </p>
+        </div>
+      );
+
     case "html_upload":
       return (
         <FileUploadField
