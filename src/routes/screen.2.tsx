@@ -4,5 +4,11 @@ import { ScreenJoin } from "./screen.1";
 
 export const Route = createFileRoute("/screen/2")({
   head: () => ({ meta: [{ title: "Touch Screen 2 · Immersive Learning" }] }),
-  component: () => <ScreenJoin role="screen2" />,
+  validateSearch: (search: Record<string, unknown>) => ({
+    code: typeof search.code === "string" ? search.code : undefined,
+  }),
+  component: () => {
+    const { code } = Route.useSearch();
+    return <ScreenJoin role="screen2" autoCode={code} />;
+  },
 });

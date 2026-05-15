@@ -92,6 +92,15 @@ export function ScreenJoin({ role, autoCode }: { role: "screen1" | "screen2"; au
     setBusy(false);
   };
 
+  // Auto-join via ?code= URL param (used by admin Test Mode)
+  useEffect(() => {
+    if (autoCode && !sessionId && !autoJoinedRef.current) {
+      autoJoinedRef.current = true;
+      join(autoCode);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoCode]);
+
   // Subscribe once joined
   useEffect(() => {
     if (!sessionId) return;
