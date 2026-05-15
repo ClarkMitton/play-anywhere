@@ -192,12 +192,13 @@ function HostScreen() {
 
   useEffect(() => {
     if (!session) return;
+    const sessionId = session.id;
     const ch = sessionChannel(session.id);
     channelRef.current = ch;
 
     ch.on(
       "postgres_changes",
-      { event: "UPDATE", schema: "public", table: "sessions", filter: `id=eq.${session.id}` },
+      { event: "UPDATE", schema: "public", table: "sessions", filter: `id=eq.${sessionId}` },
       (payload) => {
         const next = payload.new as SessionRow;
         setSession((prev) => {
@@ -217,9 +218,10 @@ function HostScreen() {
   // “Waiting for Host”; poll as a small fallback while in the lobby.
   useEffect(() => {
     if (!session || session.status !== "waiting") return;
+    const sessionId = session.id;
     let cancelled = false;
     const refreshSession = async () => {
-      const { data } = await supabase.from("sessions").select("*").eq("id", session.id).single();
+      const { data } = await supabase.from("sessions").select("*").eq("id", sessionId).single();
       if (!cancelled && data) setSession(data as SessionRow);
     };
     refreshSession();
