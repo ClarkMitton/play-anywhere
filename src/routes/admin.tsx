@@ -84,8 +84,17 @@ export const Route = createFileRoute("/admin")({
 });
 
 function AdminPage() {
-  const [unlocked, setUnlocked] = useState(false);
-  if (!unlocked) return <PinEntry onUnlock={() => setUnlocked(true)} />;
+  // Persist unlock for the browser session so navigating to /admin/designer/...
+  // and back, or refreshing, doesn't re-prompt for the PIN every time.
+  const [unlocked, setUnlocked] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return sessionStorage.getItem("admin_unlocked") === "1";
+  });
+  const handleUnlock = () => {
+    sessionStorage.setItem("admin_unlocked", "1");
+    setUnlocked(true);
+  };
+  if (!unlocked) return <PinEntry onUnlock={handleUnlock} />;
   return <AdminPanel />;
 }
 
