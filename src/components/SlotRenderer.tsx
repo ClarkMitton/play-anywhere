@@ -166,8 +166,15 @@ export function SlotRenderer({
       if (!c.url) return <Waiting screen={screen} />;
       return (
         <div className="min-h-screen w-full bg-background animate-slot-in">
-          <iframe key={c.url} src={c.url} className="w-full h-screen border-0"
-            sandbox="allow-scripts allow-same-origin allow-forms" title="Embedded content" />
+          <iframe
+            key={c.url}
+            src={c.url}
+            className="w-full h-screen border-0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; fullscreen; gyroscope; microphone; camera; picture-in-picture; web-share"
+            allowFullScreen
+            referrerPolicy="no-referrer-when-downgrade"
+            title="Embedded content"
+          />
         </div>
       );
     }
@@ -177,8 +184,14 @@ export function SlotRenderer({
       if (!c.url) return <Waiting screen={screen} />;
       return (
         <div className="min-h-screen w-full bg-background animate-slot-in">
-          <iframe key={c.url} src={c.url} className="w-full h-screen border-0"
-            sandbox="allow-scripts" title="HTML content" />
+          <iframe
+            key={c.url}
+            src={c.url}
+            className="w-full h-screen border-0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; fullscreen; gyroscope; picture-in-picture"
+            allowFullScreen
+            title="HTML content"
+          />
         </div>
       );
     }
