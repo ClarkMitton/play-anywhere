@@ -129,22 +129,9 @@ export const Route = createFileRoute("/admin/designer/$lessonId")({
 // Helpers
 // ─────────────────────────────────────────────
 
-function slotPx(mins: number): number {
-  return Math.max(MIN_SLOT_PX, mins * PX_PER_MIN);
-}
-
-function snapDuration(mins: number): number {
-  const closest = SNAP_MINS.reduce((best, s) =>
-    Math.abs(s - mins) < Math.abs(best - mins) ? s : best,
-  );
-  return Math.abs(closest - mins) <= SNAP_THRESHOLD ? closest : mins;
-}
-
-function formatDuration(mins: number): string {
-  if (mins < 1) return `${Math.round(mins * 60)}s`;
-  const whole = Math.floor(mins);
-  const secs = Math.round((mins - whole) * 60);
-  return secs === 0 ? `${whole}m` : `${whole}m ${secs}s`;
+// Timings are disabled: slots render at a fixed width.
+function slotPx(_mins: number): number {
+  return 140;
 }
 
 function makeSlot(lessonId: string, orderIndex: number): SlotDef {
