@@ -1355,17 +1355,8 @@ function SlotEditorPanel({
       .eq("id", lessonId);
   };
 
-  // Local duration string while typing; syncs from slot on id/duration change
-  const [durInput, setDurInput] = useState(String(slot.duration_mins));
-  useEffect(() => {
-    setDurInput(String(slot.duration_mins));
-  }, [slot.id, slot.duration_mins]);
+  // Timings removed — duration controls disabled.
 
-  const commitDuration = () => {
-    const v = parseFloat(durInput);
-    if (!isNaN(v) && v > 0) onUpdate({ duration_mins: v });
-    else setDurInput(String(slot.duration_mins)); // revert invalid
-  };
 
   // The content object + updater for the active screen
   const screenContent =
