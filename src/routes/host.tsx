@@ -15,6 +15,7 @@ import { SlotRenderer, type SlotContent } from "@/components/SlotRenderer";
 import { SessionEndScreen } from "@/components/SessionEndScreen";
 import { Button } from "@/components/ui/button";
 import { QRCodeSVG } from "qrcode.react";
+import { useWebcamBroadcaster } from "@/hooks/use-webcam-broadcast";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 
 export const Route = createFileRoute("/host")({
@@ -428,6 +429,7 @@ function HostScreen() {
             onEnd={endSession}
           />
         </div>
+        <HostWebcamFab sessionId={session.id} />
       </div>
     );
   }
@@ -455,6 +457,7 @@ function HostScreen() {
             onEnd={endSession}
           />
         </div>
+        <HostWebcamFab sessionId={session.id} />
       </div>
     );
   }
@@ -557,6 +560,7 @@ function HostScreen() {
           </div>
         )}
       </div>
+      {session?.id && <HostWebcamFab sessionId={session.id} />}
     </div>
   );
 }
@@ -584,6 +588,78 @@ function CodeCard({
         </div>
       </div>
       <div className="text-sm text-muted-foreground break-all">{url}</div>
+    </div>
+  );
+}
+
+function HostWebcamFab({ sessionId }: { sessionId: string }) {
+  const [enabled, setEnabled] = useState(false);
+  const [withAudio, setWithAudio] = useState(false);
+  const { stream, error, viewerCount } = useWebcamBroadcaster(sessionId, enabled, {
+    audio: withAudio,
+  });
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+
+  useEffect(() => {
+    const v = videoRef.current;
+    if (!v) return;
+    if (stream) {
+      v.srcObject = stream;
+      v.play().catch(() => {});
+    } else {
+      v.srcObject = null;
+    }
+  }, [stream]);
+
+  return (
+    <div className="fixed top-4 right-4 z-50 opacity-30 hover:opacity-100 transition-opacity">
+      <div className="bg-card/80 backdrop-blur-xl border border-border rounded-2xl p-3 w-56 flex flex-col gap-2">
+        <div className="flex items-center justify-between">
+          <span className="text-[9px] uppercase tracking-[0.3em] text-[color:var(--cyan)] font-bold">
+            Webcam
+          </span>
+          <Button
+            size="sm"
+            variant={enabled ? "destructive" : "default"}
+            className="h-7 px-3 text-[10px] uppercase tracking-widest"
+            onClick={() => setEnabled((v) => !v)}
+          >
+            {enabled ? "Stop" : "Start"}
+          </Button>
+        </div>
+        {enabled && (
+          <>
+            <div className="relative rounded-lg overflow-hidden bg-black aspect-video">
+              <video
+                ref={videoRef}
+                autoPlay
+                playsInline
+                muted
+                className="w-full h-full object-cover"
+              />
+              {error && (
+                <div className="absolute inset-0 flex items-center justify-center p-2 text-center text-[10px] text-[color:var(--destructive)]">
+                  {error}
+                </div>
+              )}
+            </div>
+            <label className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
+              <input
+                type="checkbox"
+                checked={withAudio}
+                onChange={(e) => setWithAudio(e.target.checked)}
+                className="accent-[color:var(--cyan)]"
+              />
+              Mic
+            </label>
+            <div className="text-[9px] text-muted-foreground">
+              {stream
+                ? `${viewerCount} viewer${viewerCount === 1 ? "" : "s"}`
+                : "Starting…"}
+            </div>
+          </>
+        )}
+      </div>
     </div>
   );
 }

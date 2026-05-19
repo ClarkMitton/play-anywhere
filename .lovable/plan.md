@@ -1,36 +1,67 @@
-## Problem
+## Goal
 
-Two bugs combine to make the Edit button look broken:
+Add a "Host Webcam" slot type. When active, the host's laptop camera (and optional mic) is streamed live to **all three displays** (host, screen 1, screen 2) — even if the host is only physically standing by one of them. This way it doesn't matter which screens the room has; everyone sees the host.
 
-1. **Hydration mismatch in `src/routes/admin.tsx`** — `useState(() => sessionStorage.getItem(...))` returns `false` on the SSR server (no `window`) and `true` on the client. React detects the mismatch, throws (the runtime error you're seeing), and re-renders the whole tree. That's the "PIN panel flashes then closes" you described.
+## How it will work (plain English)
 
-2. **`admin.tsx` never renders `<Outlet/>`** — In the generated route tree, `admin.designer.$lessonId` is a **child** of `admin`. So when you navigate to `/admin/designer/<id>`, TanStack first mounts `AdminPage`, which returns `<AdminPanel/>` — with no `<Outlet/>`, the designer route's component never gets a place to render. You end up looking at the lessons list (or, after the hydration glitch, a flash of the PIN screen) instead of the designer.
+1. Host opens the **remote control page** on their phone, or the host display itself — that device becomes the **broadcaster** (it owns the camera).
+2. Each of the 3 displays subscribes as a **viewer** and receives the live video.
+3. Streaming uses **WebRTC** (browser-native, peer-to-peer, low latency, no media server needed). Supabase Realtime is used only for the tiny handshake messages (offer / answer / ICE candidates) — no video goes through the database.
+4. A new slot type `host_webcam` is added in the designer. When the slot is active, viewer screens automatically connect; when the host advances past it, viewers tear the connection down and the camera light turns off on the broadcaster.
 
-The previous "persist unlock in sessionStorage" change fixed the lock-out symptom but introduced bug #1, and bug #2 was always there — it just wasn't visible until you actually tried navigating to a child route.
+## Where the broadcaster runs
 
-## Fix (single file: `src/routes/admin.tsx`)
+Best UX: add a **"Start camera"** button on the **host remote control page** (`/remote/$sessionId`). The host taps it once per session, grants camera permission on their phone or laptop, and from then on any time a `host_webcam` slot is active the stream is sent automatically. This keeps the camera tied to the person physically holding the remote, which is exactly the host.
 
-1. **Kill the hydration mismatch.** Initialise `unlocked` to `false`, then read `sessionStorage` inside a `useEffect` after mount. Server and first client render now agree.
+Fallback: if the host prefers to broadcast from the main host display instead, the host page itself also exposes the same "Start camera" button.
 
-2. **Render the child route.** Use `useMatchRoute` (or compare `useLocation().pathname`) to detect when a child route like `/admin/designer/...` is active. When it is, just render `<Outlet/>` (still gated by the PIN check). When at exactly `/admin`, render `<AdminPanel/>` as today.
+## UI additions
 
-3. **Avoid an unauthenticated flash on the designer route.** The PIN gate stays in front of `<Outlet/>` too, so refreshing directly on `/admin/designer/<id>` still requires the PIN once per browser session.
+- **Designer (`/admin/designer/$lessonId`)** — new slot content type `host_webcam` in the picker, with a tiny preview tile ("Host Webcam"). No config needed beyond placement (which screens show it — usually all three).
+- **Remote (`/remote/$sessionId`)** — persistent "Camera: Off / On" toggle at the top. When on, a small self-preview thumbnail confirms the camera is live.
+- **SlotRenderer** — new `case "host_webcam"` that renders a full-screen `<video>` element. Shows a "Waiting for host camera…" placeholder if the broadcaster hasn't started yet.
 
-Resulting shape (conceptual):
+## Technical details
 
-```text
-AdminPage
-├─ unlocked? no  → <PinEntry/>
-└─ unlocked? yes →
-     ├─ on child route → <Outlet/>          (renders the Designer)
-     └─ on /admin      → <AdminPanel/>      (lessons / data / settings)
+**New slot content variant** in `src/components/SlotRenderer.tsx`:
+```ts
+| { type: "host_webcam"; with_audio?: boolean }
 ```
 
-No other files change. The Designer route itself, the PIN value, the route tree, and the Edit button all stay as they are.
+**Signaling** — reuse the existing `sessionChannel(sessionId)` Supabase Realtime channel. Add new broadcast event names:
+- `webcam:offer` (broadcaster → specific viewer)
+- `webcam:answer` (viewer → broadcaster)
+- `webcam:ice` (both directions)
+- `webcam:viewer_join` (viewer announces itself; broadcaster responds with an offer)
+- `webcam:broadcaster_stop` (broadcaster ending stream)
 
-## Verification
+Each viewer generates a random `viewerId` so the broadcaster can manage one `RTCPeerConnection` per viewer (up to 3).
 
-- Reload `/admin`, enter PIN `4158` → Lessons tab loads, no console hydration error.
-- Click **Edit** on a lesson → URL becomes `/admin/designer/<id>`, the Stage Designer renders (no PIN re-prompt, no flash).
-- Refresh while on the Designer → still renders directly (session is already unlocked).
-- Open `/admin/designer/<id>` in a fresh tab → PIN gate appears once, then the Designer.
+**New hook** `src/hooks/use-webcam-broadcast.ts`:
+- `useWebcamBroadcaster(sessionId, enabled)` — calls `getUserMedia`, listens for viewer joins, creates one RTCPeerConnection per viewer, sends offer, handles ICE.
+- `useWebcamViewer(sessionId, enabled)` — sends `viewer_join`, accepts the offer, returns a `MediaStream` to attach to the `<video>` element.
+
+**ICE servers** — use Google's free public STUN (`stun:stun.l.google.com:19302`). No TURN needed for typical same-network classroom use; can add later if NAT traversal fails.
+
+**Designer + DB** — no schema migration required. `slots.host_content` / `screen1_content` / `screen2_content` are already `jsonb`, so the new `{ type: "host_webcam" }` shape drops straight in.
+
+**Permissions** — `getUserMedia` requires HTTPS (both preview and published URLs are HTTPS, so fine). The browser shows its native camera-permission prompt once per origin.
+
+**Cleanup** — when the active slot changes away from `host_webcam`, both broadcaster and viewer effects tear down their `RTCPeerConnection`s and stop media tracks (turns the camera light off).
+
+## Out of scope (deliberately)
+
+- Recording / saving the stream.
+- Mixing the webcam as a picture-in-picture overlay on top of other slides (could be a follow-up — same underlying hook would be reused).
+- Multi-presenter (multiple cameras at once).
+- TURN server for cross-network scenarios — only needed if classroom Wi-Fi blocks peer connections; add only if it actually fails in testing.
+
+## Files to add / change
+
+- `src/components/SlotRenderer.tsx` — add `host_webcam` type + renderer case.
+- `src/hooks/use-webcam-broadcast.ts` — new file with both hooks.
+- `src/routes/remote.$sessionId.tsx` — add "Start/Stop camera" toggle + self-preview.
+- `src/routes/host.tsx` — also expose the toggle (fallback broadcaster).
+- `src/routes/admin.designer.$lessonId.tsx` — add `host_webcam` to the content type picker.
+
+No database migration. No new dependencies.

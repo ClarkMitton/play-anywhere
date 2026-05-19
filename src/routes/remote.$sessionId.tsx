@@ -9,10 +9,11 @@
 // Each Prev/Next mutates ONE screen's index + content, leaving the others alone.
 
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { sessionChannel } from "@/lib/realtime";
 import { Button } from "@/components/ui/button";
+import { useWebcamBroadcaster } from "@/hooks/use-webcam-broadcast";
 
 export const Route = createFileRoute("/remote/$sessionId")({
   head: () => ({ meta: [{ title: "Host Remote · Immersive Learning" }] }),
@@ -248,6 +249,11 @@ function RemotePage() {
         </div>
       </div>
 
+      {/* Host webcam broadcaster */}
+      <div className="max-w-md mx-auto mb-6">
+        <WebcamControl sessionId={session.id} />
+      </div>
+
       {/* Per-screen controls */}
       <div className="max-w-md mx-auto space-y-3">
         {(["host", "screen1", "screen2"] as ScreenKey[]).map((k) => {
@@ -301,6 +307,96 @@ function RemotePage() {
             </div>
           );
         })}
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────
+// Webcam control (broadcaster)
+// ─────────────────────────────────────────────
+
+function WebcamControl({ sessionId }: { sessionId: string }) {
+  const [enabled, setEnabled] = useState(false);
+  const [withAudio, setWithAudio] = useState(false);
+  const { stream, error, viewerCount } = useWebcamBroadcaster(sessionId, enabled, {
+    audio: withAudio,
+  });
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+
+  useEffect(() => {
+    const v = videoRef.current;
+    if (!v) return;
+    if (stream) {
+      v.srcObject = stream;
+      v.play().catch(() => {});
+    } else {
+      v.srcObject = null;
+    }
+  }, [stream]);
+
+  return (
+    <div className="bg-card/70 backdrop-blur border-2 border-border rounded-2xl p-4">
+      <div className="flex items-center justify-between mb-3">
+        <div>
+          <div className="text-[10px] uppercase tracking-[0.3em] font-bold text-[color:var(--cyan)]">
+            Host Webcam
+          </div>
+          <div className="text-xs text-muted-foreground mt-0.5">
+            {enabled
+              ? error
+                ? "Camera blocked"
+                : stream
+                  ? `Live · ${viewerCount} screen${viewerCount === 1 ? "" : "s"} watching`
+                  : "Starting camera…"
+              : "Off"}
+          </div>
+        </div>
+        <Button
+          variant={enabled ? "destructive" : "default"}
+          className="h-12 px-5 text-xs uppercase tracking-widest font-extrabold"
+          onClick={() => setEnabled((v) => !v)}
+        >
+          {enabled ? "Stop" : "Start"}
+        </Button>
+      </div>
+
+      {enabled && (
+        <>
+          <div className="relative rounded-xl overflow-hidden bg-black aspect-video mb-3 border border-border">
+            <video
+              ref={videoRef}
+              autoPlay
+              playsInline
+              muted
+              className="w-full h-full object-cover"
+            />
+            {!stream && !error && (
+              <div className="absolute inset-0 flex items-center justify-center text-xs text-muted-foreground uppercase tracking-widest">
+                Requesting camera…
+              </div>
+            )}
+            {error && (
+              <div className="absolute inset-0 flex items-center justify-center p-3 text-center text-xs text-[color:var(--destructive)]">
+                {error}
+              </div>
+            )}
+          </div>
+          <label className="flex items-center gap-2 text-xs text-muted-foreground select-none">
+            <input
+              type="checkbox"
+              checked={withAudio}
+              onChange={(e) => setWithAudio(e.target.checked)}
+              className="accent-[color:var(--cyan)]"
+            />
+            Include microphone audio
+          </label>
+        </>
+      )}
+
+      <div className="text-[10px] text-muted-foreground mt-2 leading-relaxed">
+        Tap Start once and grant camera access. Whenever a slide is set to
+        “Host Webcam”, every display will show your camera live.
       </div>
     </div>
   );

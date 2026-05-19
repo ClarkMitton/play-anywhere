@@ -62,6 +62,7 @@ const CONTENT_TYPES_HOST = [
   { value: "html_upload", label: "HTML Upload" },
   { value: "confidence_checker", label: "Confidence Checker" },
   { value: "wheel_spinner", label: "Wheel Spinner" },
+  { value: "host_webcam", label: "Host Webcam" },
 ];
 const CONTENT_TYPES_SCREEN1 = [
   ...CONTENT_TYPES_HOST,
