@@ -282,6 +282,11 @@ function HostScreen() {
           screen2: { type: "waiting" as const },
         };
 
+  const initialState = (idx: number) => ({
+    slot: slotState(slots[idx]),
+    indices: { host: idx, screen1: idx, screen2: idx },
+  });
+
   const launch = async () => {
     if (!session) return;
     sounds.launch();
@@ -290,7 +295,7 @@ function HostScreen() {
       .update({
         status: "active",
         current_slot_index: 0,
-        state: { slot: slotState(slots[0]) } as never,
+        state: initialState(0) as never,
       })
       .eq("id", session.id);
   };
@@ -304,7 +309,7 @@ function HostScreen() {
         one_screen_mode: true,
         status: "active",
         current_slot_index: 0,
-        state: { slot: slotState(slots[0]) } as never,
+        state: initialState(0) as never,
       })
       .eq("id", session.id);
   };
@@ -316,7 +321,7 @@ function HostScreen() {
       .from("sessions")
       .update({
         current_slot_index: index,
-        state: { slot: slotState(slots[index]) } as never,
+        state: initialState(index) as never,
       })
       .eq("id", session.id);
   };
