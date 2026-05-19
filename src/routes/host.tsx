@@ -560,6 +560,7 @@ function HostScreen() {
           </div>
         )}
       </div>
+      {session?.id && <HostWebcamFab sessionId={session.id} />}
     </div>
   );
 }
