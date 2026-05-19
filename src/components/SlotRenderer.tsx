@@ -217,6 +217,11 @@ export function SlotRenderer({
       );
     }
 
+    case "host_webcam": {
+      if (!sessionId) return <Waiting screen={screen} />;
+      return <HostWebcamViewer sessionId={sessionId} />;
+    }
+
     case "confidence_checker": {
       const c = content as Extract<SlotContent, { type: "confidence_checker" }>;
       if (screen === "screen2")
