@@ -267,12 +267,6 @@ function DesignerPage() {
   }, [saveAll]);
 
   const handleSave = () => {
-    const hasMissing = slotsRef.current.some((s) => !s.end_behaviour);
-    if (hasMissing) {
-      setShowMissingEndBehaviour(true);
-      setTimeout(() => setShowMissingEndBehaviour(false), 4000);
-      return;
-    }
     saveAll();
   };
 
