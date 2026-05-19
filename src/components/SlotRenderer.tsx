@@ -287,6 +287,53 @@ function Waiting({ screen }: { screen: "host" | "screen1" | "screen2" }) {
 }
 
 // ─────────────────────────────────────────────
+// HOST WEBCAM — viewer side
+// ─────────────────────────────────────────────
+
+function HostWebcamViewer({ sessionId }: { sessionId: string }) {
+  const { stream, waiting } = useWebcamViewer(sessionId, true);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+
+  useEffect(() => {
+    const v = videoRef.current;
+    if (!v) return;
+    if (stream) {
+      v.srcObject = stream;
+      v.play().catch(() => {});
+    } else {
+      v.srcObject = null;
+    }
+  }, [stream]);
+
+  return (
+    <div className="min-h-screen w-full bg-black flex items-center justify-center animate-slot-in relative">
+      <video
+        ref={videoRef}
+        autoPlay
+        playsInline
+        muted
+        className="w-full h-screen object-contain bg-black"
+      />
+      {waiting && (
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-immersive bg-grid">
+          <div className="text-xs uppercase tracking-[0.5em] text-[color:var(--cyan)] animate-float-glow">
+            Host Webcam
+          </div>
+          <div className="text-3xl md:text-5xl font-extrabold text-glow text-center">
+            Waiting for host camera…
+          </div>
+          <div className="flex gap-2 mt-4">
+            <span className="w-2 h-2 rounded-full bg-[color:var(--cyan)] animate-pulse" />
+            <span className="w-2 h-2 rounded-full bg-[color:var(--cyan)] animate-pulse [animation-delay:200ms]" />
+            <span className="w-2 h-2 rounded-full bg-[color:var(--cyan)] animate-pulse [animation-delay:400ms]" />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────
 // SUBMITTED STATE (shared)
 // ─────────────────────────────────────────────
 
