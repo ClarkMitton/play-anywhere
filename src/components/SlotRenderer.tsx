@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { sounds } from "@/lib/audio";
 import { broadcast } from "@/lib/realtime";
 import { Button } from "@/components/ui/button";
+import { useWebcamViewer } from "@/hooks/use-webcam-broadcast";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 
 // ─────────────────────────────────────────────
