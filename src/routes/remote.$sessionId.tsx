@@ -249,6 +249,11 @@ function RemotePage() {
         </div>
       </div>
 
+      {/* Host webcam broadcaster */}
+      <div className="max-w-md mx-auto mb-6">
+        <WebcamControl sessionId={session.id} />
+      </div>
+
       {/* Per-screen controls */}
       <div className="max-w-md mx-auto space-y-3">
         {(["host", "screen1", "screen2"] as ScreenKey[]).map((k) => {
