@@ -14,6 +14,7 @@ import { StatusDot } from "@/components/StatusDot";
 import { SlotRenderer, type SlotContent } from "@/components/SlotRenderer";
 import { SessionEndScreen } from "@/components/SessionEndScreen";
 import { Button } from "@/components/ui/button";
+import { QRCodeSVG } from "qrcode.react";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 
 export const Route = createFileRoute("/host")({
@@ -281,6 +282,11 @@ function HostScreen() {
           screen2: { type: "waiting" as const },
         };
 
+  const initialState = (idx: number) => ({
+    slot: slotState(slots[idx]),
+    indices: { host: idx, screen1: idx, screen2: idx },
+  });
+
   const launch = async () => {
     if (!session) return;
     sounds.launch();
@@ -289,7 +295,7 @@ function HostScreen() {
       .update({
         status: "active",
         current_slot_index: 0,
-        state: { slot: slotState(slots[0]) } as never,
+        state: initialState(0) as never,
       })
       .eq("id", session.id);
   };
@@ -303,7 +309,7 @@ function HostScreen() {
         one_screen_mode: true,
         status: "active",
         current_slot_index: 0,
-        state: { slot: slotState(slots[0]) } as never,
+        state: initialState(0) as never,
       })
       .eq("id", session.id);
   };
@@ -315,7 +321,7 @@ function HostScreen() {
       .from("sessions")
       .update({
         current_slot_index: index,
-        state: { slot: slotState(slots[index]) } as never,
+        state: initialState(index) as never,
       })
       .eq("id", session.id);
   };
@@ -486,6 +492,26 @@ function HostScreen() {
           connected={!!session?.screen2_connected}
         />
       </main>
+
+      {/* Remote control QR — host scans with phone to drive all screens */}
+      {session?.id && origin && (
+        <div className="max-w-6xl mx-auto mt-12 flex flex-col items-center gap-3">
+          <div className="text-xs uppercase tracking-[0.4em] text-[color:var(--cyan)]">
+            Host Remote · Scan with your phone
+          </div>
+          <div className="bg-white rounded-2xl p-3">
+            <QRCodeSVG value={`${origin}/remote/${session.id}`} size={140} />
+          </div>
+          <a
+            href={`/remote/${session.id}`}
+            target="_blank"
+            rel="noopener"
+            className="text-[10px] font-mono text-muted-foreground hover:text-[color:var(--cyan)] break-all"
+          >
+            {origin}/remote/{session.id.slice(0, 8)}…
+          </a>
+        </div>
+      )}
 
       {/* Step 13: timeout banner or normal launch button */}
       <div className="max-w-6xl mx-auto mt-16 text-center">
