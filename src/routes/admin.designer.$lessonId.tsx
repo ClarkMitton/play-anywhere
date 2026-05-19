@@ -247,30 +247,39 @@ function DesignerPage() {
 
   const saveAll = useCallback(async () => {
     setSaveStatus("saving");
-    // Delete removed slots
-    for (const id of deletedIdsRef.current) {
-      await supabase.from("slots").delete().eq("id", id);
+    try {
+      // Delete removed slots
+      for (const id of deletedIdsRef.current) {
+        const { error } = await supabase.from("slots").delete().eq("id", id);
+        if (error) throw error;
+      }
+      // Batch upsert surviving slots
+      if (slotsRef.current.length > 0) {
+        const { error } = await supabase.from("slots").upsert(
+          slotsRef.current.map((s) => ({
+            id: s.id,
+            lesson_id: s.lesson_id,
+            session_id: null,
+            order_index: s.order_index,
+            duration_mins: s.duration_mins,
+            end_behaviour: s.end_behaviour,
+            pause_before_advance: s.pause_before_advance,
+            lead_phase: s.lead_phase,
+            host_content: s.host_content as never,
+            screen1_content: s.screen1_content as never,
+            screen2_content: s.screen2_content as never,
+          })),
+        );
+        if (error) throw error;
+      }
+      setDeletedIds([]);
+      setSaveStatus("saved");
+    } catch (err) {
+      console.error("[Designer] Save failed:", err);
+      setSaveStatus("unsaved");
+      const msg = err instanceof Error ? err.message : (err as { message?: string })?.message ?? String(err);
+      alert(`Save failed: ${msg}\n\nCheck the browser console for details.`);
     }
-    // Batch upsert surviving slots
-    if (slotsRef.current.length > 0) {
-      await supabase.from("slots").upsert(
-        slotsRef.current.map((s) => ({
-          id: s.id,
-          lesson_id: s.lesson_id,
-          session_id: null,
-          order_index: s.order_index,
-          duration_mins: s.duration_mins,
-          end_behaviour: s.end_behaviour,
-          pause_before_advance: s.pause_before_advance,
-          lead_phase: s.lead_phase,
-          host_content: s.host_content as never,
-          screen1_content: s.screen1_content as never,
-          screen2_content: s.screen2_content as never,
-        })),
-      );
-    }
-    setDeletedIds([]);
-    setSaveStatus("saved");
   }, []);
 
   const markDirty = useCallback(() => {
