@@ -774,12 +774,7 @@ function Timeline({
                     missingEnd={showMissing && !slot.end_behaviour}
                     onClick={() => onSelect(slot.id)}
                     onContextMenu={(e) => onContextMenu(e, slot.id)}
-                    onResizeStart={(e) => {
-                      e.stopPropagation();
-                      setResizingId(slot.id);
-                      resizeStartX.current = e.clientX;
-                      resizeStartDur.current = slot.duration_mins;
-                    }}
+                    onResizeStart={() => {}}
                     onDragStart={(e) => {
                       setDragId(slot.id);
                       e.dataTransfer.effectAllowed = "move";
