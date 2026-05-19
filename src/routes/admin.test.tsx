@@ -22,12 +22,20 @@ type TestSession = {
   screen2_code: string;
 };
 
+type SlotRow = {
+  host_content: unknown;
+  screen1_content: unknown;
+  screen2_content: unknown;
+};
+
 function TestMode() {
   const [lessons, setLessons] = useState<Lesson[]>([]);
   const [selectedLessonId, setSelectedLessonId] = useState<string>("");
   const [session, setSession] = useState<TestSession | null>(null);
   const [busy, setBusy] = useState(false);
   const [reloadTick, setReloadTick] = useState(0);
+  const [slotsList, setSlotsList] = useState<SlotRow[]>([]);
+  const [slotIndex, setSlotIndex] = useState(0);
 
   // Load lessons on mount
   useEffect(() => {
@@ -48,19 +56,16 @@ function TestMode() {
     if (!selectedLessonId) return;
     setBusy(true);
 
-    // Pre-load first slot so we can launch the session immediately —
-    // skips the lobby ("Waiting for both screens") that races realtime
-    // updates inside the test iframes.
+    // Pre-load ALL slots so we can launch the session immediately and let the
+    // test-mode header drive prev/next without going through the host iframe.
     const { data: slotRows } = await supabase
       .from("slots")
       .select("host_content, screen1_content, screen2_content")
       .eq("lesson_id", selectedLessonId)
       .is("session_id", null)
-      .order("order_index")
-      .limit(1);
-    const first = slotRows?.[0] as
-      | { host_content: unknown; screen1_content: unknown; screen2_content: unknown }
-      | undefined;
+      .order("order_index");
+    const all = (slotRows ?? []) as SlotRow[];
+    const first = all[0];
     const initialState = first
       ? {
           slot: {
@@ -68,6 +73,7 @@ function TestMode() {
             screen1: first.screen1_content,
             screen2: first.screen2_content,
           },
+          indices: { host: 0, screen1: 0, screen2: 0 },
         }
       : {};
 
@@ -91,8 +97,35 @@ function TestMode() {
       console.error("Failed to create test session:", error);
       return;
     }
+    setSlotsList(all);
+    setSlotIndex(0);
     setSession(data as TestSession);
   }, [selectedLessonId]);
+
+  const goToSlot = useCallback(
+    async (next: number) => {
+      if (!session || slotsList.length === 0) return;
+      const clamped = Math.max(0, Math.min(slotsList.length - 1, next));
+      if (clamped === slotIndex) return;
+      const slot = slotsList[clamped];
+      await supabase
+        .from("sessions")
+        .update({
+          current_slot_index: clamped,
+          state: {
+            slot: {
+              host: slot.host_content,
+              screen1: slot.screen1_content,
+              screen2: slot.screen2_content,
+            },
+            indices: { host: clamped, screen1: clamped, screen2: clamped },
+          } as never,
+        })
+        .eq("id", session.id);
+      setSlotIndex(clamped);
+    },
+    [session, slotsList, slotIndex],
+  );
 
   const endTest = useCallback(async () => {
     if (!session) return;
@@ -101,6 +134,8 @@ function TestMode() {
       .update({ status: "ended", ended_at: new Date().toISOString() })
       .eq("id", session.id);
     setSession(null);
+    setSlotsList([]);
+    setSlotIndex(0);
   }, [session]);
 
   const reloadAll = () => setReloadTick((t) => t + 1);
@@ -178,6 +213,29 @@ function TestMode() {
           </span>
         </div>
         <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => goToSlot(slotIndex - 1)}
+            disabled={slotIndex <= 0 || slotsList.length === 0}
+            className="uppercase tracking-widest text-xs h-9 px-3"
+          >
+            ← Prev
+          </Button>
+          <span className="text-xs font-mono text-muted-foreground tabular-nums px-1">
+            {slotsList.length === 0
+              ? "—"
+              : `Slot ${slotIndex + 1}/${slotsList.length}`}
+          </span>
+          <Button
+            size="sm"
+            onClick={() => goToSlot(slotIndex + 1)}
+            disabled={slotIndex >= slotsList.length - 1 || slotsList.length === 0}
+            className="uppercase tracking-widest text-xs h-9 px-3 font-extrabold"
+          >
+            Next →
+          </Button>
+          <div className="w-px h-6 bg-border mx-1" />
           <Button
             variant="outline"
             size="sm"
