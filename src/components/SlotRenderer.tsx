@@ -23,6 +23,7 @@ export type SlotContent =
   | { type: "html_upload"; url: string; file_name?: string }
   | { type: "confidence_checker"; prompt: string; optional_qualitative?: boolean }
   | { type: "wheel_spinner"; items: string[] }
+  | { type: "countdown_timer"; label?: string; duration_secs: number }
   | { type: "multiple_choice"; id?: string; text: string; options: string[]; correct?: number }
   | { type: "true_or_false"; id?: string; text: string; correct_tf?: boolean }
   | { type: "poll"; id?: string; text: string; options: string[] }
@@ -90,14 +91,14 @@ export function SlotRenderer({
     }
 
     case "teacher_note": {
-      if (screen !== "screen1") return <Waiting screen={screen} />;
+      if (screen !== "host") return <Waiting screen={screen} />;
       const c = content as Extract<SlotContent, { type: "teacher_note" }>;
       return (
         <div className="min-h-screen w-full flex flex-col p-10 animate-slot-in"
           style={{ background: "oklch(0.18 0.06 60)" }}>
           <div className="flex items-center gap-2 text-xs uppercase tracking-[0.4em] text-[color:var(--orange)] mb-6">
             <span className="w-2 h-2 rounded-full bg-[color:var(--orange)] animate-pulse shrink-0" />
-            Teacher note · visible on Touch Screen 1 only
+            Teacher note · visible on Host only
           </div>
           <div className="text-3xl font-bold leading-snug whitespace-pre-wrap flex-1"
             style={{ color: "oklch(0.95 0.08 60)" }}>
@@ -236,6 +237,11 @@ export function SlotRenderer({
       return <WheelSpinnerRenderer content={c} screen={screen} sessionId={sessionId} />;
     }
 
+    case "countdown_timer": {
+      const c = content as Extract<SlotContent, { type: "countdown_timer" }>;
+      return <CountdownTimerRenderer content={c} screen={screen} sessionId={sessionId} />;
+    }
+
     case "multiple_choice":
     case "true_or_false":
     case "poll":
@@ -339,14 +345,13 @@ function HostWebcamViewer({ sessionId }: { sessionId: string }) {
 
 function SubmittedState() {
   return (
-    <div className="min-h-screen w-full bg-immersive bg-grid flex items-center justify-center animate-slot-in">
-      <div className="text-center">
-        <div className="w-24 h-24 rounded-full border-4 border-[color:var(--success)] flex items-center justify-center mx-auto mb-6 animate-pulse-green"
-          style={{ color: "var(--success)" }}>
-          <span className="text-5xl font-extrabold">✓</span>
-        </div>
-        <div className="text-4xl font-extrabold text-[color:var(--success)]">Submitted</div>
-        <div className="text-lg text-muted-foreground mt-3">Thank you for your response</div>
+    <div className="min-h-screen w-full bg-immersive bg-grid flex flex-col items-center justify-center p-10 animate-slot-in">
+      <div className="text-xs uppercase tracking-[0.5em] text-[color:var(--success)] mb-6">Response received</div>
+      <div className="text-5xl md:text-7xl font-extrabold text-glow text-center">Waiting for next activity…</div>
+      <div className="mt-8 flex gap-2">
+        <span className="w-2 h-2 rounded-full bg-[color:var(--cyan)] animate-pulse" />
+        <span className="w-2 h-2 rounded-full bg-[color:var(--cyan)] animate-pulse [animation-delay:200ms]" />
+        <span className="w-2 h-2 rounded-full bg-[color:var(--cyan)] animate-pulse [animation-delay:400ms]" />
       </div>
     </div>
   );
@@ -587,7 +592,7 @@ function WheelSpinnerRenderer({ content, screen, sessionId }: {
           <div className="text-5xl md:text-7xl font-extrabold text-glow">{result}</div>
         </div>
       )}
-      {screen === "screen1" && (
+      {screen === "host" && (
         <Button onClick={handleSpin} disabled={spinning || items.length === 0}
           className="h-16 px-14 text-xl uppercase tracking-widest font-extrabold disabled:opacity-30">
           {spinning ? "Spinning…" : "Spin"}
@@ -872,6 +877,129 @@ function QuestionResults({ content, responses }: { content: QuestionContent; res
         })}
       </div>
       <div className="text-sm text-muted-foreground">{total} response{total !== 1 ? "s" : ""}</div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────
+// COUNTDOWN TIMER
+// Host has Start/Pause/Reset controls; all screens share timer state via broadcast.
+// ─────────────────────────────────────────────
+
+function CountdownTimerRenderer({ content, screen, sessionId }: {
+  content: { label?: string; duration_secs: number };
+  screen: "host" | "screen1" | "screen2";
+  sessionId?: string;
+}) {
+  const [secsLeft, setSecsLeft] = useState(content.duration_secs);
+  const [running, setRunning] = useState(false);
+  const startedAtRef = useRef<number | null>(null);
+  const secsLeftRef = useRef(content.duration_secs);
+  const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
+
+  useEffect(() => {
+    secsLeftRef.current = secsLeft;
+  }, [secsLeft]);
+
+  useEffect(() => {
+    if (!sessionId) return;
+    const ch = supabase.channel(`timer:${sessionId}`, { config: { broadcast: { self: true } } });
+    channelRef.current = ch;
+    ch.on("broadcast", { event: "timer_start" }, ({ payload }: { payload: { startedAt: number; baseSecs: number } }) => {
+      startedAtRef.current = payload.startedAt;
+      secsLeftRef.current = payload.baseSecs;
+      setSecsLeft(payload.baseSecs);
+      setRunning(true);
+    });
+    ch.on("broadcast", { event: "timer_pause" }, ({ payload }: { payload: { secsLeft: number } }) => {
+      startedAtRef.current = null;
+      setSecsLeft(payload.secsLeft);
+      secsLeftRef.current = payload.secsLeft;
+      setRunning(false);
+    });
+    ch.on("broadcast", { event: "timer_reset" }, () => {
+      startedAtRef.current = null;
+      setSecsLeft(content.duration_secs);
+      secsLeftRef.current = content.duration_secs;
+      setRunning(false);
+    });
+    ch.subscribe();
+    return () => { supabase.removeChannel(ch); channelRef.current = null; };
+  }, [sessionId, content.duration_secs]);
+
+  useEffect(() => {
+    if (!running) return;
+    const interval = setInterval(() => {
+      if (startedAtRef.current === null) return;
+      const elapsed = Math.floor((Date.now() - startedAtRef.current) / 1000);
+      const remaining = Math.max(0, secsLeftRef.current - elapsed);
+      setSecsLeft(remaining);
+      if (remaining === 0) setRunning(false);
+    }, 200);
+    return () => clearInterval(interval);
+  }, [running]);
+
+  const mins = Math.floor(secsLeft / 60);
+  const secs = secsLeft % 60;
+  const timeStr = `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
+  const urgent = secsLeft > 0 && secsLeft <= 10;
+  const done = secsLeft === 0;
+
+  const handleStart = () => {
+    const baseSecs = secsLeftRef.current;
+    const startedAt = Date.now();
+    channelRef.current?.send({
+      type: "broadcast", event: "timer_start",
+      payload: { startedAt, baseSecs },
+    });
+  };
+
+  const handlePause = () => {
+    const remaining = secsLeftRef.current;
+    channelRef.current?.send({
+      type: "broadcast", event: "timer_pause",
+      payload: { secsLeft: remaining },
+    });
+  };
+
+  const handleReset = () => {
+    channelRef.current?.send({ type: "broadcast", event: "timer_reset", payload: {} });
+  };
+
+  return (
+    <div className="min-h-screen w-full bg-immersive bg-grid flex flex-col items-center justify-center gap-8 animate-slot-in">
+      {content.label && (
+        <div className="text-2xl md:text-4xl font-bold text-center max-w-2xl px-8">{content.label}</div>
+      )}
+      <div
+        className={`text-[22vw] font-extrabold font-mono leading-none tabular-nums transition-colors duration-500
+          ${done ? "text-destructive text-glow" : urgent ? "text-[color:var(--orange)] text-glow" : "text-foreground"}`}
+      >
+        {timeStr}
+      </div>
+      {screen === "host" && (
+        <div className="flex gap-4">
+          {!running ? (
+            <Button
+              onClick={handleStart}
+              disabled={done}
+              className="h-14 px-10 text-lg uppercase tracking-widest font-extrabold disabled:opacity-30"
+            >
+              {secsLeft === content.duration_secs ? "Start" : "Resume"}
+            </Button>
+          ) : (
+            <Button onClick={handlePause} variant="outline" className="h-14 px-10 text-lg uppercase tracking-widest">
+              Pause
+            </Button>
+          )}
+          <Button onClick={handleReset} variant="outline" className="h-14 px-10 text-lg uppercase tracking-widest">
+            Reset
+          </Button>
+        </div>
+      )}
+      {done && (
+        <div className="text-xl uppercase tracking-[0.3em] text-destructive animate-pulse font-bold">Time's up!</div>
+      )}
     </div>
   );
 }

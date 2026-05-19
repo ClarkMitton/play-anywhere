@@ -1,6 +1,6 @@
-// Touch Screen 1 — /screen/1
-// Code entry, then teacher control surface during the session.
-// Step 12: End Session button with confirmation; SessionEndScreen on end.
+// Student Touch Screen 1 — /screen/1
+// Code entry → session content. Fullscreen on join.
+// Goes fullscreen immediately on code entry. Shows "Host away" overlay if host hides the app.
 // Step 13: Blocks joining if session is already in one_screen_mode.
 
 import { createFileRoute } from "@tanstack/react-router";
@@ -11,11 +11,10 @@ import { sounds } from "@/lib/audio";
 import { CodeEntry } from "@/components/CodeEntry";
 import { SlotRenderer, type SlotContent } from "@/components/SlotRenderer";
 import { SessionEndScreen } from "@/components/SessionEndScreen";
-import { Button } from "@/components/ui/button";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 
 export const Route = createFileRoute("/screen/1")({
-  head: () => ({ meta: [{ title: "Touch Screen 1 · Immersive Learning" }] }),
+  head: () => ({ meta: [{ title: "Student Touch Screen 1 · Immersive Learning" }] }),
   validateSearch: (search: Record<string, unknown>) => ({
     code: typeof search.code === "string" ? search.code : undefined,
   }),
@@ -53,7 +52,7 @@ export function ScreenJoin({ role, autoCode }: { role: "screen1" | "screen2"; au
   const autoJoinedRef = useRef(false);
   const [session, setSession] = useState<SessionRow | null>(null);
   const [lessonMeta, setLessonMeta] = useState<LessonMeta | null>(null);
-  const [confirmEnd, setConfirmEnd] = useState(false);
+  const [hostPaused, setHostPaused] = useState(false);
   const channelRef = useRef<RealtimeChannel | null>(null);
 
   const codeColumn = role === "screen1" ? "screen1_code" : "screen2_code";
@@ -102,6 +101,8 @@ export function ScreenJoin({ role, autoCode }: { role: "screen1" | "screen2"; au
     sounds.connect();
     setSessionId(data.id);
     setBusy(false);
+    // Go fullscreen immediately — must be called within a user gesture chain
+    document.documentElement.requestFullscreen().catch(() => {});
   };
 
   // Auto-join via ?code= URL param (used by admin Test Mode)
@@ -136,6 +137,9 @@ export function ScreenJoin({ role, autoCode }: { role: "screen1" | "screen2"; au
         });
       },
     );
+    ch.on("broadcast", { event: "host_visibility" }, ({ payload }: { payload: { visible: boolean } }) => {
+      setHostPaused(!payload.visible);
+    });
     ch.subscribe();
 
     markConnected(sessionId);
@@ -174,15 +178,6 @@ export function ScreenJoin({ role, autoCode }: { role: "screen1" | "screen2"; au
       cancelled = true;
     };
   }, [session?.lesson_id]);
-
-  const handleEndSession = async () => {
-    if (!sessionId) return;
-    setConfirmEnd(false);
-    await supabase
-      .from("sessions")
-      .update({ status: "ended", ended_at: new Date().toISOString() })
-      .eq("id", sessionId);
-  };
 
   // ── Code not recognised — one_screen_mode special case ──
   if (error === "one_screen_mode") {
@@ -241,57 +236,28 @@ export function ScreenJoin({ role, autoCode }: { role: "screen1" | "screen2"; au
   return (
     <div className="relative">
       <SlotRenderer
+        key={session.current_slot_index}
         content={content}
         screen={role}
         sessionId={sessionId ?? undefined}
         channel={channelRef.current ?? undefined}
       />
 
-      {/* Step 12: End Session button — TS1 only, floating */}
-      {role === "screen1" && (
-        <>
-          <div className="fixed top-4 right-4 z-50 opacity-20 hover:opacity-100 transition-opacity">
-            <Button
-              size="sm"
-              variant="destructive"
-              onClick={() => setConfirmEnd(true)}
-              className="uppercase tracking-widest text-[10px] h-9 px-4"
-            >
-              End session
-            </Button>
+      {/* Host-paused overlay — shown when teacher leaves the app */}
+      {hostPaused && (
+        <div className="fixed inset-0 z-50 bg-immersive bg-grid flex flex-col items-center justify-center p-10 animate-slot-in">
+          <div className="text-xs uppercase tracking-[0.5em] text-[color:var(--orange)] mb-6 animate-pulse">
+            Session paused
           </div>
-
-          {/* Confirmation dialog */}
-          {confirmEnd && (
-            <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-6 backdrop-blur-sm">
-              <div className="bg-card border-2 border-[color:var(--orange)] rounded-3xl p-10 max-w-md w-full text-center animate-slot-in">
-                <div className="text-xs uppercase tracking-[0.5em] text-[color:var(--orange)] mb-4">
-                  Confirm
-                </div>
-                <h2 className="text-3xl font-extrabold mb-4">End this session?</h2>
-                <p className="text-muted-foreground mb-8">
-                  All screens will show the session summary and the session cannot be resumed.
-                </p>
-                <div className="flex gap-4 justify-center">
-                  <Button
-                    variant="outline"
-                    onClick={() => setConfirmEnd(false)}
-                    className="h-14 px-8 uppercase tracking-widest"
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    variant="destructive"
-                    onClick={handleEndSession}
-                    className="h-14 px-8 uppercase tracking-widest font-extrabold"
-                  >
-                    End session
-                  </Button>
-                </div>
-              </div>
-            </div>
-          )}
-        </>
+          <div className="text-5xl font-extrabold text-glow text-center">
+            Your teacher will be right back…
+          </div>
+          <div className="mt-8 flex gap-2">
+            <span className="w-2 h-2 rounded-full bg-[color:var(--orange)] animate-pulse" />
+            <span className="w-2 h-2 rounded-full bg-[color:var(--orange)] animate-pulse [animation-delay:200ms]" />
+            <span className="w-2 h-2 rounded-full bg-[color:var(--orange)] animate-pulse [animation-delay:400ms]" />
+          </div>
+        </div>
       )}
     </div>
   );

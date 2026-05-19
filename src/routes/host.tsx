@@ -272,6 +272,38 @@ function HostScreen() {
     }
   }, [session?.screen2_connected]);
 
+  // ── Broadcast host visibility to student screens ────────────────
+
+  useEffect(() => {
+    if (!session?.id || session.status !== "active") return;
+    const ch = channelRef.current;
+    if (!ch) return;
+
+    const handleVisibility = () => {
+      ch.send({
+        type: "broadcast",
+        event: "host_visibility",
+        payload: { visible: document.visibilityState === "visible" },
+      });
+    };
+
+    document.addEventListener("visibilitychange", handleVisibility);
+    return () => document.removeEventListener("visibilitychange", handleVisibility);
+  }, [session?.id, session?.status]);
+
+  // ── Warn teacher before navigating away while session is active ──
+
+  useEffect(() => {
+    if (session?.status !== "active") return;
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = "Leaving this page will pause the session for all students.";
+      return e.returnValue;
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [session?.status]);
+
   // ── Session actions ─────────────────────────────
 
   const slotState = (s: SlotDef | undefined) =>
@@ -483,13 +515,13 @@ function HostScreen() {
 
       <main className="grid md:grid-cols-2 gap-8 max-w-6xl mx-auto">
         <CodeCard
-          label="Touch Screen 1"
+          label="Student Touch Screen 1"
           code={session?.screen1_code}
           url={screen1Url}
           connected={!!session?.screen1_connected}
         />
         <CodeCard
-          label="Touch Screen 2"
+          label="Student Touch Screen 2"
           code={session?.screen2_code}
           url={screen2Url}
           connected={!!session?.screen2_connected}

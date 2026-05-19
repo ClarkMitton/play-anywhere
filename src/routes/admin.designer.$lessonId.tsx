@@ -50,7 +50,7 @@ const LEAD_COLOURS: Record<string, string> = {
   Demonstrate: "oklch(0.72 0.18 300)", // violet
 };
 
-// Content types available per screen. teacher_note is TS1 only.
+// Content types available per screen. teacher_note is host (teacher screen) only.
 const CONTENT_TYPES_HOST = [
   { value: "waiting", label: "Waiting (standby)" },
   { value: "text_slide", label: "Text Slide" },
@@ -62,13 +62,25 @@ const CONTENT_TYPES_HOST = [
   { value: "html_upload", label: "HTML Upload" },
   { value: "confidence_checker", label: "Confidence Checker" },
   { value: "wheel_spinner", label: "Wheel Spinner" },
+  { value: "countdown_timer", label: "Countdown Timer" },
   { value: "host_webcam", label: "Host Webcam" },
+  { value: "teacher_note", label: "Teacher Note (Host only)" },
 ];
 const CONTENT_TYPES_SCREEN1 = [
-  ...CONTENT_TYPES_HOST,
-  { value: "teacher_note", label: "Teacher Note (TS1 only)" },
+  { value: "waiting", label: "Waiting (standby)" },
+  { value: "text_slide", label: "Text Slide" },
+  { value: "image", label: "Image" },
+  { value: "youtube", label: "YouTube" },
+  { value: "video_upload", label: "Video Upload" },
+  { value: "embed", label: "Embed (iframe)" },
+  { value: "webpage", label: "Webpage (proxied)" },
+  { value: "html_upload", label: "HTML Upload" },
+  { value: "confidence_checker", label: "Confidence Checker" },
+  { value: "wheel_spinner", label: "Wheel Spinner" },
+  { value: "countdown_timer", label: "Countdown Timer" },
+  { value: "host_webcam", label: "Host Webcam" },
 ];
-const CONTENT_TYPES_SCREEN2 = CONTENT_TYPES_HOST;
+const CONTENT_TYPES_SCREEN2 = CONTENT_TYPES_SCREEN1;
 // Lookup map for display labels
 const ALL_TYPE_LABELS = Object.fromEntries(
   CONTENT_TYPES_SCREEN1.map((t) => [t.value, t.label]),
@@ -462,6 +474,7 @@ function DesignerPage() {
           showMissing={showMissingEndBehaviour}
           onSelect={setSelectedId}
           onAdd={addSlot}
+          onDelete={deleteSlot}
           onReorder={reorderSlots}
           onDrop={handleTimelineDrop}
           onContextMenu={(e, id) => {
@@ -596,7 +609,7 @@ function ScreenMockupsRow({
   return (
     <div className="flex items-end justify-center gap-6 px-8 py-4 bg-background/40 border-b border-border/60 shrink-0">
       <ScreenMockup
-        label="Touch Screen 1"
+        label="Student Screen 1"
         screen="screen1"
         isActive={activeScreen === "screen1"}
         content={selectedSlot?.screen1_content ?? null}
@@ -604,7 +617,7 @@ function ScreenMockupsRow({
         onClick={() => onSelectScreen("screen1")}
       />
       <ScreenMockup
-        label="Host Display"
+        label="Host · Teacher Screen"
         screen="host"
         isActive={activeScreen === "host"}
         content={selectedSlot?.host_content ?? null}
@@ -612,7 +625,7 @@ function ScreenMockupsRow({
         onClick={() => onSelectScreen("host")}
       />
       <ScreenMockup
-        label="Touch Screen 2"
+        label="Student Screen 2"
         screen="screen2"
         isActive={activeScreen === "screen2"}
         content={selectedSlot?.screen2_content ?? null}
@@ -689,6 +702,7 @@ function Timeline({
   showMissing,
   onSelect,
   onAdd,
+  onDelete,
   onReorder,
   onDrop,
   onContextMenu,
@@ -700,6 +714,7 @@ function Timeline({
   showMissing: boolean;
   onSelect: (id: string) => void;
   onAdd: () => void;
+  onDelete: (id: string) => void;
   onReorder: (fromId: string, toIndex: number) => void;
   onDrop: (e: React.DragEvent<HTMLDivElement>) => void;
   onContextMenu: (e: React.MouseEvent, id: string) => void;
@@ -769,6 +784,7 @@ function Timeline({
                     missingEnd={showMissing && !slot.end_behaviour}
                     onClick={() => onSelect(slot.id)}
                     onContextMenu={(e) => onContextMenu(e, slot.id)}
+                    onDelete={() => onDelete(slot.id)}
                     onResizeStart={() => {}}
                     onDragStart={(e) => {
                       setDragId(slot.id);
@@ -820,6 +836,7 @@ function SlotBlock({
   missingEnd,
   onClick,
   onContextMenu,
+  onDelete,
   onResizeStart,
   onDragStart,
   onDragOver,
@@ -833,6 +850,7 @@ function SlotBlock({
   missingEnd: boolean;
   onClick: () => void;
   onContextMenu: (e: React.MouseEvent) => void;
+  onDelete: () => void;
   onResizeStart: (e: React.MouseEvent) => void;
   onDragStart: React.DragEventHandler;
   onDragOver: React.DragEventHandler;
@@ -853,7 +871,7 @@ function SlotBlock({
       onDragEnd={onDragEnd}
       onClick={onClick}
       onContextMenu={onContextMenu}
-      className={`relative rounded-xl border-2 transition-all duration-150 select-none overflow-hidden cursor-pointer
+      className={`group relative rounded-xl border-2 transition-all duration-150 select-none overflow-hidden cursor-pointer
         ${
           isSelected
             ? "border-[color:var(--cyan)]"
@@ -881,6 +899,15 @@ function SlotBlock({
           style={{ background: leadColour }}
         />
       )}
+
+      {/* Delete button — visible on hover */}
+      <button
+        onClick={(e) => { e.stopPropagation(); onDelete(); }}
+        title="Delete slot"
+        className="absolute top-1.5 right-1.5 z-10 w-5 h-5 rounded-full bg-destructive/80 hover:bg-destructive flex items-center justify-center text-[11px] text-white opacity-0 group-hover:opacity-100 transition-opacity"
+      >
+        ×
+      </button>
 
       <div className="px-3 pt-3 pb-2 flex flex-col gap-1.5 h-full">
         {/* Per-screen content type pips */}
@@ -1564,10 +1591,10 @@ function ContentTypeForm({
       );
 
     case "teacher_note":
-      if (screen !== "screen1") {
+      if (screen !== "host") {
         return (
           <div className="py-3 text-center text-[10px] uppercase tracking-widest text-[color:var(--orange)]">
-            Teacher note only renders on Touch Screen 1
+            Teacher note only renders on the Host display
           </div>
         );
       }
@@ -1579,7 +1606,7 @@ function ContentTypeForm({
           <Textarea
             value={String(content.text ?? "")}
             onChange={(e) => onChange({ text: e.target.value })}
-            placeholder="Teacher note — visible only on Touch Screen 1…"
+            placeholder="Teacher note — visible only on the Host display…"
             rows={5}
             className="bg-background/60 border-border focus-visible:border-[color:var(--cyan)] resize-none"
           />
@@ -1728,6 +1755,65 @@ function ContentTypeForm({
           onChange={(items) => onChange({ items })}
         />
       );
+
+    case "countdown_timer": {
+      const durationSecs = Number(content.duration_secs ?? 60);
+      const mins = Math.floor(durationSecs / 60);
+      const secs = durationSecs % 60;
+      return (
+        <div className="space-y-4">
+          <div className="space-y-1.5">
+            <Label className="text-[10px] uppercase tracking-widest text-muted-foreground">
+              Label (optional)
+            </Label>
+            <Input
+              value={String(content.label ?? "")}
+              onChange={(e) => onChange({ label: e.target.value })}
+              placeholder="e.g. You have 2 minutes to complete this task…"
+              className="bg-background/60 border-border focus-visible:border-[color:var(--cyan)]"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-[10px] uppercase tracking-widest text-muted-foreground">
+              Duration
+            </Label>
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5">
+                <Input
+                  type="number"
+                  min={0}
+                  max={99}
+                  value={mins}
+                  onChange={(e) => {
+                    const m = Math.max(0, Math.min(99, Number(e.target.value) || 0));
+                    onChange({ duration_secs: m * 60 + secs });
+                  }}
+                  className="w-16 bg-background/60 border-border focus-visible:border-[color:var(--cyan)] text-center"
+                />
+                <span className="text-[10px] text-muted-foreground uppercase tracking-widest">min</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <Input
+                  type="number"
+                  min={0}
+                  max={59}
+                  value={secs}
+                  onChange={(e) => {
+                    const s = Math.max(0, Math.min(59, Number(e.target.value) || 0));
+                    onChange({ duration_secs: mins * 60 + s });
+                  }}
+                  className="w-16 bg-background/60 border-border focus-visible:border-[color:var(--cyan)] text-center"
+                />
+                <span className="text-[10px] text-muted-foreground uppercase tracking-widest">sec</span>
+              </div>
+            </div>
+            <p className="text-[10px] text-muted-foreground">
+              Host controls Start / Pause / Reset. Timer syncs to all screens.
+            </p>
+          </div>
+        </div>
+      );
+    }
 
     case "multiple_choice":
     case "true_or_false":
