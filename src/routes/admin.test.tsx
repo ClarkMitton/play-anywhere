@@ -34,6 +34,8 @@ function TestMode() {
   const [session, setSession] = useState<TestSession | null>(null);
   const [busy, setBusy] = useState(false);
   const [reloadTick, setReloadTick] = useState(0);
+  const [slotsList, setSlotsList] = useState<SlotRow[]>([]);
+  const [slotIndex, setSlotIndex] = useState(0);
 
   // Load lessons on mount
   useEffect(() => {
