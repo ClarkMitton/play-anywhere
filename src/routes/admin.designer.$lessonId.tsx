@@ -58,9 +58,11 @@ const CONTENT_TYPES_HOST = [
   { value: "youtube", label: "YouTube" },
   { value: "video_upload", label: "Video Upload" },
   { value: "embed", label: "Embed (iframe)" },
+  { value: "webpage", label: "Webpage (proxied)" },
   { value: "html_upload", label: "HTML Upload" },
   { value: "confidence_checker", label: "Confidence Checker" },
   { value: "wheel_spinner", label: "Wheel Spinner" },
+  { value: "host_webcam", label: "Host Webcam" },
 ];
 const CONTENT_TYPES_SCREEN1 = [
   ...CONTENT_TYPES_HOST,
@@ -128,22 +130,9 @@ export const Route = createFileRoute("/admin/designer/$lessonId")({
 // Helpers
 // ─────────────────────────────────────────────
 
-function slotPx(mins: number): number {
-  return Math.max(MIN_SLOT_PX, mins * PX_PER_MIN);
-}
-
-function snapDuration(mins: number): number {
-  const closest = SNAP_MINS.reduce((best, s) =>
-    Math.abs(s - mins) < Math.abs(best - mins) ? s : best,
-  );
-  return Math.abs(closest - mins) <= SNAP_THRESHOLD ? closest : mins;
-}
-
-function formatDuration(mins: number): string {
-  if (mins < 1) return `${Math.round(mins * 60)}s`;
-  const whole = Math.floor(mins);
-  const secs = Math.round((mins - whole) * 60);
-  return secs === 0 ? `${whole}m` : `${whole}m ${secs}s`;
+// Timings are disabled: slots render at a fixed width.
+function slotPx(_mins: number): number {
+  return 140;
 }
 
 function makeSlot(lessonId: string, orderIndex: number): SlotDef {
@@ -279,12 +268,6 @@ function DesignerPage() {
   }, [saveAll]);
 
   const handleSave = () => {
-    const hasMissing = slotsRef.current.some((s) => !s.end_behaviour);
-    if (hasMissing) {
-      setShowMissingEndBehaviour(true);
-      setTimeout(() => setShowMissingEndBehaviour(false), 4000);
-      return;
-    }
     saveAll();
   };
 
@@ -727,35 +710,8 @@ function Timeline({
   const [dragId, setDragId] = useState<string | null>(null);
   const [dropIndex, setDropIndex] = useState<number | null>(null);
 
-  // Resize state (mouse events)
-  const [resizingId, setResizingId] = useState<string | null>(null);
-  const resizeStartX = useRef(0);
-  const resizeStartDur = useRef(0);
-
-  useEffect(() => {
-    if (!resizingId) return;
-
-    const onMouseMove = (e: MouseEvent) => {
-      const deltaMins = (e.clientX - resizeStartX.current) / PX_PER_MIN;
-      const raw = Math.max(0.1, resizeStartDur.current + deltaMins);
-      updateSlot(resizingId, { duration_mins: raw });
-    };
-
-    const onMouseUp = (e: MouseEvent) => {
-      const deltaMins = (e.clientX - resizeStartX.current) / PX_PER_MIN;
-      const raw = Math.max(0.1, resizeStartDur.current + deltaMins);
-      updateSlot(resizingId, { duration_mins: snapDuration(raw) });
-      setResizingId(null);
-      markDirty();
-    };
-
-    window.addEventListener("mousemove", onMouseMove);
-    window.addEventListener("mouseup", onMouseUp);
-    return () => {
-      window.removeEventListener("mousemove", onMouseMove);
-      window.removeEventListener("mouseup", onMouseUp);
-    };
-  }, [resizingId, updateSlot, markDirty]);
+  // Resize disabled — timings removed
+  const resizingId: string | null = null;
 
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
     // File drop passes files; slot drag passes nothing in files
@@ -813,12 +769,7 @@ function Timeline({
                     missingEnd={showMissing && !slot.end_behaviour}
                     onClick={() => onSelect(slot.id)}
                     onContextMenu={(e) => onContextMenu(e, slot.id)}
-                    onResizeStart={(e) => {
-                      e.stopPropagation();
-                      setResizingId(slot.id);
-                      resizeStartX.current = e.clientX;
-                      resizeStartDur.current = slot.duration_mins;
-                    }}
+                    onResizeStart={() => {}}
                     onDragStart={(e) => {
                       setDragId(slot.id);
                       e.dataTransfer.effectAllowed = "move";
@@ -939,11 +890,8 @@ function SlotBlock({
           <ContentPip type={slot.screen2_content.type} label="2" />
         </div>
 
-        {/* Duration + LEAD initial */}
-        <div className="flex items-end justify-between mt-auto">
-          <span className="text-[10px] font-mono font-bold text-[color:var(--cyan)]">
-            {formatDuration(slot.duration_mins)}
-          </span>
+        {/* LEAD initial */}
+        <div className="flex items-end justify-end mt-auto">
           {slot.lead_phase && (
             <span
               className="text-[9px] font-extrabold uppercase tracking-widest"
@@ -953,17 +901,6 @@ function SlotBlock({
             </span>
           )}
         </div>
-      </div>
-
-      {/* Resize handle — right edge */}
-      <div
-        className={`absolute inset-y-0 right-0 w-3 flex items-center justify-center cursor-ew-resize group
-          ${isResizing ? "bg-[color:var(--cyan)]/20" : "hover:bg-[color:var(--cyan)]/10"}`}
-        onMouseDown={onResizeStart}
-        onClick={(e) => e.stopPropagation()}
-        onContextMenu={(e) => e.stopPropagation()}
-      >
-        <div className="w-0.5 h-8 rounded-full bg-border group-hover:bg-[color:var(--cyan)]/60 transition-colors" />
       </div>
     </div>
   );
@@ -1030,29 +967,6 @@ function ContextMenu({
 
       <div className="my-1 border-t border-border/50" />
 
-      {/* End behaviour submenu */}
-      <div className="relative">
-        <CtxItem
-          onClick={() => onSetSub(sub === "end_behaviour" ? null : "end_behaviour")}
-          arrow
-          active={sub === "end_behaviour"}
-        >
-          Set end behaviour
-        </CtxItem>
-        {sub === "end_behaviour" && (
-          <div className="absolute left-full top-0 w-56 bg-card border border-border rounded-xl shadow-2xl py-1 ml-1">
-            {END_BEHAVIOURS.map((b) => (
-              <CtxItem
-                key={b.value}
-                onClick={() => onSetEndBehaviour(b.value)}
-                checked={currentSlot?.end_behaviour === b.value}
-              >
-                {b.label}
-              </CtxItem>
-            ))}
-          </div>
-        )}
-      </div>
 
       {/* LEAD phase submenu */}
       <div className="relative">
@@ -1419,17 +1333,8 @@ function SlotEditorPanel({
       .eq("id", lessonId);
   };
 
-  // Local duration string while typing; syncs from slot on id/duration change
-  const [durInput, setDurInput] = useState(String(slot.duration_mins));
-  useEffect(() => {
-    setDurInput(String(slot.duration_mins));
-  }, [slot.id, slot.duration_mins]);
+  // Timings removed — duration controls disabled.
 
-  const commitDuration = () => {
-    const v = parseFloat(durInput);
-    if (!isNaN(v) && v > 0) onUpdate({ duration_mins: v });
-    else setDurInput(String(slot.duration_mins)); // revert invalid
-  };
 
   // The content object + updater for the active screen
   const screenContent =
@@ -1527,81 +1432,7 @@ function SlotEditorPanel({
           }}
         />
         <div className="border-t border-border/40" />
-        {/* Duration */}
-        <div className="space-y-2">
-          <Label className="text-[10px] uppercase tracking-widest text-muted-foreground">
-            Duration
-          </Label>
-          <div className="flex items-center gap-2">
-            <Input
-              value={durInput}
-              onChange={(e) => setDurInput(e.target.value)}
-              onBlur={commitDuration}
-              onKeyDown={(e) => e.key === "Enter" && commitDuration()}
-              className="w-20 text-center bg-background/60 border-border focus-visible:border-[color:var(--cyan)]"
-            />
-            <span className="text-xs text-muted-foreground">mins</span>
-          </div>
-          {/* Quick snap buttons */}
-          <div className="flex gap-1 flex-wrap">
-            {SNAP_MINS.map((m) => (
-              <button
-                key={m}
-                onClick={() => onUpdate({ duration_mins: m })}
-                className={`text-[10px] px-2 py-0.5 rounded border uppercase tracking-widest transition-colors ${
-                  slot.duration_mins === m
-                    ? "border-[color:var(--cyan)] text-[color:var(--cyan)] bg-[color:var(--cyan)]/10"
-                    : "border-border text-muted-foreground hover:border-[color:var(--cyan)]/50"
-                }`}
-              >
-                {m}m
-              </button>
-            ))}
-          </div>
-        </div>
 
-        {/* End behaviour — required */}
-        <div className="space-y-2">
-          <Label
-            className={`text-[10px] uppercase tracking-widest ${
-              showEndBehaviourError ? "text-destructive" : "text-muted-foreground"
-            }`}
-          >
-            End behaviour{showEndBehaviourError ? " — required" : ""}
-          </Label>
-          <Select
-            value={slot.end_behaviour || undefined}
-            onValueChange={(v) => onUpdate({ end_behaviour: v })}
-          >
-            <SelectTrigger
-              className={`bg-background/60 focus:ring-[color:var(--cyan)] ${
-                showEndBehaviourError
-                  ? "border-destructive focus:border-destructive"
-                  : "border-border focus:border-[color:var(--cyan)]"
-              }`}
-            >
-              <SelectValue placeholder="Select…" />
-            </SelectTrigger>
-            <SelectContent className="bg-card border-border">
-              {END_BEHAVIOURS.map((b) => (
-                <SelectItem key={b.value} value={b.value}>
-                  {b.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        {/* Pause before advance */}
-        <div className="flex items-center justify-between">
-          <Label className="text-[10px] uppercase tracking-widest text-muted-foreground cursor-pointer select-none">
-            Pause before advance
-          </Label>
-          <Switch
-            checked={slot.pause_before_advance}
-            onCheckedChange={(v) => onUpdate({ pause_before_advance: v })}
-          />
-        </div>
 
         {/* LEAD phase */}
         <div className="space-y-2">
@@ -1797,20 +1628,54 @@ function ContentTypeForm({
         />
       );
 
-    case "embed":
+    case "embed": {
+      const extractUrl = (raw: string): string => {
+        const trimmed = raw.trim();
+        const match = trimmed.match(/<iframe[^>]*\ssrc\s*=\s*["']([^"']+)["']/i);
+        if (match) return match[1];
+        return trimmed;
+      };
       return (
         <div className="space-y-1.5">
           <Label className="text-[10px] uppercase tracking-widest text-muted-foreground">
-            URL to embed
+            URL or embed code
           </Label>
           <Input
             value={String(content.url ?? "")}
-            onChange={(e) => onChange({ url: e.target.value })}
-            placeholder="https://…"
+            onChange={(e) => onChange({ url: extractUrl(e.target.value) })}
+            onPaste={(e) => {
+              const pasted = e.clipboardData.getData("text");
+              const extracted = extractUrl(pasted);
+              if (extracted !== pasted) {
+                e.preventDefault();
+                onChange({ url: extracted });
+              }
+            }}
+            placeholder="https://… or paste full <iframe> snippet"
             className="bg-background/60 border-border focus-visible:border-[color:var(--cyan)]"
           />
           <p className="text-[10px] text-muted-foreground">
-            Rendered in a sandboxed iframe (allow-scripts, allow-same-origin).
+            Paste a URL or the full embed code — we extract the src automatically.
+          </p>
+        </div>
+      );
+    }
+
+    case "webpage":
+      return (
+        <div className="space-y-1.5">
+          <Label className="text-[10px] uppercase tracking-widest text-muted-foreground">
+            Webpage URL
+          </Label>
+          <Input
+            value={String(content.url ?? "")}
+            onChange={(e) => onChange({ url: e.target.value.trim() })}
+            placeholder="https://example.com"
+            className="bg-background/60 border-border focus-visible:border-[color:var(--cyan)]"
+          />
+          <p className="text-[10px] text-muted-foreground">
+            Loaded through a server proxy so sites that block iframes still render.
+            Logins, OAuth, and anti-bot pages won't work.
           </p>
         </div>
       );

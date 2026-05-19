@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { sounds } from "@/lib/audio";
 import { broadcast } from "@/lib/realtime";
 import { Button } from "@/components/ui/button";
+import { useWebcamViewer } from "@/hooks/use-webcam-broadcast";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 
 // ─────────────────────────────────────────────
@@ -17,6 +18,8 @@ export type SlotContent =
   | { type: "video_upload"; url: string; file_name?: string }
   | { type: "image"; url: string; file_name?: string }
   | { type: "embed"; url: string }
+  | { type: "webpage"; url: string }
+  | { type: "host_webcam"; with_audio?: boolean }
   | { type: "html_upload"; url: string; file_name?: string }
   | { type: "confidence_checker"; prompt: string; optional_qualitative?: boolean }
   | { type: "wheel_spinner"; items: string[] }
@@ -166,8 +169,15 @@ export function SlotRenderer({
       if (!c.url) return <Waiting screen={screen} />;
       return (
         <div className="min-h-screen w-full bg-background animate-slot-in">
-          <iframe key={c.url} src={c.url} className="w-full h-screen border-0"
-            sandbox="allow-scripts allow-same-origin allow-forms" title="Embedded content" />
+          <iframe
+            key={c.url}
+            src={c.url}
+            className="w-full h-screen border-0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; fullscreen; gyroscope; microphone; camera; picture-in-picture; web-share"
+            allowFullScreen
+            referrerPolicy="no-referrer-when-downgrade"
+            title="Embedded content"
+          />
         </div>
       );
     }
@@ -177,10 +187,39 @@ export function SlotRenderer({
       if (!c.url) return <Waiting screen={screen} />;
       return (
         <div className="min-h-screen w-full bg-background animate-slot-in">
-          <iframe key={c.url} src={c.url} className="w-full h-screen border-0"
-            sandbox="allow-scripts" title="HTML content" />
+          <iframe
+            key={c.url}
+            src={c.url}
+            className="w-full h-screen border-0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; fullscreen; gyroscope; picture-in-picture"
+            allowFullScreen
+            title="HTML content"
+          />
         </div>
       );
+    }
+
+    case "webpage": {
+      const c = content as Extract<SlotContent, { type: "webpage" }>;
+      if (!c.url) return <Waiting screen={screen} />;
+      const proxied = `/api/proxy?url=${encodeURIComponent(c.url)}`;
+      return (
+        <div className="min-h-screen w-full bg-background animate-slot-in">
+          <iframe
+            key={c.url}
+            src={proxied}
+            className="w-full h-screen border-0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; fullscreen; gyroscope; picture-in-picture"
+            allowFullScreen
+            title="Web page"
+          />
+        </div>
+      );
+    }
+
+    case "host_webcam": {
+      if (!sessionId) return <Waiting screen={screen} />;
+      return <HostWebcamViewer sessionId={sessionId} />;
     }
 
     case "confidence_checker": {
@@ -243,6 +282,53 @@ function Waiting({ screen }: { screen: "host" | "screen1" | "screen2" }) {
         <span className="w-2 h-2 rounded-full bg-[color:var(--cyan)] animate-pulse [animation-delay:200ms]" />
         <span className="w-2 h-2 rounded-full bg-[color:var(--cyan)] animate-pulse [animation-delay:400ms]" />
       </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────
+// HOST WEBCAM — viewer side
+// ─────────────────────────────────────────────
+
+function HostWebcamViewer({ sessionId }: { sessionId: string }) {
+  const { stream, waiting } = useWebcamViewer(sessionId, true);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+
+  useEffect(() => {
+    const v = videoRef.current;
+    if (!v) return;
+    if (stream) {
+      v.srcObject = stream;
+      v.play().catch(() => {});
+    } else {
+      v.srcObject = null;
+    }
+  }, [stream]);
+
+  return (
+    <div className="min-h-screen w-full bg-black flex items-center justify-center animate-slot-in relative">
+      <video
+        ref={videoRef}
+        autoPlay
+        playsInline
+        muted
+        className="w-full h-screen object-contain bg-black"
+      />
+      {waiting && (
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-immersive bg-grid">
+          <div className="text-xs uppercase tracking-[0.5em] text-[color:var(--cyan)] animate-float-glow">
+            Host Webcam
+          </div>
+          <div className="text-3xl md:text-5xl font-extrabold text-glow text-center">
+            Waiting for host camera…
+          </div>
+          <div className="flex gap-2 mt-4">
+            <span className="w-2 h-2 rounded-full bg-[color:var(--cyan)] animate-pulse" />
+            <span className="w-2 h-2 rounded-full bg-[color:var(--cyan)] animate-pulse [animation-delay:200ms]" />
+            <span className="w-2 h-2 rounded-full bg-[color:var(--cyan)] animate-pulse [animation-delay:400ms]" />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

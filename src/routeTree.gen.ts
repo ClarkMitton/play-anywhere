@@ -14,6 +14,9 @@ import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as Screen2RouteImport } from './routes/screen.2'
 import { Route as Screen1RouteImport } from './routes/screen.1'
+import { Route as RemoteSessionIdRouteImport } from './routes/remote.$sessionId'
+import { Route as ApiProxyRouteImport } from './routes/api/proxy'
+import { Route as AdminTestRouteImport } from './routes/admin.test'
 import { Route as AdminDesignerLessonIdRouteImport } from './routes/admin.designer.$lessonId'
 
 const HostRoute = HostRouteImport.update({
@@ -41,6 +44,21 @@ const Screen1Route = Screen1RouteImport.update({
   path: '/screen/1',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RemoteSessionIdRoute = RemoteSessionIdRouteImport.update({
+  id: '/remote/$sessionId',
+  path: '/remote/$sessionId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiProxyRoute = ApiProxyRouteImport.update({
+  id: '/api/proxy',
+  path: '/api/proxy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminTestRoute = AdminTestRouteImport.update({
+  id: '/test',
+  path: '/test',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminDesignerLessonIdRoute = AdminDesignerLessonIdRouteImport.update({
   id: '/designer/$lessonId',
   path: '/designer/$lessonId',
@@ -51,6 +69,9 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
   '/host': typeof HostRoute
+  '/admin/test': typeof AdminTestRoute
+  '/api/proxy': typeof ApiProxyRoute
+  '/remote/$sessionId': typeof RemoteSessionIdRoute
   '/screen/1': typeof Screen1Route
   '/screen/2': typeof Screen2Route
   '/admin/designer/$lessonId': typeof AdminDesignerLessonIdRoute
@@ -59,6 +80,9 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
   '/host': typeof HostRoute
+  '/admin/test': typeof AdminTestRoute
+  '/api/proxy': typeof ApiProxyRoute
+  '/remote/$sessionId': typeof RemoteSessionIdRoute
   '/screen/1': typeof Screen1Route
   '/screen/2': typeof Screen2Route
   '/admin/designer/$lessonId': typeof AdminDesignerLessonIdRoute
@@ -68,6 +92,9 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
   '/host': typeof HostRoute
+  '/admin/test': typeof AdminTestRoute
+  '/api/proxy': typeof ApiProxyRoute
+  '/remote/$sessionId': typeof RemoteSessionIdRoute
   '/screen/1': typeof Screen1Route
   '/screen/2': typeof Screen2Route
   '/admin/designer/$lessonId': typeof AdminDesignerLessonIdRoute
@@ -78,6 +105,9 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/host'
+    | '/admin/test'
+    | '/api/proxy'
+    | '/remote/$sessionId'
     | '/screen/1'
     | '/screen/2'
     | '/admin/designer/$lessonId'
@@ -86,6 +116,9 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/host'
+    | '/admin/test'
+    | '/api/proxy'
+    | '/remote/$sessionId'
     | '/screen/1'
     | '/screen/2'
     | '/admin/designer/$lessonId'
@@ -94,6 +127,9 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/host'
+    | '/admin/test'
+    | '/api/proxy'
+    | '/remote/$sessionId'
     | '/screen/1'
     | '/screen/2'
     | '/admin/designer/$lessonId'
@@ -103,6 +139,8 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRouteWithChildren
   HostRoute: typeof HostRoute
+  ApiProxyRoute: typeof ApiProxyRoute
+  RemoteSessionIdRoute: typeof RemoteSessionIdRoute
   Screen1Route: typeof Screen1Route
   Screen2Route: typeof Screen2Route
 }
@@ -144,6 +182,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof Screen1RouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/remote/$sessionId': {
+      id: '/remote/$sessionId'
+      path: '/remote/$sessionId'
+      fullPath: '/remote/$sessionId'
+      preLoaderRoute: typeof RemoteSessionIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/proxy': {
+      id: '/api/proxy'
+      path: '/api/proxy'
+      fullPath: '/api/proxy'
+      preLoaderRoute: typeof ApiProxyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/test': {
+      id: '/admin/test'
+      path: '/test'
+      fullPath: '/admin/test'
+      preLoaderRoute: typeof AdminTestRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/designer/$lessonId': {
       id: '/admin/designer/$lessonId'
       path: '/designer/$lessonId'
@@ -155,10 +214,12 @@ declare module '@tanstack/react-router' {
 }
 
 interface AdminRouteChildren {
+  AdminTestRoute: typeof AdminTestRoute
   AdminDesignerLessonIdRoute: typeof AdminDesignerLessonIdRoute
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
+  AdminTestRoute: AdminTestRoute,
   AdminDesignerLessonIdRoute: AdminDesignerLessonIdRoute,
 }
 
@@ -168,6 +229,8 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRouteWithChildren,
   HostRoute: HostRoute,
+  ApiProxyRoute: ApiProxyRoute,
+  RemoteSessionIdRoute: RemoteSessionIdRoute,
   Screen1Route: Screen1Route,
   Screen2Route: Screen2Route,
 }
