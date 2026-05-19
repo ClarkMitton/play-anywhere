@@ -493,6 +493,26 @@ function HostScreen() {
         />
       </main>
 
+      {/* Remote control QR — host scans with phone to drive all screens */}
+      {session?.id && origin && (
+        <div className="max-w-6xl mx-auto mt-12 flex flex-col items-center gap-3">
+          <div className="text-xs uppercase tracking-[0.4em] text-[color:var(--cyan)]">
+            Host Remote · Scan with your phone
+          </div>
+          <div className="bg-white rounded-2xl p-3">
+            <QRCodeSVG value={`${origin}/remote/${session.id}`} size={140} />
+          </div>
+          <a
+            href={`/remote/${session.id}`}
+            target="_blank"
+            rel="noopener"
+            className="text-[10px] font-mono text-muted-foreground hover:text-[color:var(--cyan)] break-all"
+          >
+            {origin}/remote/{session.id.slice(0, 8)}…
+          </a>
+        </div>
+      )}
+
       {/* Step 13: timeout banner or normal launch button */}
       <div className="max-w-6xl mx-auto mt-16 text-center">
         {countdownDone && !session?.screen2_connected ? (
