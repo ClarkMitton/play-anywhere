@@ -22,6 +22,12 @@ type TestSession = {
   screen2_code: string;
 };
 
+type SlotRow = {
+  host_content: unknown;
+  screen1_content: unknown;
+  screen2_content: unknown;
+};
+
 function TestMode() {
   const [lessons, setLessons] = useState<Lesson[]>([]);
   const [selectedLessonId, setSelectedLessonId] = useState<string>("");
