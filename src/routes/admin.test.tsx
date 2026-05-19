@@ -216,6 +216,29 @@ function TestMode() {
           <Button
             variant="outline"
             size="sm"
+            onClick={() => goToSlot(slotIndex - 1)}
+            disabled={slotIndex <= 0 || slotsList.length === 0}
+            className="uppercase tracking-widest text-xs h-9 px-3"
+          >
+            ← Prev
+          </Button>
+          <span className="text-xs font-mono text-muted-foreground tabular-nums px-1">
+            {slotsList.length === 0
+              ? "—"
+              : `Slot ${slotIndex + 1}/${slotsList.length}`}
+          </span>
+          <Button
+            size="sm"
+            onClick={() => goToSlot(slotIndex + 1)}
+            disabled={slotIndex >= slotsList.length - 1 || slotsList.length === 0}
+            className="uppercase tracking-widest text-xs h-9 px-3 font-extrabold"
+          >
+            Next →
+          </Button>
+          <div className="w-px h-6 bg-border mx-1" />
+          <Button
+            variant="outline"
+            size="sm"
             onClick={reloadAll}
             className="uppercase tracking-widest text-xs h-9 px-3"
           >
