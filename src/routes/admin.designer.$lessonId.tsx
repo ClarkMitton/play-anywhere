@@ -966,29 +966,6 @@ function ContextMenu({
 
       <div className="my-1 border-t border-border/50" />
 
-      {/* End behaviour submenu */}
-      <div className="relative">
-        <CtxItem
-          onClick={() => onSetSub(sub === "end_behaviour" ? null : "end_behaviour")}
-          arrow
-          active={sub === "end_behaviour"}
-        >
-          Set end behaviour
-        </CtxItem>
-        {sub === "end_behaviour" && (
-          <div className="absolute left-full top-0 w-56 bg-card border border-border rounded-xl shadow-2xl py-1 ml-1">
-            {END_BEHAVIOURS.map((b) => (
-              <CtxItem
-                key={b.value}
-                onClick={() => onSetEndBehaviour(b.value)}
-                checked={currentSlot?.end_behaviour === b.value}
-              >
-                {b.label}
-              </CtxItem>
-            ))}
-          </div>
-        )}
-      </div>
 
       {/* LEAD phase submenu */}
       <div className="relative">
