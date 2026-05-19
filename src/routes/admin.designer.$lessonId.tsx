@@ -895,11 +895,8 @@ function SlotBlock({
           <ContentPip type={slot.screen2_content.type} label="2" />
         </div>
 
-        {/* Duration + LEAD initial */}
-        <div className="flex items-end justify-between mt-auto">
-          <span className="text-[10px] font-mono font-bold text-[color:var(--cyan)]">
-            {formatDuration(slot.duration_mins)}
-          </span>
+        {/* LEAD initial */}
+        <div className="flex items-end justify-end mt-auto">
           {slot.lead_phase && (
             <span
               className="text-[9px] font-extrabold uppercase tracking-widest"
@@ -909,17 +906,6 @@ function SlotBlock({
             </span>
           )}
         </div>
-      </div>
-
-      {/* Resize handle — right edge */}
-      <div
-        className={`absolute inset-y-0 right-0 w-3 flex items-center justify-center cursor-ew-resize group
-          ${isResizing ? "bg-[color:var(--cyan)]/20" : "hover:bg-[color:var(--cyan)]/10"}`}
-        onMouseDown={onResizeStart}
-        onClick={(e) => e.stopPropagation()}
-        onContextMenu={(e) => e.stopPropagation()}
-      >
-        <div className="w-0.5 h-8 rounded-full bg-border group-hover:bg-[color:var(--cyan)]/60 transition-colors" />
       </div>
     </div>
   );
