@@ -715,35 +715,8 @@ function Timeline({
   const [dragId, setDragId] = useState<string | null>(null);
   const [dropIndex, setDropIndex] = useState<number | null>(null);
 
-  // Resize state (mouse events)
-  const [resizingId, setResizingId] = useState<string | null>(null);
-  const resizeStartX = useRef(0);
-  const resizeStartDur = useRef(0);
-
-  useEffect(() => {
-    if (!resizingId) return;
-
-    const onMouseMove = (e: MouseEvent) => {
-      const deltaMins = (e.clientX - resizeStartX.current) / PX_PER_MIN;
-      const raw = Math.max(0.1, resizeStartDur.current + deltaMins);
-      updateSlot(resizingId, { duration_mins: raw });
-    };
-
-    const onMouseUp = (e: MouseEvent) => {
-      const deltaMins = (e.clientX - resizeStartX.current) / PX_PER_MIN;
-      const raw = Math.max(0.1, resizeStartDur.current + deltaMins);
-      updateSlot(resizingId, { duration_mins: snapDuration(raw) });
-      setResizingId(null);
-      markDirty();
-    };
-
-    window.addEventListener("mousemove", onMouseMove);
-    window.addEventListener("mouseup", onMouseUp);
-    return () => {
-      window.removeEventListener("mousemove", onMouseMove);
-      window.removeEventListener("mouseup", onMouseUp);
-    };
-  }, [resizingId, updateSlot, markDirty]);
+  // Resize disabled — timings removed
+  const resizingId: string | null = null;
 
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
     // File drop passes files; slot drag passes nothing in files
