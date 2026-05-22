@@ -56,6 +56,8 @@ type LessonMeta = {
 type SlotDef = {
   id: string;
   order_index: number;
+  name: string | null;
+  screen_delay_secs: number;
   host_content: SlotContent;
   screen1_content: SlotContent;
   screen2_content: SlotContent;
@@ -66,12 +68,14 @@ const SCREEN2_WAIT_SECS = 60;
 function SlotNavBar({
   currentIndex,
   total,
+  slotName,
   onPrev,
   onNext,
   onEnd,
 }: {
   currentIndex: number;
   total: number;
+  slotName?: string | null;
   onPrev: () => void;
   onNext: () => void;
   onEnd: () => void;
@@ -86,8 +90,12 @@ function SlotNavBar({
       >
         ← Prev
       </Button>
-      <span className="text-sm font-mono text-muted-foreground tabular-nums">
-        {total === 0 ? "No slots" : `Slot ${currentIndex + 1} of ${total}`}
+      <span className="text-sm font-mono text-muted-foreground tabular-nums text-center">
+        {total === 0
+          ? "No slots"
+          : slotName
+            ? `${currentIndex + 1}/${total} · ${slotName}`
+            : `Slot ${currentIndex + 1} of ${total}`}
       </span>
       <Button
         size="sm"
@@ -169,7 +177,7 @@ function HostScreen() {
         supabase.from("lessons").select("title, ms_form_url").eq("id", session.lesson_id!).single(),
         supabase
           .from("slots")
-          .select("id, order_index, host_content, screen1_content, screen2_content")
+          .select("id, order_index, name, screen_delay_secs, host_content, screen1_content, screen2_content")
           .eq("lesson_id", session.lesson_id!)
           .is("session_id", null)
           .order("order_index"),
@@ -318,6 +326,7 @@ function HostScreen() {
   const initialState = (idx: number) => ({
     slot: slotState(slots[idx]),
     indices: { host: idx, screen1: idx, screen2: idx },
+    screen_delay_secs: slots[idx]?.screen_delay_secs ?? 0,
   });
 
   const launch = async () => {
@@ -456,6 +465,7 @@ function HostScreen() {
           <SlotNavBar
             currentIndex={Math.min(session.current_slot_index, Math.max(0, slots.length - 1))}
             total={slots.length}
+            slotName={slots[session.current_slot_index]?.name}
             onPrev={() => pushSlot(session.current_slot_index - 1)}
             onNext={() => pushSlot(session.current_slot_index + 1)}
             onEnd={endSession}
@@ -484,6 +494,7 @@ function HostScreen() {
           <SlotNavBar
             currentIndex={Math.min(session.current_slot_index, Math.max(0, slots.length - 1))}
             total={slots.length}
+            slotName={slots[session.current_slot_index]?.name}
             onPrev={() => pushSlot(session.current_slot_index - 1)}
             onNext={() => pushSlot(session.current_slot_index + 1)}
             onEnd={endSession}

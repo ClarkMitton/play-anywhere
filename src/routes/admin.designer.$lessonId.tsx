@@ -50,7 +50,7 @@ const LEAD_COLOURS: Record<string, string> = {
   Demonstrate: "oklch(0.72 0.18 300)", // violet
 };
 
-// Content types available per screen. teacher_note is host (teacher screen) only.
+// Content types available per screen. teacher_note and host_timer are host (teacher screen) only.
 const CONTENT_TYPES_HOST = [
   { value: "waiting", label: "Waiting (standby)" },
   { value: "text_slide", label: "Text Slide" },
@@ -62,7 +62,8 @@ const CONTENT_TYPES_HOST = [
   { value: "html_upload", label: "HTML Upload" },
   { value: "confidence_checker", label: "Confidence Checker" },
   { value: "wheel_spinner", label: "Wheel Spinner" },
-  { value: "countdown_timer", label: "Countdown Timer" },
+  { value: "countdown_timer", label: "Countdown Timer (all screens)" },
+  { value: "host_timer", label: "Host Timer (Host only)" },
   { value: "host_webcam", label: "Host Webcam" },
   { value: "teacher_note", label: "Teacher Note (Host only)" },
 ];
@@ -111,6 +112,8 @@ type SlotDef = {
   end_behaviour: string;
   pause_before_advance: boolean;
   lead_phase: string | null;
+  name: string | null;
+  screen_delay_secs: number;
   host_content: ContentDef;
   screen1_content: ContentDef;
   screen2_content: ContentDef;
@@ -157,6 +160,8 @@ function makeSlot(lessonId: string, orderIndex: number): SlotDef {
     end_behaviour: "",
     pause_before_advance: false,
     lead_phase: null,
+    name: null,
+    screen_delay_secs: 0,
     host_content: { type: "waiting" },
     screen1_content: { type: "waiting" },
     screen2_content: { type: "waiting" },
@@ -265,6 +270,8 @@ function DesignerPage() {
             end_behaviour: s.end_behaviour,
             pause_before_advance: s.pause_before_advance,
             lead_phase: s.lead_phase,
+            name: s.name,
+            screen_delay_secs: s.screen_delay_secs,
             host_content: s.host_content as never,
             screen1_content: s.screen1_content as never,
             screen2_content: s.screen2_content as never,
@@ -926,14 +933,26 @@ function SlotBlock({
           <ContentPip type={slot.screen2_content.type} label="2" />
         </div>
 
-        {/* LEAD initial */}
-        <div className="flex items-end justify-end mt-auto">
-          {slot.lead_phase && (
+        {/* Slot name */}
+        {slot.name && (
+          <div className="text-[9px] text-muted-foreground truncate leading-tight">
+            {slot.name}
+          </div>
+        )}
+
+        {/* LEAD initial + delay indicator */}
+        <div className="flex items-end justify-between mt-auto">
+          {slot.lead_phase ? (
             <span
               className="text-[9px] font-extrabold uppercase tracking-widest"
               style={{ color: leadColour ?? undefined }}
             >
               {slot.lead_phase.charAt(0)}
+            </span>
+          ) : <span />}
+          {slot.screen_delay_secs > 0 && (
+            <span className="text-[8px] text-[color:var(--cyan)] font-bold">
+              +{slot.screen_delay_secs}s
             </span>
           )}
         </div>
@@ -1469,6 +1488,44 @@ function SlotEditorPanel({
         />
         <div className="border-t border-border/40" />
 
+        {/* Slot name */}
+        <div className="space-y-1.5">
+          <Label className="text-[10px] uppercase tracking-widest text-muted-foreground">
+            Slot name (optional)
+          </Label>
+          <Input
+            value={slot.name ?? ""}
+            onChange={(e) => onUpdate({ name: e.target.value || null })}
+            placeholder="e.g. Introduction, Task 1…"
+            className="bg-background/60 border-border focus-visible:border-[color:var(--cyan)]"
+          />
+        </div>
+
+        {/* Side-screen delay */}
+        <div className="space-y-2">
+          <Label className="text-[10px] uppercase tracking-widest text-muted-foreground">
+            Side screen delay
+          </Label>
+          <Select
+            value={String(slot.screen_delay_secs ?? 0)}
+            onValueChange={(v) => onUpdate({ screen_delay_secs: Number(v) })}
+          >
+            <SelectTrigger className="bg-background/60 border-border focus:border-[color:var(--cyan)] focus:ring-[color:var(--cyan)]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent className="bg-card border-border">
+              <SelectItem value="0">No delay</SelectItem>
+              <SelectItem value="5">5 seconds</SelectItem>
+              <SelectItem value="10">10 seconds</SelectItem>
+              <SelectItem value="15">15 seconds</SelectItem>
+            </SelectContent>
+          </Select>
+          <p className="text-[10px] text-muted-foreground">
+            Side screens count down before revealing new content. Last 3 seconds show 3…2…1.
+          </p>
+        </div>
+
+        <div className="border-t border-border/40" />
 
         {/* LEAD phase */}
         <div className="space-y-2">
@@ -1642,14 +1699,25 @@ function ContentTypeForm({
 
     case "video_upload":
       return (
-        <FileUploadField
-          label="Video file"
-          accept="video/mp4,video/webm"
-          currentFileName={content.file_name ? String(content.file_name) : undefined}
-          lessonId={lessonId}
-          maxSizeMb={500}
-          onUpload={(url, file_name) => onChange({ url, file_name })}
-        />
+        <div className="space-y-3">
+          <FileUploadField
+            label="Video file"
+            accept="video/mp4,video/webm"
+            currentFileName={content.file_name ? String(content.file_name) : undefined}
+            lessonId={lessonId}
+            maxSizeMb={500}
+            onUpload={(url, file_name) => onChange({ url, file_name })}
+          />
+          <div className="flex items-center justify-between">
+            <Label className="text-[10px] uppercase tracking-widest text-muted-foreground cursor-pointer">
+              Loop video
+            </Label>
+            <Switch
+              checked={content.loop !== false}
+              onCheckedChange={(v) => onChange({ loop: v })}
+            />
+          </div>
+        </div>
       );
 
     case "image":
@@ -1818,6 +1886,72 @@ function ContentTypeForm({
             </div>
             <p className="text-[10px] text-muted-foreground">
               Host controls Start / Pause / Reset. Timer syncs to all screens.
+            </p>
+          </div>
+        </div>
+      );
+    }
+
+    case "host_timer": {
+      if (screen !== "host") {
+        return (
+          <div className="py-3 text-center text-[10px] uppercase tracking-widest text-[color:var(--orange)]">
+            Host Timer only renders on the Host display
+          </div>
+        );
+      }
+      const durationSecs = Number(content.duration_secs ?? 60);
+      const mins = Math.floor(durationSecs / 60);
+      const secs = durationSecs % 60;
+      return (
+        <div className="space-y-4">
+          <div className="space-y-1.5">
+            <Label className="text-[10px] uppercase tracking-widest text-muted-foreground">
+              Text above timer (optional)
+            </Label>
+            <Input
+              value={String(content.label ?? "")}
+              onChange={(e) => onChange({ label: e.target.value })}
+              placeholder="e.g. Complete the task in…"
+              className="bg-background/60 border-border focus-visible:border-[color:var(--cyan)]"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-[10px] uppercase tracking-widest text-muted-foreground">
+              Duration
+            </Label>
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5">
+                <Input
+                  type="number"
+                  min={0}
+                  max={99}
+                  value={mins}
+                  onChange={(e) => {
+                    const m = Math.max(0, Math.min(99, Number(e.target.value) || 0));
+                    onChange({ duration_secs: m * 60 + secs });
+                  }}
+                  className="w-16 bg-background/60 border-border focus-visible:border-[color:var(--cyan)] text-center"
+                />
+                <span className="text-[10px] text-muted-foreground uppercase tracking-widest">min</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <Input
+                  type="number"
+                  min={0}
+                  max={59}
+                  value={secs}
+                  onChange={(e) => {
+                    const s = Math.max(0, Math.min(59, Number(e.target.value) || 0));
+                    onChange({ duration_secs: mins * 60 + s });
+                  }}
+                  className="w-16 bg-background/60 border-border focus-visible:border-[color:var(--cyan)] text-center"
+                />
+                <span className="text-[10px] text-muted-foreground uppercase tracking-widest">sec</span>
+              </div>
+            </div>
+            <p className="text-[10px] text-muted-foreground">
+              Timer is local to the Host display only — side screens are not affected.
             </p>
           </div>
         </div>

@@ -26,6 +26,7 @@ type ScreenKey = "host" | "screen1" | "screen2";
 type SlotRow = {
   id: string;
   order_index: number;
+  screen_delay_secs: number;
   host_content: ContentDef;
   screen1_content: ContentDef;
   screen2_content: ContentDef;
@@ -64,6 +65,7 @@ function RemotePage() {
   const [session, setSession] = useState<SessionRow | null>(null);
   const [slots, setSlots] = useState<SlotRow[]>([]);
   const [busy, setBusy] = useState(false);
+  const [endConfirm, setEndConfirm] = useState(false);
 
   // Load session + slots
   useEffect(() => {
@@ -80,7 +82,7 @@ function RemotePage() {
       if (s.lesson_id) {
         const { data: sl } = await supabase
           .from("slots")
-          .select("id, order_index, host_content, screen1_content, screen2_content")
+          .select("id, order_index, screen_delay_secs, host_content, screen1_content, screen2_content")
           .eq("lesson_id", s.lesson_id)
           .is("session_id", null)
           .order("order_index");
@@ -138,6 +140,7 @@ function RemotePage() {
             ...session.state,
             slot: { ...prevSlot, [screen]: newContent },
             indices: { ...prevIdx, [screen]: next },
+            screen_delay_secs: slot.screen_delay_secs ?? 0,
           } as never,
         })
         .eq("id", session.id);
@@ -165,6 +168,7 @@ function RemotePage() {
               screen2: slot.screen2_content,
             },
             indices: { host: next, screen1: next, screen2: next },
+            screen_delay_secs: slot.screen_delay_secs ?? 0,
           } as never,
         })
         .eq("id", session.id);
@@ -173,6 +177,17 @@ function RemotePage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [session, slots, busy],
   );
+
+  const endSession = useCallback(async () => {
+    if (!session) return;
+    setBusy(true);
+    await supabase
+      .from("sessions")
+      .update({ status: "ended", ended_at: new Date().toISOString() })
+      .eq("id", session.id);
+    setBusy(false);
+    setEndConfirm(false);
+  }, [session]);
 
   // ── Render ─────────────────────────────────────
 
@@ -247,6 +262,42 @@ function RemotePage() {
             Next →
           </Button>
         </div>
+      </div>
+
+      {/* End session */}
+      <div className="max-w-md mx-auto mb-6">
+        {!endConfirm ? (
+          <button
+            onClick={() => setEndConfirm(true)}
+            className="w-full py-3 rounded-2xl border-2 border-destructive/50 text-destructive text-[10px] uppercase tracking-[0.3em] font-bold hover:bg-destructive/10 transition-colors"
+          >
+            End Session
+          </button>
+        ) : (
+          <div className="bg-card/70 backdrop-blur border-2 border-destructive/60 rounded-2xl p-4 space-y-3">
+            <div className="text-center text-sm font-bold text-destructive uppercase tracking-widest">
+              End session for everyone?
+            </div>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                className="flex-1 h-12 text-xs uppercase tracking-widest"
+                onClick={() => setEndConfirm(false)}
+                disabled={busy}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                className="flex-1 h-12 text-xs uppercase tracking-widest font-extrabold"
+                onClick={endSession}
+                disabled={busy}
+              >
+                {busy ? "Ending…" : "Yes, End"}
+              </Button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Host webcam broadcaster */}

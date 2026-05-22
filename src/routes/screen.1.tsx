@@ -34,7 +34,11 @@ type SessionRow = {
   current_slot_index: number;
   created_at: string;
   ended_at: string | null;
-  state: { slot?: { host?: SlotContent; screen1?: SlotContent; screen2?: SlotContent } };
+  state: {
+    slot?: { host?: SlotContent; screen1?: SlotContent; screen2?: SlotContent };
+    indices?: { host?: number; screen1?: number; screen2?: number };
+    screen_delay_secs?: number;
+  };
   screen1_connected: boolean;
   screen2_connected: boolean;
 };
@@ -229,22 +233,127 @@ export function ScreenJoin({ role, autoCode }: { role: "screen1" | "screen2"; au
     );
   }
 
-  const content = (role === "screen1"
-    ? session.state?.slot?.screen1
-    : session.state?.slot?.screen2) ?? { type: "waiting" };
+  return (
+    <DelayedScreen
+      session={session}
+      role={role}
+      sessionId={sessionId ?? undefined}
+      channel={channelRef.current ?? undefined}
+      hostPaused={hostPaused}
+    />
+  );
+}
+
+// ── Delayed screen renderer ───────────────────
+// Intercepts slot changes and shows a countdown before revealing new content.
+
+function DelayedScreen({
+  session,
+  role,
+  sessionId,
+  channel,
+  hostPaused,
+}: {
+  session: SessionRow;
+  role: "screen1" | "screen2";
+  sessionId?: string;
+  channel?: RealtimeChannel;
+  hostPaused: boolean;
+}) {
+  const [displayedContent, setDisplayedContent] = useState<SlotContent>(() =>
+    (role === "screen1" ? session.state?.slot?.screen1 : session.state?.slot?.screen2) ?? { type: "waiting" }
+  );
+  const [displayedKey, setDisplayedKey] = useState(session.current_slot_index);
+  const [countdown, setCountdown] = useState<number | null>(null);
+
+  const prevIndexRef = useRef<number>(-1);
+  const pendingContentRef = useRef<SlotContent | null>(null);
+  const pendingKeyRef = useRef<number>(0);
+  const countdownTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Cleanup on unmount
+  useEffect(() => () => {
+    if (countdownTimerRef.current) clearInterval(countdownTimerRef.current);
+  }, []);
+
+  useEffect(() => {
+    if (!session || session.status !== "active") return;
+
+    const roleKey = role === "screen1" ? "screen1" : "screen2";
+    const newIndex = session.state?.indices?.[roleKey] ?? session.current_slot_index ?? 0;
+    const rawContent =
+      (role === "screen1" ? session.state?.slot?.screen1 : session.state?.slot?.screen2) ??
+      { type: "waiting" as const };
+    const delay = session.state?.screen_delay_secs ?? 0;
+
+    if (prevIndexRef.current === -1) {
+      // First render — show content immediately, no countdown
+      prevIndexRef.current = newIndex;
+      setDisplayedContent(rawContent);
+      setDisplayedKey(newIndex);
+      return;
+    }
+
+    if (newIndex === prevIndexRef.current || delay === 0) {
+      // Same slot or no delay — immediate update
+      prevIndexRef.current = newIndex;
+      setDisplayedContent(rawContent);
+      setDisplayedKey(newIndex);
+      return;
+    }
+
+    // New slot + delay > 0: start countdown
+    prevIndexRef.current = newIndex;
+    pendingContentRef.current = rawContent;
+    pendingKeyRef.current = newIndex;
+
+    if (countdownTimerRef.current) clearInterval(countdownTimerRef.current);
+
+    let remaining = delay;
+    setCountdown(remaining);
+
+    countdownTimerRef.current = setInterval(() => {
+      remaining--;
+      if (remaining <= 0) {
+        clearInterval(countdownTimerRef.current!);
+        countdownTimerRef.current = null;
+        setCountdown(null);
+        if (pendingContentRef.current !== null) {
+          setDisplayedContent(pendingContentRef.current);
+          setDisplayedKey(pendingKeyRef.current);
+          pendingContentRef.current = null;
+        }
+      } else {
+        setCountdown(remaining);
+      }
+    }, 1000);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session.state, session.status, session.current_slot_index]);
 
   return (
     <div className="relative">
       <SlotRenderer
-        key={session.current_slot_index}
-        content={content}
+        key={displayedKey}
+        content={displayedContent}
         screen={role}
-        sessionId={sessionId ?? undefined}
-        channel={channelRef.current ?? undefined}
+        sessionId={sessionId}
+        channel={channel}
       />
 
-      {/* Host-paused overlay — shown when teacher leaves the app */}
-      {hostPaused && (
+      {/* Side-screen countdown overlay */}
+      {countdown !== null && (
+        <div className="fixed inset-0 z-50 bg-immersive bg-grid flex flex-col items-center justify-center animate-slot-in">
+          <div
+            className={`font-extrabold font-mono leading-none tabular-nums text-glow transition-all duration-300
+              ${countdown <= 3 ? "text-[50vw]" : "text-[30vw] opacity-60"}`}
+          >
+            {countdown}
+          </div>
+        </div>
+      )}
+
+      {/* Host-paused overlay */}
+      {hostPaused && countdown === null && (
         <div className="fixed inset-0 z-50 bg-immersive bg-grid flex flex-col items-center justify-center p-10 animate-slot-in">
           <div className="text-xs uppercase tracking-[0.5em] text-[color:var(--orange)] mb-6 animate-pulse">
             Session paused

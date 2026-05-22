@@ -15,7 +15,7 @@ export type SlotContent =
   | { type: "text_slide"; text: string; subtitle?: string; size?: "sm" | "md" | "lg" | "xl" | "2xl"; color?: string }
   | { type: "teacher_note"; text: string; has_reveal_button?: boolean; question_id?: string }
   | { type: "youtube"; url: string }
-  | { type: "video_upload"; url: string; file_name?: string }
+  | { type: "video_upload"; url: string; file_name?: string; loop?: boolean }
   | { type: "image"; url: string; file_name?: string }
   | { type: "embed"; url: string }
   | { type: "webpage"; url: string }
@@ -24,6 +24,7 @@ export type SlotContent =
   | { type: "confidence_checker"; prompt: string; optional_qualitative?: boolean }
   | { type: "wheel_spinner"; items: string[] }
   | { type: "countdown_timer"; label?: string; duration_secs: number }
+  | { type: "host_timer"; label?: string; duration_secs: number }
   | { type: "multiple_choice"; id?: string; text: string; options: string[]; correct?: number }
   | { type: "true_or_false"; id?: string; text: string; correct_tf?: boolean }
   | { type: "poll"; id?: string; text: string; options: string[] }
@@ -150,7 +151,7 @@ export function SlotRenderer({
       return (
         <div className="min-h-screen w-full bg-black animate-slot-in">
           <video key={c.url} src={c.url} className="w-full h-screen object-cover"
-            autoPlay loop playsInline muted={muted || screen !== "host"} />
+            autoPlay loop={c.loop !== false} playsInline muted={muted || screen !== "host"} />
         </div>
       );
     }
@@ -240,6 +241,12 @@ export function SlotRenderer({
     case "countdown_timer": {
       const c = content as Extract<SlotContent, { type: "countdown_timer" }>;
       return <CountdownTimerRenderer content={c} screen={screen} sessionId={sessionId} />;
+    }
+
+    case "host_timer": {
+      if (screen !== "host") return <Waiting screen={screen} />;
+      const c = content as Extract<SlotContent, { type: "host_timer" }>;
+      return <HostTimerRenderer content={c} />;
     }
 
     case "multiple_choice":
@@ -997,6 +1004,97 @@ function CountdownTimerRenderer({ content, screen, sessionId }: {
           </Button>
         </div>
       )}
+      {done && (
+        <div className="text-xl uppercase tracking-[0.3em] text-destructive animate-pulse font-bold">Time's up!</div>
+      )}
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────
+// HOST TIMER — host-only local timer (no broadcast to side screens)
+// ─────────────────────────────────────────────
+
+function HostTimerRenderer({ content }: {
+  content: { label?: string; duration_secs: number };
+}) {
+  const [secsLeft, setSecsLeft] = useState(content.duration_secs);
+  const [running, setRunning] = useState(false);
+  const startedAtRef = useRef<number | null>(null);
+  const secsLeftRef = useRef(content.duration_secs);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  useEffect(() => {
+    secsLeftRef.current = secsLeft;
+  }, [secsLeft]);
+
+  useEffect(() => {
+    if (!running) return;
+    intervalRef.current = setInterval(() => {
+      if (startedAtRef.current === null) return;
+      const elapsed = Math.floor((Date.now() - startedAtRef.current) / 1000);
+      const remaining = Math.max(0, secsLeftRef.current - elapsed);
+      setSecsLeft(remaining);
+      if (remaining === 0) setRunning(false);
+    }, 200);
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
+  }, [running]);
+
+  const mins = Math.floor(secsLeft / 60);
+  const secs = secsLeft % 60;
+  const timeStr = `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
+  const urgent = secsLeft > 0 && secsLeft <= 10;
+  const done = secsLeft === 0;
+
+  const handleStart = () => {
+    startedAtRef.current = Date.now();
+    setRunning(true);
+  };
+
+  const handlePause = () => {
+    startedAtRef.current = null;
+    setRunning(false);
+  };
+
+  const handleReset = () => {
+    if (intervalRef.current) clearInterval(intervalRef.current);
+    startedAtRef.current = null;
+    setRunning(false);
+    setSecsLeft(content.duration_secs);
+    secsLeftRef.current = content.duration_secs;
+  };
+
+  return (
+    <div className="min-h-screen w-full bg-immersive bg-grid flex flex-col items-center justify-center gap-8 animate-slot-in">
+      {content.label && (
+        <div className="text-2xl md:text-4xl font-bold text-center max-w-2xl px-8">{content.label}</div>
+      )}
+      <div
+        className={`text-[22vw] font-extrabold font-mono leading-none tabular-nums transition-colors duration-500
+          ${done ? "text-destructive text-glow" : urgent ? "text-[color:var(--orange)] text-glow" : "text-foreground"}`}
+      >
+        {timeStr}
+      </div>
+      <div className="flex gap-4">
+        {!running ? (
+          <Button
+            onClick={handleStart}
+            disabled={done}
+            className="h-14 px-10 text-lg uppercase tracking-widest font-extrabold disabled:opacity-30"
+          >
+            {secsLeft === content.duration_secs ? "Start" : "Resume"}
+          </Button>
+        ) : (
+          <Button onClick={handlePause} variant="outline" className="h-14 px-10 text-lg uppercase tracking-widest">
+            Pause
+          </Button>
+        )}
+        <Button onClick={handleReset} variant="outline" className="h-14 px-10 text-lg uppercase tracking-widest">
+          Reset
+        </Button>
+      </div>
       {done && (
         <div className="text-xl uppercase tracking-[0.3em] text-destructive animate-pulse font-bold">Time's up!</div>
       )}
