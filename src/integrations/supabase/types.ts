@@ -155,8 +155,10 @@ export type Database = {
           id: string
           lead_phase: string | null
           lesson_id: string | null
+          name: string | null
           order_index: number
           pause_before_advance: boolean
+          screen_delay_secs: number
           screen1_content: Json
           screen2_content: Json
           session_id: string | null
@@ -169,8 +171,10 @@ export type Database = {
           id?: string
           lead_phase?: string | null
           lesson_id?: string | null
+          name?: string | null
           order_index: number
           pause_before_advance?: boolean
+          screen_delay_secs?: number
           screen1_content?: Json
           screen2_content?: Json
           session_id?: string | null
@@ -183,8 +187,10 @@ export type Database = {
           id?: string
           lead_phase?: string | null
           lesson_id?: string | null
+          name?: string | null
           order_index?: number
           pause_before_advance?: boolean
+          screen_delay_secs?: number
           screen1_content?: Json
           screen2_content?: Json
           session_id?: string | null
