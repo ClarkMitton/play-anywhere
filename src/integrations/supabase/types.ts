@@ -155,12 +155,10 @@ export type Database = {
           id: string
           lead_phase: string | null
           lesson_id: string | null
-          name: string | null
           order_index: number
           pause_before_advance: boolean
           screen1_content: Json
           screen2_content: Json
-          screen_delay_secs: number
           session_id: string | null
         }
         Insert: {
@@ -171,12 +169,10 @@ export type Database = {
           id?: string
           lead_phase?: string | null
           lesson_id?: string | null
-          name?: string | null
           order_index: number
           pause_before_advance?: boolean
           screen1_content?: Json
           screen2_content?: Json
-          screen_delay_secs?: number
           session_id?: string | null
         }
         Update: {
@@ -187,12 +183,10 @@ export type Database = {
           id?: string
           lead_phase?: string | null
           lesson_id?: string | null
-          name?: string | null
           order_index?: number
           pause_before_advance?: boolean
           screen1_content?: Json
           screen2_content?: Json
-          screen_delay_secs?: number
           session_id?: string | null
         }
         Relationships: [
