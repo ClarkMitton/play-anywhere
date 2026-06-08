@@ -127,7 +127,7 @@ type CtxMenuState = {
   x: number;
   y: number;
   slotId: string;
-  sub: "end_behaviour" | "lead_phase" | null;
+  sub: "end_behaviour" | "screen_delay" | null;
 } | null;
 
 type SaveStatus = "saved" | "saving" | "unsaved";
@@ -527,7 +527,7 @@ function DesignerPage() {
           onInsertFeedbackBefore={() => { insertFeedback(ctxMenu.slotId, "before"); closeCtx(); }}
           onInsertFeedbackAfter={() => { insertFeedback(ctxMenu.slotId, "after"); closeCtx(); }}
           onSetEndBehaviour={(v) => { updateSlot(ctxMenu.slotId, { end_behaviour: v }); closeCtx(); }}
-          onSetLeadPhase={(v) => { updateSlot(ctxMenu.slotId, { lead_phase: v || null }); closeCtx(); }}
+          onSetScreenDelay={(v) => { updateSlot(ctxMenu.slotId, { screen_delay_secs: v }); closeCtx(); }}
         />
       )}
     </div>
@@ -802,6 +802,7 @@ function Timeline({
                     onContextMenu={(e) => onContextMenu(e, slot.id)}
                     onDelete={() => onDelete(slot.id)}
                     onResizeStart={() => {}}
+                    onNameChange={(name) => updateSlot(slot.id, { name })}
                     onDragStart={(e) => {
                       setDragId(slot.id);
                       e.dataTransfer.effectAllowed = "move";
@@ -859,6 +860,7 @@ function SlotBlock({
   onDragLeave,
   onDrop,
   onDragEnd,
+  onNameChange,
 }: {
   slot: SlotDef;
   isSelected: boolean;
@@ -873,13 +875,22 @@ function SlotBlock({
   onDragLeave: React.DragEventHandler;
   onDrop: React.DragEventHandler;
   onDragEnd: React.DragEventHandler;
+  onNameChange: (name: string | null) => void;
 }) {
+  const [editingName, setEditingName] = useState(false);
+  const [nameInput, setNameInput] = useState(slot.name ?? "");
+  const nameInputRef = useRef<HTMLInputElement>(null);
+
   const width = slotPx(slot.duration_mins);
-  const leadColour = slot.lead_phase ? LEAD_COLOURS[slot.lead_phase] : null;
+
+  const commitName = () => {
+    setEditingName(false);
+    onNameChange(nameInput.trim() || null);
+  };
 
   return (
     <div
-      draggable
+      draggable={!editingName}
       onDragStart={onDragStart}
       onDragOver={onDragOver}
       onDragLeave={onDragLeave}
@@ -908,14 +919,6 @@ function SlotBlock({
             : undefined,
       }}
     >
-      {/* LEAD phase colour strip */}
-      {leadColour && (
-        <div
-          className="absolute inset-x-0 top-0 h-1 rounded-t-xl"
-          style={{ background: leadColour }}
-        />
-      )}
-
       {/* Delete button — visible on hover */}
       <button
         onClick={(e) => { e.stopPropagation(); onDelete(); }}
@@ -933,23 +936,35 @@ function SlotBlock({
           <ContentPip type={slot.screen2_content.type} label="2" />
         </div>
 
-        {/* Slot name */}
-        {slot.name && (
-          <div className="text-[9px] text-muted-foreground truncate leading-tight">
-            {slot.name}
+        {/* Inline slot name — click to edit */}
+        {editingName ? (
+          <input
+            ref={nameInputRef}
+            autoFocus
+            value={nameInput}
+            onChange={(e) => setNameInput(e.target.value)}
+            onBlur={commitName}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") { e.preventDefault(); commitName(); }
+              if (e.key === "Escape") { setEditingName(false); setNameInput(slot.name ?? ""); }
+              e.stopPropagation();
+            }}
+            onClick={(e) => e.stopPropagation()}
+            placeholder="Name…"
+            className="w-full text-[9px] bg-background/80 border border-[color:var(--cyan)] rounded px-1 py-0.5 outline-none text-foreground"
+          />
+        ) : (
+          <div
+            className="text-[9px] text-muted-foreground truncate leading-tight cursor-text hover:text-foreground transition-colors"
+            title="Click to name slot"
+            onClick={(e) => { e.stopPropagation(); setNameInput(slot.name ?? ""); setEditingName(true); }}
+          >
+            {slot.name || <span className="opacity-40 italic">name…</span>}
           </div>
         )}
 
-        {/* LEAD initial + delay indicator */}
-        <div className="flex items-end justify-between mt-auto">
-          {slot.lead_phase ? (
-            <span
-              className="text-[9px] font-extrabold uppercase tracking-widest"
-              style={{ color: leadColour ?? undefined }}
-            >
-              {slot.lead_phase.charAt(0)}
-            </span>
-          ) : <span />}
+        {/* Delay indicator */}
+        <div className="flex items-end justify-end mt-auto">
           {slot.screen_delay_secs > 0 && (
             <span className="text-[8px] text-[color:var(--cyan)] font-bold">
               +{slot.screen_delay_secs}s
@@ -991,21 +1006,20 @@ function ContextMenu({
   onInsertFeedbackBefore,
   onInsertFeedbackAfter,
   onSetEndBehaviour,
-  onSetLeadPhase,
+  onSetScreenDelay,
 }: {
   x: number;
   y: number;
-  sub: "end_behaviour" | "lead_phase" | null;
+  sub: "end_behaviour" | "screen_delay" | null;
   currentSlot?: SlotDef;
-  onSetSub: (s: "end_behaviour" | "lead_phase" | null) => void;
+  onSetSub: (s: "end_behaviour" | "screen_delay" | null) => void;
   onDuplicate: () => void;
   onDelete: () => void;
   onInsertFeedbackBefore: () => void;
   onInsertFeedbackAfter: () => void;
   onSetEndBehaviour: (v: string) => void;
-  onSetLeadPhase: (v: string) => void;
+  onSetScreenDelay: (v: number) => void;
 }) {
-  // Clamp to viewport
   const left = Math.min(x, (typeof window !== "undefined" ? window.innerWidth : 800) - 228);
   const top = Math.min(y, (typeof window !== "undefined" ? window.innerHeight : 600) - 320);
 
@@ -1022,37 +1036,24 @@ function ContextMenu({
 
       <div className="my-1 border-t border-border/50" />
 
-
-      {/* LEAD phase submenu */}
+      {/* Side screen delay submenu */}
       <div className="relative">
         <CtxItem
-          onClick={() => onSetSub(sub === "lead_phase" ? null : "lead_phase")}
+          onClick={() => onSetSub(sub === "screen_delay" ? null : "screen_delay")}
           arrow
-          active={sub === "lead_phase"}
+          active={sub === "screen_delay"}
         >
-          Set LEAD phase
+          Side screen delay
         </CtxItem>
-        {sub === "lead_phase" && (
-          <div className="absolute left-full top-0 w-44 bg-card border border-border rounded-xl shadow-2xl py-1 ml-1">
-            <CtxItem
-              onClick={() => onSetLeadPhase("")}
-              checked={!currentSlot?.lead_phase}
-            >
-              None
-            </CtxItem>
-            {LEAD_PHASES.map((p) => (
+        {sub === "screen_delay" && (
+          <div className="absolute left-full top-0 w-40 bg-card border border-border rounded-xl shadow-2xl py-1 ml-1">
+            {[0, 5, 10, 15].map((secs) => (
               <CtxItem
-                key={p}
-                onClick={() => onSetLeadPhase(p)}
-                checked={currentSlot?.lead_phase === p}
+                key={secs}
+                onClick={() => onSetScreenDelay(secs)}
+                checked={(currentSlot?.screen_delay_secs ?? 0) === secs}
               >
-                <span className="flex items-center gap-2">
-                  <span
-                    className="w-2 h-2 rounded-full shrink-0"
-                    style={{ background: LEAD_COLOURS[p] }}
-                  />
-                  {p}
-                </span>
+                {secs === 0 ? "No delay" : `${secs} seconds`}
               </CtxItem>
             ))}
           </div>
@@ -1475,6 +1476,23 @@ function SlotEditorPanel({
 
       {/* Shared slot settings (scrollable) */}
       <div className="flex-1 overflow-y-auto px-5 py-4 space-y-5">
+        {/* Mirror TS2 content from TS1 */}
+        {activeScreen === "screen2" && (
+          <div className="flex items-center justify-between py-2 px-3 bg-[color:var(--cyan)]/5 border border-[color:var(--cyan)]/20 rounded-xl">
+            <Label className="text-[10px] uppercase tracking-widest text-[color:var(--cyan)] cursor-pointer">
+              Mirror TS1 → TS2
+            </Label>
+            <Switch
+              checked={
+                JSON.stringify(slot.screen2_content) === JSON.stringify(slot.screen1_content)
+              }
+              onCheckedChange={(v) => {
+                if (v) onUpdate({ screen2_content: { ...slot.screen1_content } });
+              }}
+            />
+          </div>
+        )}
+
         {/* Content type configuration form */}
         <ContentTypeForm
           content={screenContent}
@@ -1488,73 +1506,9 @@ function SlotEditorPanel({
         />
         <div className="border-t border-border/40" />
 
-        {/* Slot name */}
-        <div className="space-y-1.5">
-          <Label className="text-[10px] uppercase tracking-widest text-muted-foreground">
-            Slot name (optional)
-          </Label>
-          <Input
-            value={slot.name ?? ""}
-            onChange={(e) => onUpdate({ name: e.target.value || null })}
-            placeholder="e.g. Introduction, Task 1…"
-            className="bg-background/60 border-border focus-visible:border-[color:var(--cyan)]"
-          />
-        </div>
-
-        {/* Side-screen delay */}
-        <div className="space-y-2">
-          <Label className="text-[10px] uppercase tracking-widest text-muted-foreground">
-            Side screen delay
-          </Label>
-          <Select
-            value={String(slot.screen_delay_secs ?? 0)}
-            onValueChange={(v) => onUpdate({ screen_delay_secs: Number(v) })}
-          >
-            <SelectTrigger className="bg-background/60 border-border focus:border-[color:var(--cyan)] focus:ring-[color:var(--cyan)]">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent className="bg-card border-border">
-              <SelectItem value="0">No delay</SelectItem>
-              <SelectItem value="5">5 seconds</SelectItem>
-              <SelectItem value="10">10 seconds</SelectItem>
-              <SelectItem value="15">15 seconds</SelectItem>
-            </SelectContent>
-          </Select>
-          <p className="text-[10px] text-muted-foreground">
-            Side screens count down before revealing new content. Last 3 seconds show 3…2…1.
-          </p>
-        </div>
-
-        <div className="border-t border-border/40" />
-
-        {/* LEAD phase */}
-        <div className="space-y-2">
-          <Label className="text-[10px] uppercase tracking-widest text-muted-foreground">
-            LEAD phase
-          </Label>
-          <Select
-            value={slot.lead_phase ?? "none"}
-            onValueChange={(v) => onUpdate({ lead_phase: v === "none" ? null : v })}
-          >
-            <SelectTrigger className="bg-background/60 border-border focus:border-[color:var(--cyan)] focus:ring-[color:var(--cyan)]">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent className="bg-card border-border">
-              <SelectItem value="none">None</SelectItem>
-              {LEAD_PHASES.map((p) => (
-                <SelectItem key={p} value={p}>
-                  <span className="flex items-center gap-2">
-                    <span
-                      className="w-2 h-2 rounded-full shrink-0 inline-block"
-                      style={{ background: LEAD_COLOURS[p] }}
-                    />
-                    {p}
-                  </span>
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+        <p className="text-[10px] text-muted-foreground">
+          Click a slot in the timeline to rename it. Right-click to set side screen delay.
+        </p>
       </div>
     </div>
   );

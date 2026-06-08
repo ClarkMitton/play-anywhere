@@ -47,6 +47,7 @@ type Lesson = {
   description: string | null;
   estimated_duration_mins: number;
   ms_form_url: string | null;
+  ms_form_title: string | null;
   slots: unknown;
   resource_bucket: ResourceFile[] | null;
   featured: boolean;
@@ -380,12 +381,12 @@ function LessonsTab() {
               lesson={lesson}
               onFeatured={() => toggleFeatured(lesson)}
               onEdit={() => {
-                // Designer route is created in Step 8
                 window.location.href = `/admin/designer/${lesson.id}`;
               }}
               onDelete={() => setDeleteTarget(lesson)}
               onUpload={(files) => handleBatchUpload(lesson, files)}
               uploading={uploadingFor === lesson.id}
+              onReload={loadLessons}
             />
           ))}
         </div>
@@ -436,6 +437,7 @@ function LessonCard({
   onDelete,
   onUpload,
   uploading,
+  onReload,
 }: {
   lesson: Lesson;
   onFeatured: () => void;
@@ -443,9 +445,30 @@ function LessonCard({
   onDelete: () => void;
   onUpload: (files: FileList) => void;
   uploading: boolean;
+  onReload: () => void;
 }) {
   const fileRef = useRef<HTMLInputElement>(null);
   const fileCount = Array.isArray(lesson.resource_bucket) ? lesson.resource_bucket.length : 0;
+  const [formEditOpen, setFormEditOpen] = useState(false);
+  const [formUrl, setFormUrl] = useState(lesson.ms_form_url ?? "");
+  const [formTitle, setFormTitle] = useState(lesson.ms_form_title ?? "");
+  const [formSaving, setFormSaving] = useState(false);
+
+  const saveForm = async () => {
+    setFormSaving(true);
+    await supabase.from("lessons").update({
+      ms_form_url: formUrl.trim() || null,
+      ms_form_title: formTitle.trim() || null,
+    }).eq("id", lesson.id);
+    setFormSaving(false);
+    setFormEditOpen(false);
+    onReload();
+  };
+
+  const unlinkForm = async () => {
+    await supabase.from("lessons").update({ ms_form_url: null, ms_form_title: null }).eq("id", lesson.id);
+    onReload();
+  };
 
   return (
     <div className="bg-card/60 backdrop-blur border border-border rounded-2xl p-6 animate-slot-in">
@@ -463,7 +486,7 @@ function LessonCard({
           {lesson.description && (
             <p className="text-muted-foreground mt-1 text-sm max-w-2xl">{lesson.description}</p>
           )}
-          <div className="flex items-center gap-5 mt-3 text-xs uppercase tracking-widest text-muted-foreground">
+          <div className="flex items-center gap-5 mt-3 text-xs uppercase tracking-widest text-muted-foreground flex-wrap">
             <span>{lesson.estimated_duration_mins}m</span>
             {fileCount > 0 && (
               <span>
@@ -471,7 +494,34 @@ function LessonCard({
               </span>
             )}
             {lesson.ms_form_url && (
-              <span className="text-[color:var(--cyan)]">Form linked</span>
+              <span className="flex items-center gap-2">
+                <span className="text-[color:var(--cyan)]">
+                  {lesson.ms_form_title ? lesson.ms_form_title : "Form linked"}
+                </span>
+                <button
+                  onClick={() => { setFormUrl(lesson.ms_form_url ?? ""); setFormTitle(lesson.ms_form_title ?? ""); setFormEditOpen(true); }}
+                  className="text-muted-foreground hover:text-foreground transition-colors text-[10px]"
+                  title="Edit form link"
+                >
+                  ✏
+                </button>
+                <button
+                  onClick={unlinkForm}
+                  className="text-destructive hover:text-destructive/80 transition-colors text-[10px]"
+                  title="Unlink form"
+                >
+                  ✕
+                </button>
+              </span>
+            )}
+            {!lesson.ms_form_url && (
+              <button
+                onClick={() => { setFormUrl(""); setFormTitle(""); setFormEditOpen(true); }}
+                className="text-muted-foreground hover:text-[color:var(--cyan)] transition-colors"
+                title="Link MS Form"
+              >
+                + Link form
+              </button>
             )}
           </div>
         </div>
@@ -507,7 +557,6 @@ function LessonCard({
             className="hidden"
             onChange={(e) => {
               if (e.target.files) onUpload(e.target.files);
-              // Reset so the same file can be picked again
               e.target.value = "";
             }}
           />
@@ -531,6 +580,41 @@ function LessonCard({
           </Button>
         </div>
       </div>
+
+      {/* Form link editor */}
+      <Dialog open={formEditOpen} onOpenChange={(o) => !o && setFormEditOpen(false)}>
+        <DialogContent className="bg-card border-border max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-extrabold">Link MS Form</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label className="uppercase tracking-widest text-xs text-muted-foreground">Form title</Label>
+              <Input
+                value={formTitle}
+                onChange={(e) => setFormTitle(e.target.value)}
+                placeholder="e.g. End of lesson feedback"
+                className="bg-background/60 border-border focus-visible:border-[color:var(--cyan)]"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="uppercase tracking-widest text-xs text-muted-foreground">Form URL</Label>
+              <Input
+                value={formUrl}
+                onChange={(e) => setFormUrl(e.target.value)}
+                placeholder="https://forms.office.com/…"
+                className="bg-background/60 border-border focus-visible:border-[color:var(--cyan)]"
+              />
+            </div>
+          </div>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setFormEditOpen(false)} disabled={formSaving}>Cancel</Button>
+            <Button onClick={saveForm} disabled={formSaving} className="uppercase tracking-widest">
+              {formSaving ? "Saving…" : "Save"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

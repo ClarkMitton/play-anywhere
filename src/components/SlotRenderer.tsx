@@ -226,8 +226,8 @@ export function SlotRenderer({
 
     case "confidence_checker": {
       const c = content as Extract<SlotContent, { type: "confidence_checker" }>;
-      if (screen === "screen2")
-        return <ConfidenceCheckerTS2 content={c} sessionId={sessionId} slotId={slotId} />;
+      if (screen === "screen1" || screen === "screen2")
+        return <ConfidenceCheckerInput content={c} screen={screen} sessionId={sessionId} slotId={slotId} />;
       if (screen === "host")
         return <ConfidenceCheckerHost sessionId={sessionId} slotId={slotId} />;
       return <Waiting screen={screen} />;
@@ -365,11 +365,12 @@ function SubmittedState() {
 }
 
 // ─────────────────────────────────────────────
-// CONFIDENCE CHECKER — Touch Screen 2
+// CONFIDENCE CHECKER — TS1 / TS2 input (multi-student)
 // ─────────────────────────────────────────────
 
-function ConfidenceCheckerTS2({ content, sessionId, slotId }: {
+function ConfidenceCheckerInput({ content, screen, sessionId, slotId }: {
   content: { prompt: string; optional_qualitative?: boolean };
+  screen: "screen1" | "screen2";
   sessionId?: string; slotId?: string;
 }) {
   const [score, setScore] = useState<number | null>(null);
@@ -389,14 +390,34 @@ function ConfidenceCheckerTS2({ content, sessionId, slotId }: {
     if (!score || !sessionId || submitting) return;
     setSubmitting(true);
     await supabase.from("responses").insert({
-      session_id: sessionId, slot_id: slotId ?? null, screen_role: "screen2",
+      session_id: sessionId, slot_id: slotId ?? null, screen_role: screen,
       response_type: "confidence_checker", response_data: { score, thoughts } as never,
     });
     setSubmitting(false);
     setSubmitted(true);
   };
 
-  if (submitted) return <SubmittedState />;
+  const handleNextStudent = () => {
+    setScore(null);
+    setThoughts([]);
+    setNewThought("");
+    setSubmitted(false);
+  };
+
+  if (submitted) {
+    return (
+      <div className="min-h-screen w-full bg-immersive bg-grid flex flex-col items-center justify-center p-10 animate-slot-in gap-8">
+        <div className="text-xs uppercase tracking-[0.5em] text-[color:var(--success)]">Response received</div>
+        <div className="text-5xl md:text-6xl font-extrabold text-glow text-center">Thank you!</div>
+        <Button
+          onClick={handleNextStudent}
+          className="h-16 px-12 text-xl uppercase tracking-widest font-extrabold"
+        >
+          Next Student
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen w-full bg-immersive bg-grid flex flex-col items-center justify-center p-8 gap-8 animate-slot-in">
@@ -524,7 +545,7 @@ function WheelSpinnerRenderer({ content, screen, sessionId }: {
     if (spinningRef.current || spinItems.length === 0) return;
     spinningRef.current = true;
     setResult(null);
-    setSpinning(true);
+
     const sectorDeg = 360 / spinItems.length;
     const winIdx = Math.max(0, spinItems.indexOf(winner));
     const winnerCenter = winIdx * sectorDeg + sectorDeg / 2;
@@ -532,7 +553,17 @@ function WheelSpinnerRenderer({ content, screen, sessionId }: {
     const currentMod = baseRotationRef.current % 360;
     const delta = ((targetMod - currentMod) + 360) % 360;
     baseRotationRef.current = baseRotationRef.current + 360 * 5 + delta;
-    setRotation(baseRotationRef.current);
+    const newRotation = baseRotationRef.current;
+
+    // Set spinning first so the CSS transition activates, then update rotation in the
+    // next two animation frames so the browser actually animates the transform change.
+    setSpinning(true);
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        setRotation(newRotation);
+      });
+    });
+
     setTimeout(() => {
       spinningRef.current = false;
       setSpinning(false);
@@ -890,7 +921,9 @@ function QuestionResults({ content, responses }: { content: QuestionContent; res
 
 // ─────────────────────────────────────────────
 // COUNTDOWN TIMER
-// Host has Start/Pause/Reset controls; all screens share timer state via broadcast.
+// Auto-starts on all screens. Host has Pause/Reset controls.
+// Uses baseSecsRef (fixed, never synced from state) to avoid compound-decrement speed bug.
+// Side screens request a sync from host when they subscribe late.
 // ─────────────────────────────────────────────
 
 function CountdownTimerRenderer({ content, screen, sessionId }: {
@@ -900,73 +933,126 @@ function CountdownTimerRenderer({ content, screen, sessionId }: {
 }) {
   const [secsLeft, setSecsLeft] = useState(content.duration_secs);
   const [running, setRunning] = useState(false);
+  const [flashRed, setFlashRed] = useState(false);
+
+  // baseSecsRef holds remaining seconds at the moment timer was last started/resumed.
+  // It is NEVER synced from secsLeft — that was the compound-decrement speed bug.
+  const baseSecsRef = useRef(content.duration_secs);
   const startedAtRef = useRef<number | null>(null);
-  const secsLeftRef = useRef(content.duration_secs);
+  const runningRef = useRef(false);
+  const doneRef = useRef(false);
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
 
-  useEffect(() => {
-    secsLeftRef.current = secsLeft;
-  }, [secsLeft]);
+  useEffect(() => { runningRef.current = running; }, [running]);
 
-  useEffect(() => {
-    if (!sessionId) return;
-    const ch = supabase.channel(`timer:${sessionId}`, { config: { broadcast: { self: true } } });
-    channelRef.current = ch;
-    ch.on("broadcast", { event: "timer_start" }, ({ payload }: { payload: { startedAt: number; baseSecs: number } }) => {
-      startedAtRef.current = payload.startedAt;
-      secsLeftRef.current = payload.baseSecs;
-      setSecsLeft(payload.baseSecs);
-      setRunning(true);
-    });
-    ch.on("broadcast", { event: "timer_pause" }, ({ payload }: { payload: { secsLeft: number } }) => {
-      startedAtRef.current = null;
-      setSecsLeft(payload.secsLeft);
-      secsLeftRef.current = payload.secsLeft;
-      setRunning(false);
-    });
-    ch.on("broadcast", { event: "timer_reset" }, () => {
-      startedAtRef.current = null;
-      setSecsLeft(content.duration_secs);
-      secsLeftRef.current = content.duration_secs;
-      setRunning(false);
-    });
-    ch.subscribe();
-    return () => { supabase.removeChannel(ch); channelRef.current = null; };
-  }, [sessionId, content.duration_secs]);
-
+  // Tick — only runs while running
   useEffect(() => {
     if (!running) return;
     const interval = setInterval(() => {
       if (startedAtRef.current === null) return;
       const elapsed = Math.floor((Date.now() - startedAtRef.current) / 1000);
-      const remaining = Math.max(0, secsLeftRef.current - elapsed);
+      const remaining = Math.max(0, baseSecsRef.current - elapsed);
       setSecsLeft(remaining);
-      if (remaining === 0) setRunning(false);
+      if (remaining === 0 && !doneRef.current) {
+        doneRef.current = true;
+        setRunning(false);
+        sounds.countdownEnd();
+        setFlashRed(true);
+        setTimeout(() => setFlashRed(false), 2500);
+      }
     }, 200);
     return () => clearInterval(interval);
   }, [running]);
+
+  // Channel + auto-start
+  useEffect(() => {
+    if (!sessionId) return;
+    const ch = supabase.channel(`timer:${sessionId}`, { config: { broadcast: { self: true } } });
+    channelRef.current = ch;
+
+    ch.on("broadcast", { event: "timer_start" }, ({ payload }: { payload: { startedAt: number; baseSecs: number } }) => {
+      doneRef.current = false;
+      startedAtRef.current = payload.startedAt;
+      baseSecsRef.current = payload.baseSecs;
+      setSecsLeft(payload.baseSecs);
+      setRunning(true);
+    });
+
+    ch.on("broadcast", { event: "timer_pause" }, ({ payload }: { payload: { secsLeft: number } }) => {
+      startedAtRef.current = null;
+      baseSecsRef.current = payload.secsLeft;
+      setSecsLeft(payload.secsLeft);
+      setRunning(false);
+    });
+
+    ch.on("broadcast", { event: "timer_reset" }, () => {
+      const startedAt = Date.now();
+      doneRef.current = false;
+      startedAtRef.current = startedAt;
+      baseSecsRef.current = content.duration_secs;
+      setSecsLeft(content.duration_secs);
+      setRunning(true);
+    });
+
+    if (screen === "host") {
+      // Respond to sync requests from side screens that subscribed late
+      ch.on("broadcast", { event: "timer_sync_request" }, () => {
+        if (!runningRef.current || !startedAtRef.current) return;
+        channelRef.current?.send({
+          type: "broadcast", event: "timer_sync",
+          payload: { startedAt: startedAtRef.current, baseSecs: baseSecsRef.current },
+        });
+      });
+    } else {
+      // Receive sync from host and start from correct position
+      ch.on("broadcast", { event: "timer_sync" }, ({ payload }: { payload: { startedAt: number; baseSecs: number } }) => {
+        if (!payload.startedAt || !payload.baseSecs) return;
+        doneRef.current = false;
+        startedAtRef.current = payload.startedAt;
+        baseSecsRef.current = payload.baseSecs;
+        const elapsed = Math.floor((Date.now() - payload.startedAt) / 1000);
+        const remaining = Math.max(0, payload.baseSecs - elapsed);
+        setSecsLeft(remaining > 0 ? remaining : 0);
+        if (remaining > 0) setRunning(true);
+      });
+    }
+
+    ch.subscribe(() => {
+      if (screen === "host") {
+        // Auto-start immediately
+        const startedAt = Date.now();
+        doneRef.current = false;
+        startedAtRef.current = startedAt;
+        baseSecsRef.current = content.duration_secs;
+        setRunning(true);
+        ch.send({ type: "broadcast", event: "timer_start", payload: { startedAt, baseSecs: content.duration_secs } });
+      } else {
+        // Request current state from host (it may already be running)
+        setTimeout(() => {
+          ch.send({ type: "broadcast", event: "timer_sync_request", payload: {} });
+        }, 300);
+      }
+    });
+
+    return () => { supabase.removeChannel(ch); channelRef.current = null; };
+  }, [sessionId, content.duration_secs, screen]);
 
   const mins = Math.floor(secsLeft / 60);
   const secs = secsLeft % 60;
   const timeStr = `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
   const urgent = secsLeft > 0 && secsLeft <= 10;
-  const done = secsLeft === 0;
-
-  const handleStart = () => {
-    const baseSecs = secsLeftRef.current;
-    const startedAt = Date.now();
-    channelRef.current?.send({
-      type: "broadcast", event: "timer_start",
-      payload: { startedAt, baseSecs },
-    });
-  };
+  const done = secsLeft === 0 && doneRef.current;
 
   const handlePause = () => {
-    const remaining = secsLeftRef.current;
-    channelRef.current?.send({
-      type: "broadcast", event: "timer_pause",
-      payload: { secsLeft: remaining },
-    });
+    if (!startedAtRef.current) return;
+    const elapsed = Math.floor((Date.now() - startedAtRef.current) / 1000);
+    const remaining = Math.max(0, baseSecsRef.current - elapsed);
+    channelRef.current?.send({ type: "broadcast", event: "timer_pause", payload: { secsLeft: remaining } });
+  };
+
+  const handleResume = () => {
+    const startedAt = Date.now();
+    channelRef.current?.send({ type: "broadcast", event: "timer_start", payload: { startedAt, baseSecs: baseSecsRef.current } });
   };
 
   const handleReset = () => {
@@ -986,19 +1072,15 @@ function CountdownTimerRenderer({ content, screen, sessionId }: {
       </div>
       {screen === "host" && (
         <div className="flex gap-4">
-          {!running ? (
-            <Button
-              onClick={handleStart}
-              disabled={done}
-              className="h-14 px-10 text-lg uppercase tracking-widest font-extrabold disabled:opacity-30"
-            >
-              {secsLeft === content.duration_secs ? "Start" : "Resume"}
-            </Button>
-          ) : (
+          {running ? (
             <Button onClick={handlePause} variant="outline" className="h-14 px-10 text-lg uppercase tracking-widest">
               Pause
             </Button>
-          )}
+          ) : !done ? (
+            <Button onClick={handleResume} className="h-14 px-10 text-lg uppercase tracking-widest font-extrabold">
+              Resume
+            </Button>
+          ) : null}
           <Button onClick={handleReset} variant="outline" className="h-14 px-10 text-lg uppercase tracking-widest">
             Reset
           </Button>
@@ -1007,12 +1089,16 @@ function CountdownTimerRenderer({ content, screen, sessionId }: {
       {done && (
         <div className="text-xl uppercase tracking-[0.3em] text-destructive animate-pulse font-bold">Time's up!</div>
       )}
+      {flashRed && (
+        <div className="fixed inset-0 pointer-events-none z-50 bg-destructive/50 animate-pulse" />
+      )}
     </div>
   );
 }
 
 // ─────────────────────────────────────────────
 // HOST TIMER — host-only local timer (no broadcast to side screens)
+// Auto-starts when the slide loads.
 // ─────────────────────────────────────────────
 
 function HostTimerRenderer({ content }: {
@@ -1020,50 +1106,64 @@ function HostTimerRenderer({ content }: {
 }) {
   const [secsLeft, setSecsLeft] = useState(content.duration_secs);
   const [running, setRunning] = useState(false);
+  const [flashRed, setFlashRed] = useState(false);
+  const baseSecsRef = useRef(content.duration_secs);
   const startedAtRef = useRef<number | null>(null);
-  const secsLeftRef = useRef(content.duration_secs);
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const doneRef = useRef(false);
 
+  // Auto-start on mount
   useEffect(() => {
-    secsLeftRef.current = secsLeft;
-  }, [secsLeft]);
+    const startedAt = Date.now();
+    startedAtRef.current = startedAt;
+    baseSecsRef.current = content.duration_secs;
+    setRunning(true);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     if (!running) return;
-    intervalRef.current = setInterval(() => {
+    const interval = setInterval(() => {
       if (startedAtRef.current === null) return;
       const elapsed = Math.floor((Date.now() - startedAtRef.current) / 1000);
-      const remaining = Math.max(0, secsLeftRef.current - elapsed);
+      const remaining = Math.max(0, baseSecsRef.current - elapsed);
       setSecsLeft(remaining);
-      if (remaining === 0) setRunning(false);
+      if (remaining === 0 && !doneRef.current) {
+        doneRef.current = true;
+        setRunning(false);
+        sounds.countdownEnd();
+        setFlashRed(true);
+        setTimeout(() => setFlashRed(false), 2500);
+      }
     }, 200);
-    return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current);
-    };
+    return () => clearInterval(interval);
   }, [running]);
 
   const mins = Math.floor(secsLeft / 60);
   const secs = secsLeft % 60;
   const timeStr = `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
   const urgent = secsLeft > 0 && secsLeft <= 10;
-  const done = secsLeft === 0;
+  const done = secsLeft === 0 && doneRef.current;
 
-  const handleStart = () => {
+  const handlePause = () => {
+    if (!startedAtRef.current) return;
+    const elapsed = Math.floor((Date.now() - startedAtRef.current) / 1000);
+    baseSecsRef.current = Math.max(0, baseSecsRef.current - elapsed);
+    startedAtRef.current = null;
+    setRunning(false);
+  };
+
+  const handleResume = () => {
     startedAtRef.current = Date.now();
     setRunning(true);
   };
 
-  const handlePause = () => {
-    startedAtRef.current = null;
-    setRunning(false);
-  };
-
   const handleReset = () => {
-    if (intervalRef.current) clearInterval(intervalRef.current);
-    startedAtRef.current = null;
-    setRunning(false);
+    doneRef.current = false;
+    const startedAt = Date.now();
+    startedAtRef.current = startedAt;
+    baseSecsRef.current = content.duration_secs;
     setSecsLeft(content.duration_secs);
-    secsLeftRef.current = content.duration_secs;
+    setRunning(true);
   };
 
   return (
@@ -1078,25 +1178,24 @@ function HostTimerRenderer({ content }: {
         {timeStr}
       </div>
       <div className="flex gap-4">
-        {!running ? (
-          <Button
-            onClick={handleStart}
-            disabled={done}
-            className="h-14 px-10 text-lg uppercase tracking-widest font-extrabold disabled:opacity-30"
-          >
-            {secsLeft === content.duration_secs ? "Start" : "Resume"}
-          </Button>
-        ) : (
+        {running ? (
           <Button onClick={handlePause} variant="outline" className="h-14 px-10 text-lg uppercase tracking-widest">
             Pause
           </Button>
-        )}
+        ) : !done ? (
+          <Button onClick={handleResume} className="h-14 px-10 text-lg uppercase tracking-widest font-extrabold">
+            Resume
+          </Button>
+        ) : null}
         <Button onClick={handleReset} variant="outline" className="h-14 px-10 text-lg uppercase tracking-widest">
           Reset
         </Button>
       </div>
       {done && (
         <div className="text-xl uppercase tracking-[0.3em] text-destructive animate-pulse font-bold">Time's up!</div>
+      )}
+      {flashRed && (
+        <div className="fixed inset-0 pointer-events-none z-50 bg-destructive/50 animate-pulse" />
       )}
     </div>
   );

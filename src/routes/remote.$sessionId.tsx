@@ -189,6 +189,30 @@ function RemotePage() {
     setEndConfirm(false);
   }, [session]);
 
+  const launchSession = useCallback(async () => {
+    if (!session || slots.length === 0 || busy) return;
+    const slot = slots[0];
+    setBusy(true);
+    await supabase
+      .from("sessions")
+      .update({
+        status: "active",
+        current_slot_index: 0,
+        state: {
+          slot: {
+            host: slot.host_content,
+            screen1: slot.screen1_content,
+            screen2: slot.screen2_content,
+          },
+          indices: { host: 0, screen1: 0, screen2: 0 },
+          screen_delay_secs: slot.screen_delay_secs ?? 0,
+        } as never,
+      })
+      .eq("id", session.id);
+    setBusy(false);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session, slots, busy]);
+
   // ── Render ─────────────────────────────────────
 
   if (!session) {
@@ -215,14 +239,24 @@ function RemotePage() {
 
   if (session.status === "waiting") {
     return (
-      <div className="min-h-screen bg-immersive flex flex-col items-center justify-center gap-4 p-8 text-center">
+      <div className="min-h-screen bg-immersive flex flex-col items-center justify-center gap-6 p-8 text-center">
         <div className="text-xs uppercase tracking-[0.4em] text-[color:var(--cyan)]">
           Host Remote
         </div>
-        <h1 className="text-3xl font-extrabold">Waiting for Host to launch…</h1>
+        <h1 className="text-3xl font-extrabold">Ready to launch</h1>
         <p className="text-sm text-muted-foreground max-w-sm">
-          Once the session is live, controls for each screen will appear here.
+          Launch the session from here or from the host screen.
         </p>
+        <Button
+          className="h-16 px-14 text-xl uppercase tracking-widest font-extrabold"
+          onClick={launchSession}
+          disabled={busy || slots.length === 0}
+        >
+          {busy ? "Launching…" : "Launch Session"}
+        </Button>
+        {slots.length === 0 && (
+          <p className="text-xs text-muted-foreground">Loading slots…</p>
+        )}
       </div>
     );
   }

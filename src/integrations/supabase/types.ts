@@ -22,6 +22,7 @@ export type Database = {
           featured: boolean
           id: string
           ms_form_url: string | null
+          ms_form_title: string | null
           resource_bucket: Json
           slots: Json
           title: string
@@ -34,6 +35,7 @@ export type Database = {
           featured?: boolean
           id?: string
           ms_form_url?: string | null
+          ms_form_title?: string | null
           resource_bucket?: Json
           slots?: Json
           title: string
@@ -46,6 +48,7 @@ export type Database = {
           featured?: boolean
           id?: string
           ms_form_url?: string | null
+          ms_form_title?: string | null
           resource_bucket?: Json
           slots?: Json
           title?: string
