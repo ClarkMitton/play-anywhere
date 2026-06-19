@@ -9,10 +9,11 @@
 // Each Prev/Next mutates ONE screen's index + content, leaving the others alone.
 
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { sessionChannel } from "@/lib/realtime";
 import { Button } from "@/components/ui/button";
+import type { RealtimeChannel } from "@supabase/supabase-js";
 
 
 export const Route = createFileRoute("/remote/$sessionId")({
