@@ -16,7 +16,7 @@ export type SlotContent =
   | { type: "teacher_note"; text: string; has_reveal_button?: boolean; question_id?: string }
   | { type: "youtube"; url: string }
   | { type: "video_upload"; url: string; file_name?: string; loop?: boolean }
-  | { type: "image"; url: string; file_name?: string }
+  | { type: "image"; url: string; file_name?: string; title?: string }
   | { type: "embed"; url: string }
   | { type: "webpage"; url: string }
   | { type: "host_webcam"; with_audio?: boolean }
