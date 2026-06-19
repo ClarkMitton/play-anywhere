@@ -21,7 +21,7 @@ export type SlotContent =
   | { type: "webpage"; url: string }
   | { type: "host_webcam"; with_audio?: boolean }
   | { type: "html_upload"; url: string; file_name?: string }
-  | { type: "confidence_checker"; prompt: string; optional_qualitative?: boolean }
+  | { type: "confidence_checker"; prompt: string; optional_qualitative?: boolean; scale_mode?: "numbers" | "likert"; max?: number }
   | { type: "wheel_spinner"; items: string[] }
   | { type: "countdown_timer"; label?: string; duration_secs: number }
   | { type: "host_timer"; label?: string; duration_secs: number }
@@ -229,7 +229,7 @@ export function SlotRenderer({
       if (screen === "screen1" || screen === "screen2")
         return <ConfidenceCheckerInput content={c} screen={screen} sessionId={sessionId} slotId={slotId} />;
       if (screen === "host")
-        return <ConfidenceCheckerHost sessionId={sessionId} slotId={slotId} />;
+        return <ConfidenceCheckerHost content={c} sessionId={sessionId} slotId={slotId} />;
       return <Waiting screen={screen} />;
     }
 
@@ -368,16 +368,34 @@ function SubmittedState() {
 // CONFIDENCE CHECKER — TS1 / TS2 input (multi-student)
 // ─────────────────────────────────────────────
 
+// 5-point Likert wording (low → high). Stored as 1–5 so the host chart and
+// session averages stay numeric regardless of scale mode.
+const LIKERT_LABELS = ["Strongly disagree", "Disagree", "Neutral", "Agree", "Strongly agree"];
+
+// Normalise the configured scale into a list of option values.
+// numbers → 1..max (max clamped 2–10). likert → fixed 1..5.
+function resolveScale(content: { scale_mode?: "numbers" | "likert"; max?: number }) {
+  const mode = content.scale_mode === "likert" ? "likert" : "numbers";
+  const max = mode === "likert" ? 5 : Math.min(10, Math.max(2, Math.round(content.max ?? 5)));
+  return { mode, max, options: Array.from({ length: max }, (_, i) => i + 1) };
+}
+
 function ConfidenceCheckerInput({ content, screen, sessionId, slotId }: {
-  content: { prompt: string; optional_qualitative?: boolean };
+  content: { prompt: string; optional_qualitative?: boolean; scale_mode?: "numbers" | "likert"; max?: number };
   screen: "screen1" | "screen2";
   sessionId?: string; slotId?: string;
 }) {
+  const { mode, options } = resolveScale(content);
+
   const [score, setScore] = useState<number | null>(null);
   const [thoughts, setThoughts] = useState<string[]>([]);
   const [newThought, setNewThought] = useState("");
-  const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [personNum, setPersonNum] = useState(1);   // person currently answering
+  const [recorded, setRecorded] = useState(0);     // people submitted so far
+  const [phase, setPhase] = useState<"input" | "confirm" | "done">("input");
+
+  const resetForm = () => { setScore(null); setThoughts([]); setNewThought(""); };
 
   const addThought = () => {
     const t = newThought.trim();
@@ -394,49 +412,93 @@ function ConfidenceCheckerInput({ content, screen, sessionId, slotId }: {
       response_type: "confidence_checker", response_data: { score, thoughts } as never,
     });
     setSubmitting(false);
-    setSubmitted(true);
+    setRecorded(c => c + 1);
+    setPhase("confirm");
   };
 
-  const handleNextStudent = () => {
-    setScore(null);
-    setThoughts([]);
-    setNewThought("");
-    setSubmitted(false);
+  const handleNextPerson = () => {
+    resetForm();
+    setPersonNum(n => n + 1);
+    setPhase("input");
   };
 
-  if (submitted) {
+  // After everyone on this screen has answered — final confirmation.
+  if (phase === "done") {
+    return (
+      <div className="min-h-screen w-full bg-immersive bg-grid flex flex-col items-center justify-center p-10 animate-slot-in gap-6">
+        <div className="text-xs uppercase tracking-[0.5em] text-[color:var(--success)]">All responses in</div>
+        <div className="text-5xl md:text-6xl font-extrabold text-glow text-center">That's everyone!</div>
+        <div className="text-xl text-muted-foreground">
+          {recorded} {recorded === 1 ? "person" : "people"} recorded
+        </div>
+      </div>
+    );
+  }
+
+  // Just submitted — choose to take the next person or finish the round.
+  if (phase === "confirm") {
     return (
       <div className="min-h-screen w-full bg-immersive bg-grid flex flex-col items-center justify-center p-10 animate-slot-in gap-8">
-        <div className="text-xs uppercase tracking-[0.5em] text-[color:var(--success)]">Response received</div>
-        <div className="text-5xl md:text-6xl font-extrabold text-glow text-center">Thank you!</div>
-        <Button
-          onClick={handleNextStudent}
-          className="h-16 px-12 text-xl uppercase tracking-widest font-extrabold"
-        >
-          Next Student
-        </Button>
+        <div className="text-xs uppercase tracking-[0.5em] text-[color:var(--success)]">Person {personNum} recorded</div>
+        <div className="text-4xl md:text-5xl font-extrabold text-glow text-center">Thank you!</div>
+        <div className="text-sm text-muted-foreground uppercase tracking-widest">
+          {recorded} {recorded === 1 ? "person" : "people"} so far
+        </div>
+        <div className="flex flex-col sm:flex-row gap-4">
+          <Button
+            onClick={handleNextPerson}
+            className="h-16 px-10 text-xl uppercase tracking-widest font-extrabold"
+          >
+            Next Person →
+          </Button>
+          <Button
+            onClick={() => setPhase("done")}
+            variant="outline"
+            className="h-16 px-10 text-xl uppercase tracking-widest font-extrabold border-2"
+          >
+            That's Everyone ✓
+          </Button>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen w-full bg-immersive bg-grid flex flex-col items-center justify-center p-8 gap-8 animate-slot-in">
+    <div className="min-h-screen w-full bg-immersive bg-grid flex flex-col items-center justify-center p-8 gap-7 animate-slot-in">
+      <div className="text-xs uppercase tracking-[0.5em] text-[color:var(--cyan)]">Person {personNum}</div>
       <div className="text-2xl md:text-3xl font-bold text-center max-w-lg leading-snug">
         {content.prompt || "How confident are you?"}
       </div>
-      <div className="flex gap-3 md:gap-5">
-        {[1, 2, 3, 4, 5].map(n => (
-          <button key={n} onClick={() => setScore(n)}
-            className={`w-16 h-16 md:w-20 md:h-20 rounded-2xl text-3xl md:text-4xl font-extrabold border-2 transition-all duration-150 select-none
-              ${score === n ? "border-[color:var(--cyan)] bg-[color:var(--cyan)]/20 text-[color:var(--cyan)] scale-110 shadow-[0_0_24px_color-mix(in_oklab,var(--cyan)_40%,transparent)]"
-                : "border-border text-muted-foreground hover:border-[color:var(--cyan)]/50 active:scale-95"}`}>
-            {n}
-          </button>
-        ))}
-      </div>
-      <div className="flex justify-between w-full max-w-xs text-xs text-muted-foreground uppercase tracking-widest">
-        <span>Not at all</span><span>Very confident</span>
-      </div>
+
+      {mode === "likert" ? (
+        <div className="flex flex-col gap-3 w-full max-w-lg">
+          {options.map(n => (
+            <button key={n} onClick={() => setScore(n)}
+              className={`w-full px-6 py-4 rounded-2xl text-left text-lg font-semibold border-2 transition-all duration-150
+                ${score === n ? "border-[color:var(--cyan)] bg-[color:var(--cyan)]/20 text-[color:var(--cyan)]"
+                  : "border-border text-foreground hover:border-[color:var(--cyan)]/50 active:scale-[0.99]"}`}>
+              {LIKERT_LABELS[n - 1]}
+            </button>
+          ))}
+        </div>
+      ) : (
+        <>
+          <div className="flex flex-wrap justify-center gap-3 md:gap-4 max-w-2xl">
+            {options.map(n => (
+              <button key={n} onClick={() => setScore(n)}
+                className={`w-16 h-16 md:w-20 md:h-20 rounded-2xl text-3xl md:text-4xl font-extrabold border-2 transition-all duration-150 select-none
+                  ${score === n ? "border-[color:var(--cyan)] bg-[color:var(--cyan)]/20 text-[color:var(--cyan)] scale-110 shadow-[0_0_24px_color-mix(in_oklab,var(--cyan)_40%,transparent)]"
+                    : "border-border text-muted-foreground hover:border-[color:var(--cyan)]/50 active:scale-95"}`}>
+                {n}
+              </button>
+            ))}
+          </div>
+          <div className="flex justify-between w-full max-w-xs text-xs text-muted-foreground uppercase tracking-widest">
+            <span>Not at all</span><span>Very confident</span>
+          </div>
+        </>
+      )}
+
       {content.optional_qualitative && (
         <div className="w-full max-w-lg space-y-3">
           <div className="text-sm text-muted-foreground uppercase tracking-widest">Add a thought (optional, up to 5)</div>
@@ -468,7 +530,11 @@ function ConfidenceCheckerInput({ content, screen, sessionId, slotId }: {
 // CONFIDENCE CHECKER — Host (live aggregate)
 // ─────────────────────────────────────────────
 
-function ConfidenceCheckerHost({ sessionId, slotId }: { sessionId?: string; slotId?: string }) {
+function ConfidenceCheckerHost({ content, sessionId, slotId }: {
+  content: { scale_mode?: "numbers" | "likert"; max?: number };
+  sessionId?: string; slotId?: string;
+}) {
+  const { mode, options } = resolveScale(content);
   const [scores, setScores] = useState<number[]>([]);
 
   useEffect(() => {
@@ -490,25 +556,31 @@ function ConfidenceCheckerHost({ sessionId, slotId }: { sessionId?: string; slot
     return () => { supabase.removeChannel(ch); };
   }, [sessionId, slotId]);
 
-  const counts = [1, 2, 3, 4, 5].map(n => scores.filter(s => s === n).length);
+  const counts = options.map(n => scores.filter(s => s === n).length);
   const maxCount = Math.max(...counts, 1);
   const avg = scores.length > 0 ? (scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(1) : "—";
-  const barColors = ["var(--destructive)", "var(--orange)", "oklch(0.82 0.18 80)", "oklch(0.75 0.18 150)", "var(--success)"];
+  // Hue ramp red → green across however many options the scale has.
+  const barColor = (i: number) => {
+    const t = options.length <= 1 ? 1 : i / (options.length - 1);
+    return `oklch(0.75 0.17 ${Math.round(25 + t * 120)})`;
+  };
 
   return (
     <div className="min-h-screen w-full bg-immersive bg-grid flex flex-col items-center justify-center p-12 gap-10 animate-slot-in">
       <div className="text-xs uppercase tracking-[0.4em] text-[color:var(--cyan)]">Confidence Checker · Live</div>
-      <div className="flex items-end gap-6 md:gap-10 h-48">
-        {[1, 2, 3, 4, 5].map((n, i) => {
-          const h = counts[i] === 0 ? 4 : Math.max(12, (counts[i] / maxCount) * 176);
-          return (
-            <div key={n} className="flex flex-col items-center gap-2">
-              <span className="text-2xl font-extrabold">{counts[i]}</span>
-              <div className="w-14 md:w-20 rounded-t-xl transition-all duration-700" style={{ height: `${h}px`, background: barColors[i] }} />
-              <span className="text-xl font-bold" style={{ color: barColors[i] }}>{n}</span>
-            </div>
-          );
-        })}
+      <div className="flex items-end gap-4 md:gap-8 h-48">
+        {options.map((n, i) => (
+          <div key={n} className="flex flex-col items-center gap-2">
+            <span className="text-2xl font-extrabold">{counts[i]}</span>
+            <div className="w-12 md:w-16 rounded-t-xl transition-all duration-700"
+              style={{ height: `${counts[i] === 0 ? 4 : Math.max(12, (counts[i] / maxCount) * 176)}px`, background: barColor(i) }} />
+            <span className="text-xl font-bold" style={{ color: barColor(i) }}>{n}</span>
+          </div>
+        ))}
+      </div>
+      <div className="flex justify-between w-full max-w-md text-xs text-muted-foreground uppercase tracking-widest">
+        <span>{mode === "likert" ? LIKERT_LABELS[0] : "Not at all"}</span>
+        <span>{mode === "likert" ? LIKERT_LABELS[LIKERT_LABELS.length - 1] : "Very confident"}</span>
       </div>
       <div className="flex gap-16 text-center">
         <div>
