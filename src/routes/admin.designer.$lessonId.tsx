@@ -1702,14 +1702,27 @@ function ContentTypeForm({
 
     case "image":
       return (
-        <FileUploadField
-          label="Image file"
-          accept="image/png,image/jpeg,image/webp,image/gif"
-          currentFileName={content.file_name ? String(content.file_name) : undefined}
-          lessonId={lessonId}
-          maxSizeMb={50}
-          onUpload={(url, file_name) => onChange({ url, file_name })}
-        />
+        <div className="space-y-3">
+          <div className="space-y-1.5">
+            <Label className="text-[10px] uppercase tracking-widest text-muted-foreground">
+              Title (optional)
+            </Label>
+            <Input
+              value={String(content.title ?? "")}
+              onChange={(e) => onChange({ title: e.target.value })}
+              placeholder="e.g. Activity 1 — Sort the cards"
+              className="bg-background/60 border-border focus-visible:border-[color:var(--cyan)]"
+            />
+          </div>
+          <FileUploadField
+            label="Image file"
+            accept="image/png,image/jpeg,image/webp,image/gif"
+            currentFileName={content.file_name ? String(content.file_name) : undefined}
+            lessonId={lessonId}
+            maxSizeMb={50}
+            onUpload={(url, file_name) => onChange({ url, file_name })}
+          />
+        </div>
       );
 
     case "embed": {
