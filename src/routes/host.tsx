@@ -332,6 +332,8 @@ function HostScreen() {
   const launch = async () => {
     if (!session) return;
     sounds.launch();
+    // Go fullscreen — must be called within the user gesture (click) chain
+    document.documentElement.requestFullscreen().catch(() => {});
     await supabase
       .from("sessions")
       .update({
@@ -345,6 +347,7 @@ function HostScreen() {
   const startOneScreen = async () => {
     if (!session) return;
     sounds.launch();
+    document.documentElement.requestFullscreen().catch(() => {});
     await supabase
       .from("sessions")
       .update({
@@ -355,6 +358,7 @@ function HostScreen() {
       })
       .eq("id", session.id);
   };
+
 
   const pushSlot = async (index: number) => {
     if (!session || index < 0 || index >= slots.length) return;
