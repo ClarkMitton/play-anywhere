@@ -104,6 +104,7 @@ function RemotePage() {
   // Realtime: stay in sync with the session row
   useEffect(() => {
     const ch = sessionChannel(sessionId);
+    channelRef.current = ch;
     ch.on(
       "postgres_changes",
       { event: "UPDATE", schema: "public", table: "sessions", filter: `id=eq.${sessionId}` },
@@ -111,9 +112,43 @@ function RemotePage() {
     );
     ch.subscribe();
     return () => {
+      channelRef.current = null;
       supabase.removeChannel(ch);
     };
   }, [sessionId]);
+
+  // Timer broadcast helpers
+  const sendTimer = useCallback(async (seconds: number) => {
+    const ch = channelRef.current;
+    if (!ch) return;
+    await ch.send({ type: "broadcast", event: "timer_set", payload: { seconds } });
+    setTimerSetFlash(true);
+    window.setTimeout(() => setTimerSetFlash(false), 900);
+  }, []);
+  const addMinute = useCallback(async () => {
+    const ch = channelRef.current;
+    if (!ch) return;
+    await ch.send({ type: "broadcast", event: "timer_add", payload: { seconds: 60 } });
+  }, []);
+  const clearTimer = useCallback(async () => {
+    const ch = channelRef.current;
+    if (!ch) return;
+    await ch.send({ type: "broadcast", event: "timer_clear", payload: {} });
+  }, []);
+
+  const bumpSec = (delta: number) => {
+    let total = tMin * 60 + tSec + delta;
+    if (total < 0) total = 0;
+    if (total > 99 * 60 + 45) total = 99 * 60 + 45;
+    setTMin(Math.floor(total / 60));
+    setTSec(total % 60);
+  };
+  const bumpMin = (delta: number) => {
+    let m = tMin + delta;
+    if (m < 0) m = 0;
+    if (m > 99) m = 99;
+    setTMin(m);
+  };
 
   const indices = session?.state?.indices ?? {};
   const currentIndex = (k: ScreenKey): number => {
