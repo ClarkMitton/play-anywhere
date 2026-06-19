@@ -67,6 +67,12 @@ function RemotePage() {
   const [slots, setSlots] = useState<SlotRow[]>([]);
   const [busy, setBusy] = useState(false);
   const [endConfirm, setEndConfirm] = useState(false);
+  const channelRef = useRef<RealtimeChannel | null>(null);
+
+  // Timer composer state
+  const [tMin, setTMin] = useState(1);
+  const [tSec, setTSec] = useState(0);
+  const [timerSetFlash, setTimerSetFlash] = useState(false);
 
   // Load session + slots
   useEffect(() => {
