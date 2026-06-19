@@ -65,24 +65,36 @@ export function SlotRenderer({
 
     case "text_slide": {
       const c = content as Extract<SlotContent, { type: "text_slide" }>;
-      const sizeClass =
-        c.size === "2xl" ? "text-[13vw]" :
-        c.size === "xl"  ? "text-[10vw]" :
-        c.size === "lg"  ? "text-[7vw]"  :
-        c.size === "md"  ? "text-[5vw]"  :
-        c.size === "sm"  ? "text-[3.5vw]": "text-[10vw]";
+      const text = c.text || "";
+      // Smart shrink: longer text gets smaller so it always fits the viewport without scrolling.
+      const baseVw =
+        c.size === "2xl" ? 13 :
+        c.size === "xl"  ? 10 :
+        c.size === "lg"  ? 7  :
+        c.size === "md"  ? 5  :
+        c.size === "sm"  ? 3.5 : 10;
+      const len = text.length;
+      const shrink =
+        len > 400 ? 0.32 :
+        len > 250 ? 0.42 :
+        len > 150 ? 0.55 :
+        len > 80  ? 0.7  :
+        len > 40  ? 0.85 : 1;
+      const fontSize = `clamp(1.25rem, ${(baseVw * shrink).toFixed(2)}vw, 14rem)`;
       return (
         <div
           key={String(c.text) + String(c.subtitle ?? "")}
-          className="min-h-screen w-full bg-immersive bg-grid flex items-center justify-center p-12 animate-slot-in"
+          className="h-screen w-full bg-immersive bg-grid flex items-center justify-center p-8 overflow-hidden animate-slot-in"
         >
-          <div className="text-center max-w-[90vw]">
-            <div className={`${sizeClass} leading-[0.95] font-extrabold text-glow`}
-              style={{ color: c.color ?? undefined }}>
-              {c.text || ""}
+          <div className="text-center max-w-[92vw] max-h-full overflow-hidden">
+            <div
+              className="leading-[1.05] font-extrabold text-glow whitespace-pre-line break-words"
+              style={{ color: c.color ?? undefined, fontSize }}
+            >
+              {text}
             </div>
             {c.subtitle && (
-              <div className="mt-4 text-[3vw] text-muted-foreground font-semibold leading-snug">
+              <div className="mt-4 text-[2.4vw] text-muted-foreground font-semibold leading-snug whitespace-pre-line">
                 {c.subtitle}
               </div>
             )}
@@ -160,25 +172,26 @@ export function SlotRenderer({
       const c = content as Extract<SlotContent, { type: "image" }>;
       if (!c.url) return <Waiting screen={screen} />;
       const title = (c.title ?? "").trim();
-      // Smart title sizing: long titles shrink, short ones grow — clamped to viewport.
       const titleLen = title.length;
       const titleVw = titleLen > 60 ? 2.6 : titleLen > 40 ? 3.4 : titleLen > 20 ? 4.4 : 5.5;
-      const titleFontSize = `clamp(1.5rem, ${titleVw}vw, 5rem)`;
+      const titleFontSize = `clamp(1.25rem, ${titleVw}vw, 5rem)`;
       return (
-        <div className="min-h-screen w-full bg-black animate-slot-in flex flex-col items-center justify-center p-6 gap-4">
+        <div className="h-screen w-full bg-black animate-slot-in flex flex-col items-center justify-center p-4 gap-3 overflow-hidden">
           {title && (
             <h2
-              className="font-extrabold text-glow text-center leading-tight max-w-[92vw] shrink-0"
+              className="font-extrabold text-glow text-center leading-tight max-w-[94vw] shrink-0 whitespace-pre-line"
               style={{ fontSize: titleFontSize, color: "var(--cyan)" }}
             >
               {title}
             </h2>
           )}
-          <img
-            src={c.url}
-            alt={title || ""}
-            className="max-w-full min-h-0 flex-1 w-auto h-auto object-contain"
-          />
+          <div className="flex-1 min-h-0 w-full flex items-center justify-center">
+            <img
+              src={c.url}
+              alt={title || ""}
+              className="max-h-full max-w-full w-auto h-auto object-contain"
+            />
+          </div>
         </div>
       );
     }
