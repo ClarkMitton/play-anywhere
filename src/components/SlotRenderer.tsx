@@ -160,8 +160,12 @@ export function SlotRenderer({
       const c = content as Extract<SlotContent, { type: "image" }>;
       if (!c.url) return <Waiting screen={screen} />;
       return (
-        <div className="min-h-screen w-full bg-black animate-slot-in">
-          <img src={c.url} alt="" className="w-full h-screen object-cover" />
+        <div className="min-h-screen w-full bg-black animate-slot-in flex items-center justify-center">
+          <img
+            src={c.url}
+            alt=""
+            className="max-w-full max-h-screen w-auto h-auto object-contain"
+          />
         </div>
       );
     }

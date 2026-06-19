@@ -1558,11 +1558,12 @@ function ContentTypeForm({
             <Label className="text-[10px] uppercase tracking-widest text-muted-foreground">
               Subtitle (optional)
             </Label>
-            <Input
+            <Textarea
               value={String(content.subtitle ?? "")}
               onChange={(e) => onChange({ subtitle: e.target.value })}
-              placeholder="Subtitle…"
-              className="bg-background/60 border-border focus-visible:border-[color:var(--cyan)]"
+              placeholder="Subtitle… (multiple lines allowed)"
+              rows={4}
+              className="bg-background/60 border-border focus-visible:border-[color:var(--cyan)] min-h-[100px] resize-y"
             />
           </div>
           <div className="space-y-1.5">
