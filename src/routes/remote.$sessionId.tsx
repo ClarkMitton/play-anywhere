@@ -261,137 +261,83 @@ function RemotePage() {
     );
   }
 
+  const curAll = Math.max(currentIndex("host"), currentIndex("screen1"), currentIndex("screen2"));
+  const total = slots.length;
+
   return (
-    <div className="min-h-screen bg-immersive bg-grid p-5 pb-12">
+    <div className="min-h-screen bg-immersive flex flex-col p-4 gap-3">
       {/* Header */}
-      <header className="max-w-md mx-auto mb-5">
-        <div className="text-[10px] uppercase tracking-[0.4em] text-[color:var(--cyan)] mb-1">
-          Host Remote · {slots.length} slot{slots.length !== 1 ? "s" : ""}
+      <header className="flex items-center justify-between shrink-0">
+        <div>
+          <div className="text-[10px] uppercase tracking-[0.4em] text-[color:var(--cyan)]">
+            Host Remote
+          </div>
+          <div className="text-xs font-mono text-muted-foreground mt-0.5 tabular-nums">
+            Slot {total === 0 ? "—" : `${curAll + 1}/${total}`}
+          </div>
         </div>
-        <h1 className="text-2xl font-extrabold leading-tight">Slot control</h1>
-        <div className="text-[10px] font-mono text-muted-foreground mt-1">
-          Session {session.id.slice(0, 8)}
-        </div>
-      </header>
-
-      {/* All together control */}
-      <div className="max-w-md mx-auto mb-6 bg-card/70 backdrop-blur border-2 border-border rounded-2xl p-4">
-        <div className="text-[10px] uppercase tracking-[0.4em] text-muted-foreground mb-3 text-center">
-          All screens together
-        </div>
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            className="flex-1 h-14 text-base uppercase tracking-widest font-bold"
-            onClick={() => moveAll(-1)}
-            disabled={busy || slots.length === 0}
-          >
-            ← Prev
-          </Button>
-          <Button
-            className="flex-1 h-14 text-base uppercase tracking-widest font-extrabold"
-            onClick={() => moveAll(1)}
-            disabled={busy || slots.length === 0}
-          >
-            Next →
-          </Button>
-        </div>
-      </div>
-
-      {/* End session */}
-      <div className="max-w-md mx-auto mb-6">
         {!endConfirm ? (
           <button
             onClick={() => setEndConfirm(true)}
-            className="w-full py-3 rounded-2xl border-2 border-destructive/50 text-destructive text-[10px] uppercase tracking-[0.3em] font-bold hover:bg-destructive/10 transition-colors"
+            className="px-3 py-2 rounded-lg border border-destructive/50 text-destructive text-[10px] uppercase tracking-[0.3em] font-bold hover:bg-destructive/10 transition-colors"
           >
-            End Session
+            End
           </button>
         ) : (
-          <div className="bg-card/70 backdrop-blur border-2 border-destructive/60 rounded-2xl p-4 space-y-3">
-            <div className="text-center text-sm font-bold text-destructive uppercase tracking-widest">
-              End session for everyone?
-            </div>
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                className="flex-1 h-12 text-xs uppercase tracking-widest"
-                onClick={() => setEndConfirm(false)}
-                disabled={busy}
-              >
-                Cancel
-              </Button>
-              <Button
-                variant="destructive"
-                className="flex-1 h-12 text-xs uppercase tracking-widest font-extrabold"
-                onClick={endSession}
-                disabled={busy}
-              >
-                {busy ? "Ending…" : "Yes, End"}
-              </Button>
-            </div>
+          <div className="flex gap-1.5">
+            <Button
+              variant="outline"
+              size="sm"
+              className="text-[10px] uppercase tracking-widest"
+              onClick={() => setEndConfirm(false)}
+              disabled={busy}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              size="sm"
+              className="text-[10px] uppercase tracking-widest font-extrabold"
+              onClick={endSession}
+              disabled={busy}
+            >
+              {busy ? "…" : "End?"}
+            </Button>
           </div>
         )}
+      </header>
+
+      {/* Big Previous / Next buttons that fill the screen */}
+      <div className="flex-1 flex flex-col gap-3 min-h-0">
+        <button
+          onClick={() => moveAll(-1)}
+          disabled={busy || curAll <= 0 || total === 0}
+          className="flex-1 rounded-3xl border-4 font-black uppercase tracking-[0.3em] text-4xl transition-all active:scale-[0.98] disabled:opacity-30 disabled:cursor-not-allowed"
+          style={{
+            background: "color-mix(in oklab, var(--orange) 20%, transparent)",
+            borderColor: "var(--orange)",
+            color: "var(--orange)",
+          }}
+        >
+          ↑ Previous
+        </button>
+        <button
+          onClick={() => moveAll(1)}
+          disabled={busy || curAll >= total - 1 || total === 0}
+          className="flex-1 rounded-3xl border-4 font-black uppercase tracking-[0.3em] text-4xl transition-all active:scale-[0.98] disabled:opacity-30 disabled:cursor-not-allowed"
+          style={{
+            background: "color-mix(in oklab, var(--success) 20%, transparent)",
+            borderColor: "var(--success)",
+            color: "var(--success)",
+          }}
+        >
+          Next ↓
+        </button>
       </div>
 
-      {/* Host webcam broadcaster */}
-      <div className="max-w-md mx-auto mb-6">
+      {/* Host webcam broadcaster (compact) */}
+      <div className="shrink-0">
         <WebcamControl sessionId={session.id} />
-      </div>
-
-      {/* Per-screen controls */}
-      <div className="max-w-md mx-auto space-y-3">
-        {(["host", "screen1", "screen2"] as ScreenKey[]).map((k) => {
-          const idx = currentIndex(k);
-          const total = slots.length;
-          const content = session.state?.slot?.[k];
-          return (
-            <div
-              key={k}
-              className="bg-card/70 backdrop-blur border-2 rounded-2xl p-4"
-              style={{ borderColor: `color-mix(in oklab, ${SCREEN_ACCENTS[k]} 40%, transparent)` }}
-            >
-              <div className="flex items-center justify-between mb-3">
-                <div>
-                  <div
-                    className="text-[10px] uppercase tracking-[0.3em] font-bold"
-                    style={{ color: SCREEN_ACCENTS[k] }}
-                  >
-                    {SCREEN_LABELS[k]}
-                  </div>
-                  <div className="text-xs text-muted-foreground mt-0.5 capitalize">
-                    {contentLabel(content)}
-                  </div>
-                </div>
-                <div className="text-right">
-                  <div className="text-[9px] uppercase tracking-widest text-muted-foreground">
-                    Slot
-                  </div>
-                  <div className="text-lg font-mono font-extrabold tabular-nums">
-                    {total === 0 ? "—" : `${idx + 1}/${total}`}
-                  </div>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  className="flex-1 h-12 uppercase tracking-widest text-xs"
-                  onClick={() => move(k, -1)}
-                  disabled={busy || idx <= 0 || total === 0}
-                >
-                  ← Prev
-                </Button>
-                <Button
-                  className="flex-1 h-12 uppercase tracking-widest text-xs font-extrabold"
-                  onClick={() => move(k, 1)}
-                  disabled={busy || idx >= total - 1 || total === 0}
-                >
-                  Next →
-                </Button>
-              </div>
-            </div>
-          );
-        })}
       </div>
     </div>
   );
