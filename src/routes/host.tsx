@@ -505,6 +505,7 @@ function HostScreen() {
             onEnd={endSession}
           />
         </div>
+        <HostTimerOverlay channel={channelRef.current} slotIndex={session.current_slot_index} />
       </div>
     );
   }
