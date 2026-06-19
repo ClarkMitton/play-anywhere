@@ -172,25 +172,26 @@ export function SlotRenderer({
       const c = content as Extract<SlotContent, { type: "image" }>;
       if (!c.url) return <Waiting screen={screen} />;
       const title = (c.title ?? "").trim();
-      // Smart title sizing: long titles shrink, short ones grow — clamped to viewport.
       const titleLen = title.length;
       const titleVw = titleLen > 60 ? 2.6 : titleLen > 40 ? 3.4 : titleLen > 20 ? 4.4 : 5.5;
-      const titleFontSize = `clamp(1.5rem, ${titleVw}vw, 5rem)`;
+      const titleFontSize = `clamp(1.25rem, ${titleVw}vw, 5rem)`;
       return (
-        <div className="min-h-screen w-full bg-black animate-slot-in flex flex-col items-center justify-center p-6 gap-4">
+        <div className="h-screen w-full bg-black animate-slot-in flex flex-col items-center justify-center p-4 gap-3 overflow-hidden">
           {title && (
             <h2
-              className="font-extrabold text-glow text-center leading-tight max-w-[92vw] shrink-0"
+              className="font-extrabold text-glow text-center leading-tight max-w-[94vw] shrink-0 whitespace-pre-line"
               style={{ fontSize: titleFontSize, color: "var(--cyan)" }}
             >
               {title}
             </h2>
           )}
-          <img
-            src={c.url}
-            alt={title || ""}
-            className="max-w-full min-h-0 flex-1 w-auto h-auto object-contain"
-          />
+          <div className="flex-1 min-h-0 w-full flex items-center justify-center">
+            <img
+              src={c.url}
+              alt={title || ""}
+              className="max-h-full max-w-full w-auto h-auto object-contain"
+            />
+          </div>
         </div>
       );
     }
