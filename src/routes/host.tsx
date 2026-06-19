@@ -659,3 +659,14 @@ function CodeCard({
   );
 }
 
+function FullscreenPrompt({ onClick }: { onClick: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      className="fixed top-4 right-4 z-[100] bg-[color:var(--cyan)] text-black px-5 py-3 rounded-full font-bold uppercase tracking-widest text-xs shadow-2xl hover:scale-105 transition-transform animate-pulse"
+    >
+      ⛶ Click to go fullscreen
+    </button>
+  );
+}
+
