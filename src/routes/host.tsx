@@ -13,6 +13,7 @@ import { sounds } from "@/lib/audio";
 import { StatusDot } from "@/components/StatusDot";
 import { SlotRenderer, type SlotContent } from "@/components/SlotRenderer";
 import { SessionEndScreen } from "@/components/SessionEndScreen";
+import { HostTimerOverlay } from "@/components/HostTimerOverlay";
 import { Button } from "@/components/ui/button";
 import { QRCodeSVG } from "qrcode.react";
 
