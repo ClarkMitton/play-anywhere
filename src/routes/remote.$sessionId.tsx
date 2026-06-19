@@ -349,6 +349,84 @@ function RemotePage() {
         )}
       </header>
 
+      {/* Timer composer */}
+      <div className="shrink-0 rounded-2xl border-2 border-[color:var(--cyan)]/30 bg-[color:var(--cyan)]/5 p-3">
+        <div className="flex items-center justify-between mb-2">
+          <div className="text-[10px] uppercase tracking-[0.3em] text-[color:var(--cyan)] font-bold">
+            Timer
+          </div>
+          <button
+            onClick={clearTimer}
+            className="text-[9px] uppercase tracking-widest text-muted-foreground hover:text-destructive transition-colors"
+          >
+            Hide
+          </button>
+        </div>
+        <div className="flex items-stretch justify-center gap-2 mb-2">
+          {/* Minutes */}
+          <div className="flex flex-col items-center">
+            <button
+              onClick={() => bumpMin(1)}
+              className="w-12 h-7 rounded-t-lg bg-card border border-border text-lg font-bold active:scale-95"
+            >+</button>
+            <input
+              type="number"
+              min={0}
+              max={99}
+              value={tMin}
+              onChange={(e) => setTMin(Math.max(0, Math.min(99, parseInt(e.target.value || "0", 10))))}
+              className="w-12 h-12 text-center bg-card border-x border-border font-mono text-2xl font-bold tabular-nums focus:outline-none focus:bg-[color:var(--cyan)]/10"
+            />
+            <button
+              onClick={() => bumpMin(-1)}
+              className="w-12 h-7 rounded-b-lg bg-card border border-border text-lg font-bold active:scale-95"
+            >−</button>
+          </div>
+          <div className="flex items-center text-3xl font-mono font-bold text-muted-foreground">:</div>
+          {/* Seconds (steps of 15) */}
+          <div className="flex flex-col items-center">
+            <button
+              onClick={() => bumpSec(15)}
+              className="w-12 h-7 rounded-t-lg bg-card border border-border text-lg font-bold active:scale-95"
+            >+</button>
+            <input
+              type="number"
+              min={0}
+              max={59}
+              value={tSec}
+              onChange={(e) => setTSec(Math.max(0, Math.min(59, parseInt(e.target.value || "0", 10))))}
+              className="w-12 h-12 text-center bg-card border-x border-border font-mono text-2xl font-bold tabular-nums focus:outline-none focus:bg-[color:var(--cyan)]/10"
+            />
+            <button
+              onClick={() => bumpSec(-15)}
+              className="w-12 h-7 rounded-b-lg bg-card border border-border text-lg font-bold active:scale-95"
+            >−</button>
+          </div>
+        </div>
+        <div className="flex gap-2">
+          <button
+            onClick={() => sendTimer(tMin * 60 + tSec)}
+            disabled={tMin * 60 + tSec === 0}
+            className="flex-1 h-11 rounded-xl font-extrabold uppercase tracking-widest text-sm transition-all active:scale-[0.98] disabled:opacity-30"
+            style={{
+              background: timerSetFlash
+                ? "var(--success)"
+                : "color-mix(in oklab, var(--cyan) 25%, transparent)",
+              color: timerSetFlash ? "#fff" : "var(--cyan)",
+              border: "2px solid var(--cyan)",
+            }}
+          >
+            {timerSetFlash ? "Sent ✓" : "Add Timer"}
+          </button>
+          <button
+            onClick={addMinute}
+            className="h-11 px-4 rounded-xl font-bold uppercase tracking-widest text-xs border-2 border-border bg-card active:scale-[0.98]"
+          >
+            +1 min
+          </button>
+        </div>
+      </div>
+
       {/* Big Previous / Next buttons that fill the screen */}
       <div className="flex-1 flex flex-col gap-3 min-h-0">
         <button
@@ -376,6 +454,7 @@ function RemotePage() {
           Next ↓
         </button>
       </div>
+
 
     </div>
   );
