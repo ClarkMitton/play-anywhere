@@ -21,8 +21,8 @@ export type Database = {
           estimated_duration_mins: number
           featured: boolean
           id: string
-          ms_form_url: string | null
           ms_form_title: string | null
+          ms_form_url: string | null
           resource_bucket: Json
           slots: Json
           title: string
@@ -34,8 +34,8 @@ export type Database = {
           estimated_duration_mins?: number
           featured?: boolean
           id?: string
-          ms_form_url?: string | null
           ms_form_title?: string | null
+          ms_form_url?: string | null
           resource_bucket?: Json
           slots?: Json
           title: string
@@ -47,8 +47,8 @@ export type Database = {
           estimated_duration_mins?: number
           featured?: boolean
           id?: string
-          ms_form_url?: string | null
           ms_form_title?: string | null
+          ms_form_url?: string | null
           resource_bucket?: Json
           slots?: Json
           title?: string
