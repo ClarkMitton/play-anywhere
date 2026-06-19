@@ -1751,7 +1751,9 @@ function ContentTypeForm({
         />
       );
 
-    case "confidence_checker":
+    case "confidence_checker": {
+      const ccMode = content.scale_mode === "likert" ? "likert" : "numbers";
+      const ccMax = Math.min(10, Math.max(2, Math.round(Number(content.max ?? 5))));
       return (
         <div className="space-y-3">
           <div className="space-y-1.5">
@@ -1765,6 +1767,43 @@ function ContentTypeForm({
               className="bg-background/60 border-border focus-visible:border-[color:var(--cyan)]"
             />
           </div>
+          <div className="space-y-1.5">
+            <Label className="text-[10px] uppercase tracking-widest text-muted-foreground">
+              Scale type
+            </Label>
+            <Select
+              value={ccMode}
+              onValueChange={(v) => onChange({ scale_mode: v })}
+            >
+              <SelectTrigger className="bg-background/60 border-border focus:border-[color:var(--cyan)]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="numbers">Numbers</SelectItem>
+                <SelectItem value="likert">Likert (Strongly disagree → Strongly agree)</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          {ccMode === "numbers" && (
+            <div className="space-y-1.5">
+              <Label className="text-[10px] uppercase tracking-widest text-muted-foreground">
+                Highest number (2–10)
+              </Label>
+              <Input
+                type="number"
+                min={2}
+                max={10}
+                value={ccMax}
+                onChange={(e) =>
+                  onChange({ max: Math.max(2, Math.min(10, Number(e.target.value) || 5)) })
+                }
+                className="w-24 bg-background/60 border-border focus-visible:border-[color:var(--cyan)] text-center"
+              />
+              <p className="text-[10px] text-muted-foreground">
+                Students pick from 1 to {ccMax}.
+              </p>
+            </div>
+          )}
           <div className="flex items-center justify-between">
             <Label className="text-[10px] uppercase tracking-widest text-muted-foreground cursor-pointer">
               Optional qualitative input
@@ -1775,10 +1814,12 @@ function ContentTypeForm({
             />
           </div>
           <p className="text-[10px] text-muted-foreground">
-            Touch Screen 2 shows 1–5 scale. Host shows live bar chart.
+            Each touch screen labels responders “Person 1, 2, 3…” — submit, take the next
+            person, then tap “That's everyone” to finish. Host shows a live bar chart.
           </p>
         </div>
       );
+    }
 
     case "wheel_spinner":
       return (
