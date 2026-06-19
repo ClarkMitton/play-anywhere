@@ -524,6 +524,7 @@ function HostScreen() {
           />
         </div>
         <HostTimerOverlay channel={channelRef.current} slotIndex={session.current_slot_index} />
+        {needsFullscreenClick && <FullscreenPrompt onClick={enterFullscreen} />}
       </div>
     );
   }
