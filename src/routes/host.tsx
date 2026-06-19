@@ -126,6 +126,23 @@ function HostScreen() {
   const [countdownDone, setCountdownDone] = useState(false);
   const countdownIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
+  // Fullscreen prompt — shown when session is active but the host PC isn't fullscreen
+  // (happens when teacher launches from their phone — no gesture on the host).
+  const [needsFullscreenClick, setNeedsFullscreenClick] = useState(false);
+  useEffect(() => {
+    if (session?.status !== "active") {
+      setNeedsFullscreenClick(false);
+      return;
+    }
+    const check = () => setNeedsFullscreenClick(!document.fullscreenElement);
+    check();
+    document.addEventListener("fullscreenchange", check);
+    return () => document.removeEventListener("fullscreenchange", check);
+  }, [session?.status]);
+  const enterFullscreen = () => {
+    document.documentElement.requestFullscreen().catch(() => {});
+  };
+
   // ── Load or create session ─────────────────────
 
   useEffect(() => {
