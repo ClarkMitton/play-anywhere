@@ -499,7 +499,6 @@ function HostScreen() {
             onEnd={endSession}
           />
         </div>
-        <HostWebcamFab sessionId={session.id} />
       </div>
     );
   }
