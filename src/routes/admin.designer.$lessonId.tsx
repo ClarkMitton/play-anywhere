@@ -1504,7 +1504,32 @@ function SlotEditorPanel({
             setQuestionModalOpen(true);
           }}
         />
+
+        {/* Mirror Host content to all 3 screens */}
+        {activeScreen === "host" && (
+          <div className="flex items-center justify-between py-2 px-3 bg-[color:var(--cyan)]/5 border border-[color:var(--cyan)]/20 rounded-xl">
+            <Label className="text-[10px] uppercase tracking-widest text-[color:var(--cyan)] cursor-pointer">
+              Mirror on all 3 screens
+            </Label>
+            <Switch
+              checked={
+                JSON.stringify(slot.screen1_content) === JSON.stringify(slot.host_content) &&
+                JSON.stringify(slot.screen2_content) === JSON.stringify(slot.host_content)
+              }
+              onCheckedChange={(v) => {
+                if (v) {
+                  onUpdate({
+                    screen1_content: { ...slot.host_content },
+                    screen2_content: { ...slot.host_content },
+                  });
+                }
+              }}
+            />
+          </div>
+        )}
+
         <div className="border-t border-border/40" />
+
 
         <p className="text-[10px] text-muted-foreground">
           Click a slot in the timeline to rename it. Right-click to set side screen delay.
