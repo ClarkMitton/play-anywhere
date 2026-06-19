@@ -126,6 +126,23 @@ function HostScreen() {
   const [countdownDone, setCountdownDone] = useState(false);
   const countdownIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
+  // Fullscreen prompt — shown when session is active but the host PC isn't fullscreen
+  // (happens when teacher launches from their phone — no gesture on the host).
+  const [needsFullscreenClick, setNeedsFullscreenClick] = useState(false);
+  useEffect(() => {
+    if (session?.status !== "active") {
+      setNeedsFullscreenClick(false);
+      return;
+    }
+    const check = () => setNeedsFullscreenClick(!document.fullscreenElement);
+    check();
+    document.addEventListener("fullscreenchange", check);
+    return () => document.removeEventListener("fullscreenchange", check);
+  }, [session?.status]);
+  const enterFullscreen = () => {
+    document.documentElement.requestFullscreen().catch(() => {});
+  };
+
   // ── Load or create session ─────────────────────
 
   useEffect(() => {
@@ -477,6 +494,7 @@ function HostScreen() {
           />
         </div>
         <HostTimerOverlay channel={channelRef.current} slotIndex={session.current_slot_index} />
+        {needsFullscreenClick && <FullscreenPrompt onClick={enterFullscreen} />}
       </div>
     );
   }
@@ -506,6 +524,7 @@ function HostScreen() {
           />
         </div>
         <HostTimerOverlay channel={channelRef.current} slotIndex={session.current_slot_index} />
+        {needsFullscreenClick && <FullscreenPrompt onClick={enterFullscreen} />}
       </div>
     );
   }
@@ -637,6 +656,17 @@ function CodeCard({
       </div>
       <div className="text-sm text-muted-foreground break-all">{url}</div>
     </div>
+  );
+}
+
+function FullscreenPrompt({ onClick }: { onClick: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      className="fixed top-4 right-4 z-[100] bg-[color:var(--cyan)] text-black px-5 py-3 rounded-full font-bold uppercase tracking-widest text-xs shadow-2xl hover:scale-105 transition-transform animate-pulse"
+    >
+      ⛶ Click to go fullscreen
+    </button>
   );
 }
 
