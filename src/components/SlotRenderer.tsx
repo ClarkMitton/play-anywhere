@@ -159,12 +159,25 @@ export function SlotRenderer({
     case "image": {
       const c = content as Extract<SlotContent, { type: "image" }>;
       if (!c.url) return <Waiting screen={screen} />;
+      const title = (c.title ?? "").trim();
+      // Smart title sizing: long titles shrink, short ones grow — clamped to viewport.
+      const titleLen = title.length;
+      const titleVw = titleLen > 60 ? 2.6 : titleLen > 40 ? 3.4 : titleLen > 20 ? 4.4 : 5.5;
+      const titleFontSize = `clamp(1.5rem, ${titleVw}vw, 5rem)`;
       return (
-        <div className="min-h-screen w-full bg-black animate-slot-in flex items-center justify-center">
+        <div className="min-h-screen w-full bg-black animate-slot-in flex flex-col items-center justify-center p-6 gap-4">
+          {title && (
+            <h2
+              className="font-extrabold text-glow text-center leading-tight max-w-[92vw] shrink-0"
+              style={{ fontSize: titleFontSize, color: "var(--cyan)" }}
+            >
+              {title}
+            </h2>
+          )}
           <img
             src={c.url}
-            alt=""
-            className="max-w-full max-h-screen w-auto h-auto object-contain"
+            alt={title || ""}
+            className="max-w-full min-h-0 flex-1 w-auto h-auto object-contain"
           />
         </div>
       );
