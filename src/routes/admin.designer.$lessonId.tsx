@@ -24,6 +24,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { SlotStackThumbnail } from "@/components/SlotThumbnail";
 
 // ─────────────────────────────────────────────
 // Constants
@@ -881,7 +882,9 @@ function SlotBlock({
   const [nameInput, setNameInput] = useState(slot.name ?? "");
   const nameInputRef = useRef<HTMLInputElement>(null);
 
-  const width = slotPx(slot.duration_mins);
+  // Fixed thumbnail card width — independent of duration so the timeline
+  // looks like a slide sorter rather than a Gantt chart.
+  const width = 168;
 
   const commitName = () => {
     setEditingName(false);
@@ -901,23 +904,15 @@ function SlotBlock({
       className={`group relative rounded-xl border-2 transition-all duration-150 select-none overflow-hidden cursor-pointer
         ${
           isSelected
-            ? "border-[color:var(--cyan)]"
+            ? "border-[color:var(--cyan)] shadow-[0_0_18px_color-mix(in_oklab,var(--cyan)_35%,transparent)]"
             : missingEnd
               ? "border-destructive"
-              : "border-border hover:border-[color:var(--cyan)]/50"
+              : "border-border hover:border-[color:var(--cyan)]/60 hover:shadow-[0_0_14px_color-mix(in_oklab,var(--cyan)_20%,transparent)]"
         }
         ${isResizing ? "opacity-80" : ""}
-        bg-card/80 backdrop-blur
+        bg-card/80 backdrop-blur shrink-0
       `}
-      style={{
-        width: `${width}px`,
-        minHeight: "80px",
-        boxShadow: isSelected
-          ? "0 0 16px color-mix(in oklab, var(--cyan) 25%, transparent)"
-          : missingEnd
-            ? "0 0 10px color-mix(in oklab, var(--destructive) 20%, transparent)"
-            : undefined,
-      }}
+      style={{ width: `${width}px` }}
     >
       {/* Delete button — visible on hover */}
       <button
@@ -928,13 +923,18 @@ function SlotBlock({
         ×
       </button>
 
-      <div className="px-3 pt-3 pb-2 flex flex-col gap-1.5 h-full">
-        {/* Per-screen content type pips */}
-        <div className="flex gap-1">
-          <ContentPip type={slot.host_content.type} label="H" />
-          <ContentPip type={slot.screen1_content.type} label="1" />
-          <ContentPip type={slot.screen2_content.type} label="2" />
+      <div className="px-2 pt-2 pb-2 flex flex-col gap-1.5">
+        {/* Slot index */}
+        <div className="text-[8px] uppercase tracking-widest text-muted-foreground/70 font-bold leading-none pl-0.5">
+          Slot {slot.order_index + 1}
         </div>
+
+        {/* Stacked screen previews: host on top, S1 + S2 below */}
+        <SlotStackThumbnail
+          host={slot.host_content}
+          s1={slot.screen1_content}
+          s2={slot.screen2_content}
+        />
 
         {/* Inline slot name — click to edit */}
         {editingName ? (
@@ -951,26 +951,17 @@ function SlotBlock({
             }}
             onClick={(e) => e.stopPropagation()}
             placeholder="Name…"
-            className="w-full text-[9px] bg-background/80 border border-[color:var(--cyan)] rounded px-1 py-0.5 outline-none text-foreground"
+            className="w-full text-[10px] bg-background/80 border border-[color:var(--cyan)] rounded px-1 py-0.5 outline-none text-foreground"
           />
         ) : (
           <div
-            className="text-[9px] text-muted-foreground truncate leading-tight cursor-text hover:text-foreground transition-colors"
+            className="text-[10px] text-muted-foreground truncate leading-tight cursor-text hover:text-foreground transition-colors px-0.5"
             title="Click to name slot"
             onClick={(e) => { e.stopPropagation(); setNameInput(slot.name ?? ""); setEditingName(true); }}
           >
             {slot.name || <span className="opacity-40 italic">name…</span>}
           </div>
         )}
-
-        {/* Delay indicator */}
-        <div className="flex items-end justify-end mt-auto">
-          {slot.screen_delay_secs > 0 && (
-            <span className="text-[8px] text-[color:var(--cyan)] font-bold">
-              +{slot.screen_delay_secs}s
-            </span>
-          )}
-        </div>
       </div>
     </div>
   );

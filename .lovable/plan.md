@@ -1,67 +1,59 @@
-## Goal
+This is a large change touching the designer, host, both student screens, and the slot renderer. I'll break it into 4 phases that can ship in order. Before starting I need a few decisions from you.
 
-Add a "Host Webcam" slot type. When active, the host's laptop camera (and optional mic) is streamed live to **all three displays** (host, screen 1, screen 2) — even if the host is only physically standing by one of them. This way it doesn't matter which screens the room has; everyone sees the host.
+## Phase 1 — Timeline slot thumbnails
 
-## How it will work (plain English)
+In `admin.designer.$lessonId.tsx`, replace each slot's label-only card with a mini "screen stack":
+- Top (≈65% height): Host preview thumbnail with corner tag "H"
+- Bottom row: Student 1 + Student 2 mini previews with "1" / "2" tags
+- Each thumbnail uses the same SlotRenderer logic at scaled-down size (CSS `transform: scale()` on a fixed-size 16:9 inner container so real text/image/bg colour shows)
+- Empty slot → faded box with "No content"
+- Rounded corners, subtle border, hover glow, consistent sizes across slots
 
-1. Host opens the **remote control page** on their phone, or the host display itself — that device becomes the **broadcaster** (it owns the camera).
-2. Each of the 3 displays subscribes as a **viewer** and receives the live video.
-3. Streaming uses **WebRTC** (browser-native, peer-to-peer, low latency, no media server needed). Supabase Realtime is used only for the tiny handshake messages (offer / answer / ICE candidates) — no video goes through the database.
-4. A new slot type `host_webcam` is added in the designer. When the slot is active, viewer screens automatically connect; when the host advances past it, viewers tear the connection down and the camera light turns off on the broadcaster.
+## Phase 2 — Confidence Checker mode
 
-## Where the broadcaster runs
+New slot type `confidence_checker` with config:
+- `prompt` (string)
+- `scaleType`: `numbers` (1–10) or `emojis` (5-step 😟 😐 🙂 😄 🤩)
 
-Best UX: add a **"Start camera"** button on the **host remote control page** (`/remote/$sessionId`). The host taps it once per session, grants camera permission on their phone or laptop, and from then on any time a `host_webcam` slot is active the stream is sent automatically. This keeps the camera tied to the person physically holding the remote, which is exactly the host.
+Behaviour:
+- Host: prompt + live distribution chart, reset button
+- Both student screens: scale buttons; tap submits
+- Side screens locked from manual config; designer hides per-screen editors for this slot type and shows "Controlled by Host Mode" banner
+- Responses stored in a new `responses` table keyed by `(session_id, slot_index, screen)` with realtime subscription
 
-Fallback: if the host prefers to broadcast from the main host display instead, the host page itself also exposes the same "Start camera" button.
+## Phase 3 — Voting Mode
 
-## UI additions
+New slot type `voting` with config:
+- `question`
+- `options[]` (2–4 labels, default A/B/C/D, presets Yes/No)
 
-- **Designer (`/admin/designer/$lessonId`)** — new slot content type `host_webcam` in the picker, with a tiny preview tile ("Host Webcam"). No config needed beyond placement (which screens show it — usually all three).
-- **Remote (`/remote/$sessionId`)** — persistent "Camera: Off / On" toggle at the top. When on, a small self-preview thumbnail confirms the camera is live.
-- **SlotRenderer** — new `case "host_webcam"` that renders a full-screen `<video>` element. Shows a "Waiting for host camera…" placeholder if the broadcaster hasn't started yet.
+Behaviour:
+- Host: question + live bar chart with counts and %
+- Student screens: large option buttons (one per option)
+- Reuses the same `responses` table; option index = response value
+- Reset votes button on host
 
-## Technical details
+## Phase 4 — Quiz Mode (Buzzers)
 
-**New slot content variant** in `src/components/SlotRenderer.tsx`:
-```ts
-| { type: "host_webcam"; with_audio?: boolean }
-```
+New slot type `quiz` with config:
+- `team1Name`, `team2Name` (defaults "Team 1" / "Team 2")
+- `questions[]` each `{ question, answer? }`
 
-**Signaling** — reuse the existing `sessionChannel(sessionId)` Supabase Realtime channel. Add new broadcast event names:
-- `webcam:offer` (broadcaster → specific viewer)
-- `webcam:answer` (viewer → broadcaster)
-- `webcam:ice` (both directions)
-- `webcam:viewer_join` (viewer announces itself; broadcaster responds with an offer)
-- `webcam:broadcaster_stop` (broadcaster ending stream)
+Behaviour:
+- Host: current question, both team scores, "first buzzed" highlight, controls: Reveal Answer (if any), Next Question, Reset Buzzers, +1/+5 per team
+- Student 1 = Team 1 BUZZ button; Student 2 = Team 2 BUZZ button
+- First press locks both, registers winner; scores persist across questions in the slot
+- Uses a `quiz_state` table (or extends `responses`) with realtime: `{ session_id, slot_index, current_q, buzzed_team, team1_score, team2_score }`
 
-Each viewer generates a random `viewerId` so the broadcaster can manage one `RTCPeerConnection` per viewer (up to 3).
+## Technical notes
 
-**New hook** `src/hooks/use-webcam-broadcast.ts`:
-- `useWebcamBroadcaster(sessionId, enabled)` — calls `getUserMedia`, listens for viewer joins, creates one RTCPeerConnection per viewer, sends offer, handles ICE.
-- `useWebcamViewer(sessionId, enabled)` — sends `viewer_join`, accepts the offer, returns a `MediaStream` to attach to the `<video>` element.
+- New DB tables `responses` and `quiz_state` with RLS + GRANTs, realtime enabled
+- New SlotRenderer cases: `confidence_checker`, `voting`, `quiz` — with `screen` prop variant (host/s1/s2)
+- Remote/student screens detect synchronized slot types and render the synced view instead of their per-slot config
+- Designer: when a synchronized slot type is chosen, hide the S1/S2 editor panels and show a "Controlled by Host" notice; thumbnails in Phase 1 still render the synced previews
 
-**ICE servers** — use Google's free public STUN (`stun:stun.l.google.com:19302`). No TURN needed for typical same-network classroom use; can add later if NAT traversal fails.
+## Questions before I start
 
-**Designer + DB** — no schema migration required. `slots.host_content` / `screen1_content` / `screen2_content` are already `jsonb`, so the new `{ type: "host_webcam" }` shape drops straight in.
-
-**Permissions** — `getUserMedia` requires HTTPS (both preview and published URLs are HTTPS, so fine). The browser shows its native camera-permission prompt once per origin.
-
-**Cleanup** — when the active slot changes away from `host_webcam`, both broadcaster and viewer effects tear down their `RTCPeerConnection`s and stop media tracks (turns the camera light off).
-
-## Out of scope (deliberately)
-
-- Recording / saving the stream.
-- Mixing the webcam as a picture-in-picture overlay on top of other slides (could be a follow-up — same underlying hook would be reused).
-- Multi-presenter (multiple cameras at once).
-- TURN server for cross-network scenarios — only needed if classroom Wi-Fi blocks peer connections; add only if it actually fails in testing.
-
-## Files to add / change
-
-- `src/components/SlotRenderer.tsx` — add `host_webcam` type + renderer case.
-- `src/hooks/use-webcam-broadcast.ts` — new file with both hooks.
-- `src/routes/remote.$sessionId.tsx` — add "Start/Stop camera" toggle + self-preview.
-- `src/routes/host.tsx` — also expose the toggle (fallback broadcaster).
-- `src/routes/admin.designer.$lessonId.tsx` — add `host_webcam` to the content type picker.
-
-No database migration. No new dependencies.
+1. Do you want all 4 phases in one go, or ship Phase 1 (thumbnails) first so you can review, then the 3 activity modes?
+2. For the quiz, should "Reset Buzzers" also clear the per-question winner highlight only, or also reset scores? (I'll default to: Reset Buzzers = just buzzers; separate "Reset Scores" button.)
+3. For Voting Mode, do you want the option to show results on student screens after they vote, or keep student screens on the buttons until host moves on? (I'll default to: show "✓ Vote recorded" on student after tap, no chart.)
