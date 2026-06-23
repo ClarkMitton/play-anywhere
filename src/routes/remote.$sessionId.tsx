@@ -427,6 +427,26 @@ function RemotePage() {
         </div>
       </div>
 
+      {/* Quiz Buzzer controls — only when the host's current slot is a quiz_buzzer */}
+      {(() => {
+        const idx = currentIndex("host");
+        const hostContent = slots[idx]?.host_content as
+          | { type?: string; team1_name?: string; team2_name?: string; question?: string; questions?: string[] }
+          | undefined;
+        if (!hostContent || hostContent.type !== "quiz_buzzer") return null;
+        const questions = (hostContent.questions && hostContent.questions.length > 0)
+          ? hostContent.questions
+          : (hostContent.question ? [hostContent.question] : []);
+        return (
+          <QuizRemoteControls
+            sessionId={sessionId}
+            team1Name={hostContent.team1_name?.trim() || "Team 1"}
+            team2Name={hostContent.team2_name?.trim() || "Team 2"}
+            totalQuestions={questions.length}
+          />
+        );
+      })()}
+
       {/* Big Previous / Next buttons that fill the screen */}
       <div className="flex-1 flex flex-col gap-3 min-h-0">
         <button
