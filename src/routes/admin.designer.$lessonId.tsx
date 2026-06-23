@@ -51,7 +51,7 @@ const LEAD_COLOURS: Record<string, string> = {
   Demonstrate: "oklch(0.72 0.18 300)", // violet
 };
 
-// Content types available per screen. teacher_note and host_timer are host (teacher screen) only.
+// Content types available per screen. host_timer is host (teacher screen) only.
 const CONTENT_TYPES_HOST = [
   { value: "waiting", label: "Waiting (standby)" },
   { value: "text_slide", label: "Text Slide" },
@@ -59,16 +59,12 @@ const CONTENT_TYPES_HOST = [
   { value: "youtube", label: "YouTube" },
   { value: "video_upload", label: "Video Upload" },
   { value: "embed", label: "Embed (iframe)" },
-  { value: "webpage", label: "Webpage (proxied)" },
-  { value: "html_upload", label: "HTML Upload" },
   { value: "confidence_checker", label: "Confidence Checker" },
   { value: "voting", label: "Voting" },
   { value: "quiz_buzzer", label: "Quiz Buzzer" },
   { value: "wheel_spinner", label: "Wheel Spinner" },
   { value: "countdown_timer", label: "Countdown Timer (all screens)" },
   { value: "host_timer", label: "Host Timer (Host only)" },
-  { value: "host_webcam", label: "Host Webcam" },
-  { value: "teacher_note", label: "Teacher Note (Host only)" },
 ];
 const CONTENT_TYPES_SCREEN1 = [
   { value: "waiting", label: "Waiting (standby)" },
@@ -77,19 +73,16 @@ const CONTENT_TYPES_SCREEN1 = [
   { value: "youtube", label: "YouTube" },
   { value: "video_upload", label: "Video Upload" },
   { value: "embed", label: "Embed (iframe)" },
-  { value: "webpage", label: "Webpage (proxied)" },
-  { value: "html_upload", label: "HTML Upload" },
   { value: "confidence_checker", label: "Confidence Checker" },
   { value: "voting", label: "Voting" },
   { value: "quiz_buzzer", label: "Quiz Buzzer" },
   { value: "wheel_spinner", label: "Wheel Spinner" },
   { value: "countdown_timer", label: "Countdown Timer" },
-  { value: "host_webcam", label: "Host Webcam" },
 ];
 const CONTENT_TYPES_SCREEN2 = CONTENT_TYPES_SCREEN1;
 // Lookup map for display labels
 const ALL_TYPE_LABELS = Object.fromEntries(
-  CONTENT_TYPES_SCREEN1.map((t) => [t.value, t.label]),
+  [...CONTENT_TYPES_HOST, ...CONTENT_TYPES_SCREEN1].map((t) => [t.value, t.label]),
 );
 
 // ─────────────────────────────────────────────
@@ -1785,7 +1778,7 @@ function ContentTypeForm({
       );
 
     case "confidence_checker": {
-      const ccMode = content.scale_mode === "likert" ? "likert" : "numbers";
+      const ccMode = content.scale_mode === "emoji" ? "emoji" : "numbers";
       const ccMax = Math.min(10, Math.max(2, Math.round(Number(content.max ?? 5))));
       return (
         <div className="space-y-3">
@@ -1812,8 +1805,8 @@ function ContentTypeForm({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="numbers">Numbers</SelectItem>
-                <SelectItem value="likert">Likert (Strongly disagree → Strongly agree)</SelectItem>
+                <SelectItem value="numbers">Numbers (1 → N)</SelectItem>
+                <SelectItem value="emoji">Emoji faces (😡 → 😄)</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -1915,16 +1908,16 @@ function ContentTypeForm({
     case "quiz_buzzer":
       return (
         <div className="space-y-3">
-          <div className="space-y-1.5">
-            <Label className="text-[10px] uppercase tracking-widest text-muted-foreground">Question (optional)</Label>
-            <Textarea
-              value={String(content.question ?? "")}
-              onChange={(e) => onChange({ question: e.target.value })}
-              placeholder="Read aloud or type your question here…"
-              rows={2}
-              className="bg-background/60 border-border focus-visible:border-[color:var(--cyan)]"
-            />
-          </div>
+          <QuizQuestionsEditor
+            questions={
+              Array.isArray(content.questions)
+                ? (content.questions as string[])
+                : content.question
+                  ? [String(content.question)]
+                  : []
+            }
+            onChange={(questions) => onChange({ questions, question: questions[0] ?? "" })}
+          />
           <div className="grid grid-cols-2 gap-2">
             <div className="space-y-1.5">
               <Label className="text-[10px] uppercase tracking-widest text-muted-foreground">Team 1 name</Label>
@@ -1946,7 +1939,7 @@ function ContentTypeForm({
             </div>
           </div>
           <p className="text-[10px] text-muted-foreground">
-            Place on all 3 screens (use Mirror). TS1 = Team 1 buzzer, TS2 = Team 2 buzzer. Host shows scores + controls.
+            Place on all 3 screens (use Mirror). TS1 = Team 1 buzzer, TS2 = Team 2 buzzer. Host shows scores + controls and a "Next Question" button.
           </p>
         </div>
       );
@@ -2252,6 +2245,74 @@ function WheelItemsEditor({
         <button
           onClick={addItem}
           className="px-3 h-8 border border-border rounded-md text-sm hover:border-[color:var(--cyan)] transition-colors"
+        >
+          +
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// Multi-question editor for Quiz Buzzer. Stores as a string[].
+function QuizQuestionsEditor({
+  questions,
+  onChange,
+}: {
+  questions: string[];
+  onChange: (questions: string[]) => void;
+}) {
+  const [newQ, setNewQ] = useState("");
+  const addQ = () => {
+    const t = newQ.trim();
+    if (!t) return;
+    onChange([...questions, t]);
+    setNewQ("");
+  };
+  return (
+    <div className="space-y-2">
+      <Label className="text-[10px] uppercase tracking-widest text-muted-foreground">
+        Questions ({questions.length}) — host advances with "Next Question"
+      </Label>
+      <div className="space-y-1.5 max-h-56 overflow-y-auto">
+        {questions.map((q, i) => (
+          <div key={i} className="flex items-start gap-2">
+            <span className="text-[10px] font-bold text-muted-foreground mt-2 w-5 text-right shrink-0">{i + 1}.</span>
+            <Textarea
+              value={q}
+              onChange={(e) => {
+                const next = [...questions];
+                next[i] = e.target.value;
+                onChange(next);
+              }}
+              rows={2}
+              className="flex-1 text-xs bg-background/60 border-border focus-visible:border-[color:var(--cyan)]"
+            />
+            <button
+              onClick={() => onChange(questions.filter((_, j) => j !== i))}
+              className="text-muted-foreground hover:text-destructive transition-colors text-lg leading-none shrink-0 px-1 mt-1"
+            >
+              ×
+            </button>
+          </div>
+        ))}
+      </div>
+      <div className="flex gap-2">
+        <Textarea
+          value={newQ}
+          onChange={(e) => setNewQ(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+              e.preventDefault();
+              addQ();
+            }
+          }}
+          rows={2}
+          placeholder="Add a question… (⌘/Ctrl+Enter to add)"
+          className="flex-1 text-xs bg-background/60 border-border focus-visible:border-[color:var(--cyan)]"
+        />
+        <button
+          onClick={addQ}
+          className="px-3 h-8 border border-border rounded-md text-sm hover:border-[color:var(--cyan)] transition-colors shrink-0 self-start"
         >
           +
         </button>
