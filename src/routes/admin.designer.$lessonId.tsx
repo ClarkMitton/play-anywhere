@@ -62,6 +62,8 @@ const CONTENT_TYPES_HOST = [
   { value: "webpage", label: "Webpage (proxied)" },
   { value: "html_upload", label: "HTML Upload" },
   { value: "confidence_checker", label: "Confidence Checker" },
+  { value: "voting", label: "Voting" },
+  { value: "quiz_buzzer", label: "Quiz Buzzer" },
   { value: "wheel_spinner", label: "Wheel Spinner" },
   { value: "countdown_timer", label: "Countdown Timer (all screens)" },
   { value: "host_timer", label: "Host Timer (Host only)" },
