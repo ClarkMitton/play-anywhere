@@ -1314,3 +1314,273 @@ function HostTimerRenderer({ content }: {
     </div>
   );
 }
+
+// ─────────────────────────────────────────────
+// VOTING MODE — host shows live bar chart; TS1/TS2 show option buttons
+// Stored in `responses` with response_type="voting", response_data={option:number}
+// ─────────────────────────────────────────────
+
+const VOTE_PALETTE = ["var(--cyan)", "var(--orange)", "var(--success)", "oklch(0.72 0.18 300)"];
+
+function VotingRenderer({ content, screen, sessionId, slotId }: {
+  content: { question: string; options: string[] };
+  screen: "host" | "screen1" | "screen2";
+  sessionId?: string; slotId?: string;
+}) {
+  const options = (content.options ?? []).filter((o) => typeof o === "string");
+  if (screen === "host") return <VotingHost question={content.question} options={options} sessionId={sessionId} slotId={slotId} />;
+  return <VotingInput question={content.question} options={options} screen={screen} sessionId={sessionId} slotId={slotId} />;
+}
+
+function VotingInput({ question, options, screen, sessionId, slotId }: {
+  question: string; options: string[]; screen: "screen1" | "screen2";
+  sessionId?: string; slotId?: string;
+}) {
+  const [picked, setPicked] = useState<number | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [done, setDone] = useState(false);
+
+  const submit = async (i: number) => {
+    if (!sessionId || submitting || done) return;
+    setPicked(i);
+    setSubmitting(true);
+    await supabase.from("responses").insert({
+      session_id: sessionId, slot_id: slotId ?? null, screen_role: screen,
+      response_type: "voting", response_data: { option: i } as never,
+    });
+    setSubmitting(false);
+    setDone(true);
+  };
+
+  if (done) {
+    return (
+      <div className="min-h-screen w-full bg-immersive bg-grid flex flex-col items-center justify-center gap-6 p-10 animate-slot-in">
+        <div className="text-xs uppercase tracking-[0.5em] text-[color:var(--success)]">Vote recorded</div>
+        <div className="text-5xl md:text-7xl font-extrabold text-glow text-center">Thanks!</div>
+        {picked !== null && (
+          <div className="text-2xl text-muted-foreground">You voted: <span className="font-bold text-foreground">{options[picked]}</span></div>
+        )}
+        <Button onClick={() => { setDone(false); setPicked(null); }} variant="outline" className="h-12 px-8 text-sm uppercase tracking-widest">
+          Vote again
+        </Button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen w-full bg-immersive bg-grid flex flex-col items-center justify-center p-8 gap-8 animate-slot-in">
+      <div className="text-2xl md:text-4xl font-bold text-center max-w-2xl">{question || "Cast your vote"}</div>
+      <div className={`grid gap-4 w-full max-w-3xl ${options.length <= 2 ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-2"}`}>
+        {options.map((opt, i) => (
+          <button key={i} onClick={() => submit(i)} disabled={submitting}
+            className="h-32 md:h-40 rounded-3xl border-4 text-3xl md:text-4xl font-extrabold uppercase tracking-wide transition-all active:scale-[0.97] disabled:opacity-40"
+            style={{ borderColor: VOTE_PALETTE[i % VOTE_PALETTE.length], background: `color-mix(in oklab, ${VOTE_PALETTE[i % VOTE_PALETTE.length]} 18%, transparent)`, color: VOTE_PALETTE[i % VOTE_PALETTE.length] }}>
+            {opt || `Option ${String.fromCharCode(65 + i)}`}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function VotingHost({ question, options, sessionId, slotId }: {
+  question: string; options: string[]; sessionId?: string; slotId?: string;
+}) {
+  const [votes, setVotes] = useState<number[]>([]);
+
+  useEffect(() => {
+    if (!sessionId) return;
+    let cancelled = false;
+    (async () => {
+      let q = supabase.from("responses").select("response_data").eq("session_id", sessionId).eq("response_type", "voting");
+      if (slotId) q = q.eq("slot_id", slotId);
+      const { data } = await q;
+      if (!cancelled && data) setVotes(data.map(r => (r.response_data as { option?: number })?.option).filter((n): n is number => typeof n === "number"));
+    })();
+    const ch = supabase.channel(`vote:${sessionId}`);
+    ch.on("postgres_changes", { event: "INSERT", schema: "public", table: "responses", filter: `session_id=eq.${sessionId}` },
+      (payload) => {
+        const r = payload.new as { response_type: string; response_data: { option?: number }; slot_id: string | null };
+        if (r.response_type !== "voting") return;
+        if (slotId && r.slot_id !== slotId) return;
+        if (typeof r.response_data?.option === "number") setVotes(p => [...p, r.response_data.option!]);
+      }).subscribe();
+    return () => { cancelled = true; supabase.removeChannel(ch); };
+  }, [sessionId, slotId]);
+
+  const counts = options.map((_, i) => votes.filter(v => v === i).length);
+  const total = votes.length;
+  const maxCount = Math.max(...counts, 1);
+
+  return (
+    <div className="min-h-screen w-full bg-immersive bg-grid flex flex-col items-center justify-center p-12 gap-8 animate-slot-in">
+      <div className="text-xs uppercase tracking-[0.4em] text-[color:var(--cyan)]">Voting · Live</div>
+      <div className="text-3xl md:text-5xl font-bold text-center max-w-3xl">{question || "Voting"}</div>
+      <div className="w-full max-w-4xl space-y-5">
+        {options.map((opt, i) => {
+          const c = counts[i];
+          const pct = total > 0 ? Math.round((c / total) * 100) : 0;
+          const w = (c / maxCount) * 100;
+          const color = VOTE_PALETTE[i % VOTE_PALETTE.length];
+          return (
+            <div key={i}>
+              <div className="flex items-baseline justify-between mb-2">
+                <span className="text-xl md:text-2xl font-bold" style={{ color }}>{opt || `Option ${String.fromCharCode(65 + i)}`}</span>
+                <span className="text-lg text-muted-foreground tabular-nums">{c} · {pct}%</span>
+              </div>
+              <div className="h-8 rounded-xl bg-card/60 overflow-hidden">
+                <div className="h-full rounded-xl transition-all duration-700 ease-out" style={{ width: `${w}%`, background: color }} />
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      <div className="text-sm text-muted-foreground uppercase tracking-widest">{total} vote{total === 1 ? "" : "s"}</div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────
+// QUIZ BUZZER MODE — TS1 = Team 1, TS2 = Team 2, Host shows scores + controls
+// State synced via realtime broadcast on channel quiz:${sessionId}
+// ─────────────────────────────────────────────
+
+type QuizState = {
+  buzzed: "team1" | "team2" | null;
+  scores: { team1: number; team2: number };
+};
+
+function QuizBuzzerRenderer({ content, screen, sessionId }: {
+  content: { question?: string; team1_name?: string; team2_name?: string };
+  screen: "host" | "screen1" | "screen2";
+  sessionId?: string;
+}) {
+  const team1Name = content.team1_name?.trim() || "Team 1";
+  const team2Name = content.team2_name?.trim() || "Team 2";
+  const [state, setState] = useState<QuizState>({ buzzed: null, scores: { team1: 0, team2: 0 } });
+  const stateRef = useRef(state);
+  const channelRef = useRef<RealtimeChannel | null>(null);
+  useEffect(() => { stateRef.current = state; }, [state]);
+
+  useEffect(() => {
+    if (!sessionId) return;
+    const ch = supabase.channel(`quiz:${sessionId}`, { config: { broadcast: { self: true } } });
+    channelRef.current = ch;
+    ch.on("broadcast", { event: "quiz_state" }, ({ payload }: { payload: QuizState }) => {
+      setState(payload);
+    });
+    if (screen === "host") {
+      ch.on("broadcast", { event: "quiz_sync_request" }, () => {
+        ch.send({ type: "broadcast", event: "quiz_state", payload: stateRef.current });
+      });
+    }
+    ch.subscribe(() => {
+      if (screen !== "host") {
+        setTimeout(() => ch.send({ type: "broadcast", event: "quiz_sync_request", payload: {} }), 200);
+      }
+    });
+    return () => { supabase.removeChannel(ch); channelRef.current = null; };
+  }, [sessionId, screen]);
+
+  const broadcast = (next: QuizState) => {
+    setState(next);
+    channelRef.current?.send({ type: "broadcast", event: "quiz_state", payload: next });
+  };
+
+  const buzz = (team: "team1" | "team2") => {
+    if (state.buzzed) return;
+    const next = { ...state, buzzed: team };
+    broadcast(next);
+    sounds.questionReveal();
+  };
+
+  // ── TS1 / TS2: massive buzz button
+  if (screen === "screen1" || screen === "screen2") {
+    const team = screen === "screen1" ? "team1" : "team2";
+    const name = team === "team1" ? team1Name : team2Name;
+    const color = team === "team1" ? "var(--cyan)" : "var(--orange)";
+    const isMe = state.buzzed === team;
+    const other = state.buzzed && !isMe;
+    return (
+      <div className="min-h-screen w-full bg-immersive flex flex-col p-6 gap-4 animate-slot-in">
+        <div className="text-center">
+          <div className="text-xs uppercase tracking-[0.4em] text-muted-foreground">Quiz</div>
+          <div className="text-3xl md:text-5xl font-extrabold mt-1" style={{ color }}>{name}</div>
+        </div>
+        {content.question && (
+          <div className="text-xl md:text-2xl font-bold text-center px-4">{content.question}</div>
+        )}
+        <button
+          onClick={() => buzz(team)}
+          disabled={Boolean(state.buzzed)}
+          className="flex-1 rounded-[3rem] border-[6px] font-black uppercase tracking-[0.4em] text-6xl md:text-8xl transition-all active:scale-[0.97] disabled:opacity-30"
+          style={{
+            borderColor: color,
+            background: isMe ? color : `color-mix(in oklab, ${color} 15%, transparent)`,
+            color: isMe ? "#000" : color,
+          }}
+        >
+          {isMe ? "✓ Buzzed!" : other ? "Locked" : "BUZZ"}
+        </button>
+        <div className="grid grid-cols-2 gap-3 text-center">
+          <div className="rounded-xl border-2 border-[color:var(--cyan)]/40 p-3">
+            <div className="text-[10px] uppercase tracking-widest text-muted-foreground">{team1Name}</div>
+            <div className="text-3xl font-extrabold text-[color:var(--cyan)] tabular-nums">{state.scores.team1}</div>
+          </div>
+          <div className="rounded-xl border-2 border-[color:var(--orange)]/40 p-3">
+            <div className="text-[10px] uppercase tracking-widest text-muted-foreground">{team2Name}</div>
+            <div className="text-3xl font-extrabold text-[color:var(--orange)] tabular-nums">{state.scores.team2}</div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Host view: question, scores, controls
+  const resetBuzz = () => broadcast({ ...state, buzzed: null });
+  const award = (team: "team1" | "team2", n: number) => {
+    const scores = { ...state.scores, [team]: Math.max(0, state.scores[team] + n) };
+    broadcast({ ...state, scores, buzzed: null });
+  };
+  const resetScores = () => broadcast({ buzzed: null, scores: { team1: 0, team2: 0 } });
+
+  return (
+    <div className="min-h-screen w-full bg-immersive bg-grid flex flex-col items-center justify-center p-10 gap-8 animate-slot-in">
+      <div className="text-xs uppercase tracking-[0.4em] text-[color:var(--cyan)]">Quiz Buzzer</div>
+      {content.question && (
+        <div className="text-3xl md:text-5xl font-bold text-center max-w-4xl">{content.question}</div>
+      )}
+      <div className="grid grid-cols-2 gap-8 w-full max-w-4xl">
+        {(["team1", "team2"] as const).map((t) => {
+          const isBuzzed = state.buzzed === t;
+          const color = t === "team1" ? "var(--cyan)" : "var(--orange)";
+          const name = t === "team1" ? team1Name : team2Name;
+          return (
+            <div key={t}
+              className={`rounded-3xl border-4 p-6 flex flex-col items-center gap-3 transition-all ${isBuzzed ? "scale-105 shadow-[0_0_60px_color-mix(in_oklab,var(--cyan)_40%,transparent)]" : ""}`}
+              style={{ borderColor: color, background: isBuzzed ? `color-mix(in oklab, ${color} 25%, transparent)` : "transparent" }}>
+              <div className="text-sm uppercase tracking-[0.3em]" style={{ color }}>{name}</div>
+              <div className="text-8xl font-black tabular-nums" style={{ color }}>{state.scores[t]}</div>
+              {isBuzzed && <div className="text-2xl font-extrabold uppercase tracking-widest animate-pulse" style={{ color }}>BUZZED IN!</div>}
+              <div className="flex gap-2 mt-2">
+                <Button onClick={() => award(t, 1)} className="h-10 px-4 text-sm font-bold">+1</Button>
+                <Button onClick={() => award(t, 5)} variant="outline" className="h-10 px-4 text-sm font-bold">+5</Button>
+                <Button onClick={() => award(t, -1)} variant="outline" className="h-10 px-3 text-sm">−1</Button>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      <div className="flex gap-4">
+        <Button onClick={resetBuzz} disabled={!state.buzzed} variant="outline"
+          className="h-12 px-6 text-sm uppercase tracking-widest font-bold">
+          Reset Buzzers
+        </Button>
+        <Button onClick={resetScores} variant="outline"
+          className="h-12 px-6 text-sm uppercase tracking-widest font-bold border-destructive/40 text-destructive hover:bg-destructive/10">
+          Reset Scores
+        </Button>
+      </div>
+    </div>
+  );
+}
