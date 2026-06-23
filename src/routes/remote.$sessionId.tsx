@@ -480,3 +480,160 @@ function RemotePage() {
   );
 }
 
+// ─────────────────────────────────────────────
+// Quiz Buzzer remote controls — mirrors the host control surface on the phone.
+// Subscribes to the same `quiz:${sessionId}` broadcast channel used by the
+// SlotRenderer's QuizBuzzerRenderer. Anyone broadcasting `quiz_state` updates
+// every connected client (host + screens + this remote) at once.
+// ─────────────────────────────────────────────
+
+type QuizState = {
+  buzzed: "team1" | "team2" | null;
+  scores: { team1: number; team2: number };
+  currentQuestion: number;
+};
+
+function QuizRemoteControls({
+  sessionId,
+  team1Name,
+  team2Name,
+  totalQuestions,
+}: {
+  sessionId: string;
+  team1Name: string;
+  team2Name: string;
+  totalQuestions: number;
+}) {
+  const [state, setState] = useState<QuizState>({
+    buzzed: null,
+    scores: { team1: 0, team2: 0 },
+    currentQuestion: 0,
+  });
+  const channelRef = useRef<RealtimeChannel | null>(null);
+
+  useEffect(() => {
+    const ch = supabase.channel(`quiz:${sessionId}`, { config: { broadcast: { self: true } } });
+    channelRef.current = ch;
+    ch.on("broadcast", { event: "quiz_state" }, ({ payload }: { payload: QuizState }) => {
+      setState({
+        buzzed: payload?.buzzed ?? null,
+        scores: payload?.scores ?? { team1: 0, team2: 0 },
+        currentQuestion: payload?.currentQuestion ?? 0,
+      });
+    });
+    ch.subscribe(() => {
+      // Ask the host to send us the current state.
+      setTimeout(() => ch.send({ type: "broadcast", event: "quiz_sync_request", payload: {} }), 200);
+    });
+    return () => {
+      channelRef.current = null;
+      supabase.removeChannel(ch);
+    };
+  }, [sessionId]);
+
+  const send = (next: QuizState) => {
+    setState(next);
+    channelRef.current?.send({ type: "broadcast", event: "quiz_state", payload: next });
+  };
+
+  const award = (team: "team1" | "team2", n: number) => {
+    const scores = { ...state.scores, [team]: Math.max(0, state.scores[team] + n) };
+    send({ ...state, scores, buzzed: null });
+  };
+  const resetBuzz = () => send({ ...state, buzzed: null });
+  const resetScores = () => send({ ...state, buzzed: null, scores: { team1: 0, team2: 0 } });
+  const goQuestion = (delta: number) => {
+    const next = Math.max(0, Math.min(Math.max(0, totalQuestions - 1), state.currentQuestion + delta));
+    send({ ...state, currentQuestion: next, buzzed: null });
+  };
+
+  return (
+    <div className="shrink-0 rounded-2xl border-2 border-[color:var(--orange)]/40 bg-[color:var(--orange)]/5 p-3 space-y-3">
+      <div className="flex items-center justify-between">
+        <div className="text-[10px] uppercase tracking-[0.3em] text-[color:var(--orange)] font-bold">
+          Quiz Buzzer
+        </div>
+        {totalQuestions > 1 && (
+          <div className="text-[10px] uppercase tracking-widest text-muted-foreground tabular-nums">
+            Q {state.currentQuestion + 1} / {totalQuestions}
+          </div>
+        )}
+      </div>
+      {(["team1", "team2"] as const).map((t) => {
+        const isBuzzed = state.buzzed === t;
+        const color = t === "team1" ? "var(--cyan)" : "var(--orange)";
+        const name = t === "team1" ? team1Name : team2Name;
+        return (
+          <div
+            key={t}
+            className="rounded-xl border-2 p-2 flex items-center gap-2"
+            style={{
+              borderColor: color,
+              background: isBuzzed
+                ? `color-mix(in oklab, ${color} 20%, transparent)`
+                : "transparent",
+            }}
+          >
+            <div className="flex-1 min-w-0">
+              <div className="text-[10px] uppercase tracking-widest truncate" style={{ color }}>
+                {name} {isBuzzed && <span className="font-extrabold">· BUZZED</span>}
+              </div>
+              <div className="text-3xl font-black tabular-nums" style={{ color }}>
+                {state.scores[t]}
+              </div>
+            </div>
+            <button
+              onClick={() => award(t, 1)}
+              className="h-12 px-4 rounded-lg font-extrabold text-lg active:scale-95"
+              style={{ background: color, color: "#000" }}
+            >
+              +1
+            </button>
+            <button
+              onClick={() => award(t, 5)}
+              className="h-12 px-4 rounded-lg font-extrabold text-lg border-2 active:scale-95"
+              style={{ borderColor: color, color }}
+            >
+              +5
+            </button>
+          </div>
+        );
+      })}
+      <div className="flex gap-2">
+        <button
+          onClick={resetBuzz}
+          disabled={!state.buzzed}
+          className="flex-1 h-10 rounded-lg border-2 border-border text-[11px] uppercase tracking-widest font-bold active:scale-95 disabled:opacity-30"
+        >
+          Reset Buzzers
+        </button>
+        {totalQuestions > 1 && (
+          <>
+            <button
+              onClick={() => goQuestion(-1)}
+              disabled={state.currentQuestion === 0}
+              className="h-10 px-3 rounded-lg border-2 border-border text-[11px] uppercase tracking-widest font-bold active:scale-95 disabled:opacity-30"
+            >
+              ← Q
+            </button>
+            <button
+              onClick={() => goQuestion(1)}
+              disabled={state.currentQuestion >= totalQuestions - 1}
+              className="h-10 px-3 rounded-lg text-[11px] uppercase tracking-widest font-bold text-black active:scale-95 disabled:opacity-30"
+              style={{ background: "var(--cyan)" }}
+            >
+              Q →
+            </button>
+          </>
+        )}
+        <button
+          onClick={resetScores}
+          className="h-10 px-3 rounded-lg border-2 border-destructive/40 text-destructive text-[11px] uppercase tracking-widest font-bold active:scale-95"
+        >
+          0
+        </button>
+      </div>
+    </div>
+  );
+}
+
