@@ -294,6 +294,16 @@ export function SlotRenderer({
       return <Waiting screen={screen} />;
     }
 
+    case "voting": {
+      const c = content as Extract<SlotContent, { type: "voting" }>;
+      return <VotingRenderer content={c} screen={screen} sessionId={sessionId} slotId={slotId} />;
+    }
+
+    case "quiz_buzzer": {
+      const c = content as Extract<SlotContent, { type: "quiz_buzzer" }>;
+      return <QuizBuzzerRenderer content={c} screen={screen} sessionId={sessionId} />;
+    }
+
     default:
       return <Waiting screen={screen} />;
   }
