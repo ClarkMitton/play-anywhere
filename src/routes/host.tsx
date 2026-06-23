@@ -82,31 +82,33 @@ function SlotNavBar({
   onEnd: () => void;
 }) {
   return (
-    <div className="mx-auto max-w-2xl bg-card/80 backdrop-blur-xl border border-border rounded-full px-6 py-3 flex items-center justify-between gap-4">
+    <div className="mx-auto bg-card/70 backdrop-blur-md border border-border/60 rounded-full px-2 py-1 flex items-center justify-between gap-1.5 text-[10px] shadow-md w-fit max-w-md">
       <Button
         size="sm"
         variant="outline"
         onClick={onPrev}
         disabled={currentIndex <= 0 || total === 0}
+        className="h-6 px-2 text-[10px] rounded-full"
       >
-        ← Prev
+        ←
       </Button>
-      <span className="text-sm font-mono text-muted-foreground tabular-nums text-center">
+      <span className="font-mono text-muted-foreground tabular-nums px-1 truncate max-w-[180px]">
         {total === 0
-          ? "No slots"
+          ? "0/0"
           : slotName
             ? `${currentIndex + 1}/${total} · ${slotName}`
-            : `Slot ${currentIndex + 1} of ${total}`}
+            : `${currentIndex + 1}/${total}`}
       </span>
       <Button
         size="sm"
         variant="outline"
         onClick={onNext}
         disabled={currentIndex >= total - 1 || total === 0}
+        className="h-6 px-2 text-[10px] rounded-full"
       >
-        Next →
+        →
       </Button>
-      <Button size="sm" variant="destructive" onClick={onEnd}>
+      <Button size="sm" variant="destructive" onClick={onEnd} className="h-6 px-2 text-[10px] rounded-full">
         End
       </Button>
     </div>
@@ -483,7 +485,7 @@ function HostScreen() {
           />
         </div>
         {/* Floating slot navigation bar */}
-        <div className="fixed bottom-0 left-0 right-0 p-4 opacity-20 hover:opacity-100 transition-opacity z-50">
+        <div className="fixed top-2 left-1/2 -translate-x-1/2 opacity-40 hover:opacity-100 transition-opacity z-50">
           <SlotNavBar
             currentIndex={Math.min(session.current_slot_index, Math.max(0, slots.length - 1))}
             total={slots.length}
@@ -513,7 +515,7 @@ function HostScreen() {
           channel={channelRef.current ?? undefined}
         />
         {/* Floating slot navigation bar */}
-        <div className="fixed bottom-0 left-0 right-0 p-4 opacity-20 hover:opacity-100 transition-opacity z-50">
+        <div className="fixed top-2 left-1/2 -translate-x-1/2 opacity-40 hover:opacity-100 transition-opacity z-50">
           <SlotNavBar
             currentIndex={Math.min(session.current_slot_index, Math.max(0, slots.length - 1))}
             total={slots.length}

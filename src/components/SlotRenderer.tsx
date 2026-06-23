@@ -3,7 +3,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { sounds } from "@/lib/audio";
 import { broadcast } from "@/lib/realtime";
 import { Button } from "@/components/ui/button";
-import { useWebcamViewer } from "@/hooks/use-webcam-broadcast";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 
 // ─────────────────────────────────────────────
@@ -18,10 +17,7 @@ export type SlotContent =
   | { type: "video_upload"; url: string; file_name?: string; loop?: boolean }
   | { type: "image"; url: string; file_name?: string; title?: string }
   | { type: "embed"; url: string }
-  | { type: "webpage"; url: string }
-  | { type: "host_webcam"; with_audio?: boolean }
-  | { type: "html_upload"; url: string; file_name?: string }
-  | { type: "confidence_checker"; prompt: string; optional_qualitative?: boolean; scale_mode?: "numbers" | "likert"; max?: number }
+  | { type: "confidence_checker"; prompt: string; optional_qualitative?: boolean; scale_mode?: "numbers" | "emoji"; max?: number }
   | { type: "wheel_spinner"; items: string[] }
   | { type: "countdown_timer"; label?: string; duration_secs: number }
   | { type: "host_timer"; label?: string; duration_secs: number }
@@ -30,7 +26,7 @@ export type SlotContent =
   | { type: "poll"; id?: string; text: string; options: string[] }
   | { type: "likert"; id?: string; text: string; optional_qualitative?: boolean }
   | { type: "voting"; question: string; options: string[] }
-  | { type: "quiz_buzzer"; question?: string; team1_name?: string; team2_name?: string }
+  | { type: "quiz_buzzer"; question?: string; questions?: string[]; team1_name?: string; team2_name?: string }
   | { type: string; [k: string]: unknown };
 
 type QuestionContent = Extract<SlotContent,
@@ -216,45 +212,8 @@ export function SlotRenderer({
       );
     }
 
-    case "html_upload": {
-      const c = content as Extract<SlotContent, { type: "html_upload" }>;
-      if (!c.url) return <Waiting screen={screen} />;
-      return (
-        <div className="min-h-screen w-full bg-background animate-slot-in">
-          <iframe
-            key={c.url}
-            src={c.url}
-            className="w-full h-screen border-0"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; fullscreen; gyroscope; picture-in-picture"
-            allowFullScreen
-            title="HTML content"
-          />
-        </div>
-      );
-    }
+    // (html_upload, webpage, host_webcam removed)
 
-    case "webpage": {
-      const c = content as Extract<SlotContent, { type: "webpage" }>;
-      if (!c.url) return <Waiting screen={screen} />;
-      const proxied = `/api/proxy?url=${encodeURIComponent(c.url)}`;
-      return (
-        <div className="min-h-screen w-full bg-background animate-slot-in">
-          <iframe
-            key={c.url}
-            src={proxied}
-            className="w-full h-screen border-0"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; fullscreen; gyroscope; picture-in-picture"
-            allowFullScreen
-            title="Web page"
-          />
-        </div>
-      );
-    }
-
-    case "host_webcam": {
-      if (!sessionId) return <Waiting screen={screen} />;
-      return <HostWebcamViewer sessionId={sessionId} />;
-    }
 
     case "confidence_checker": {
       const c = content as Extract<SlotContent, { type: "confidence_checker" }>;
@@ -341,52 +300,8 @@ function Waiting({ screen }: { screen: "host" | "screen1" | "screen2" }) {
   );
 }
 
-// ─────────────────────────────────────────────
-// HOST WEBCAM — viewer side
-// ─────────────────────────────────────────────
+// (Host webcam removed)
 
-function HostWebcamViewer({ sessionId }: { sessionId: string }) {
-  const { stream, waiting } = useWebcamViewer(sessionId, true);
-  const videoRef = useRef<HTMLVideoElement | null>(null);
-
-  useEffect(() => {
-    const v = videoRef.current;
-    if (!v) return;
-    if (stream) {
-      v.srcObject = stream;
-      v.play().catch(() => {});
-    } else {
-      v.srcObject = null;
-    }
-  }, [stream]);
-
-  return (
-    <div className="min-h-screen w-full bg-black flex items-center justify-center animate-slot-in relative">
-      <video
-        ref={videoRef}
-        autoPlay
-        playsInline
-        muted
-        className="w-full h-screen object-contain bg-black"
-      />
-      {waiting && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-immersive bg-grid">
-          <div className="text-xs uppercase tracking-[0.5em] text-[color:var(--cyan)] animate-float-glow">
-            Host Webcam
-          </div>
-          <div className="text-3xl md:text-5xl font-extrabold text-glow text-center">
-            Waiting for host camera…
-          </div>
-          <div className="flex gap-2 mt-4">
-            <span className="w-2 h-2 rounded-full bg-[color:var(--cyan)] animate-pulse" />
-            <span className="w-2 h-2 rounded-full bg-[color:var(--cyan)] animate-pulse [animation-delay:200ms]" />
-            <span className="w-2 h-2 rounded-full bg-[color:var(--cyan)] animate-pulse [animation-delay:400ms]" />
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
 
 // ─────────────────────────────────────────────
 // SUBMITTED STATE (shared)
@@ -410,20 +325,20 @@ function SubmittedState() {
 // CONFIDENCE CHECKER — TS1 / TS2 input (multi-student)
 // ─────────────────────────────────────────────
 
-// 5-point Likert wording (low → high). Stored as 1–5 so the host chart and
-// session averages stay numeric regardless of scale mode.
-const LIKERT_LABELS = ["Strongly disagree", "Disagree", "Neutral", "Agree", "Strongly agree"];
+// Emoji scale (low → high). Stored as 1–5.
+const EMOJI_LABELS = ["Really angry", "Slightly angry", "Neutral", "Happy", "Really happy"];
+const EMOJI_FACES = ["😡", "😠", "😐", "🙂", "😄"];
 
 // Normalise the configured scale into a list of option values.
-// numbers → 1..max (max clamped 2–10). likert → fixed 1..5.
-function resolveScale(content: { scale_mode?: "numbers" | "likert"; max?: number }) {
-  const mode = content.scale_mode === "likert" ? "likert" : "numbers";
-  const max = mode === "likert" ? 5 : Math.min(10, Math.max(2, Math.round(content.max ?? 5)));
+// numbers → 1..max (max clamped 2–10). emoji → fixed 1..5.
+function resolveScale(content: { scale_mode?: "numbers" | "emoji"; max?: number }) {
+  const mode = content.scale_mode === "emoji" ? "emoji" : "numbers";
+  const max = mode === "emoji" ? 5 : Math.min(10, Math.max(2, Math.round(content.max ?? 5)));
   return { mode, max, options: Array.from({ length: max }, (_, i) => i + 1) };
 }
 
 function ConfidenceCheckerInput({ content, screen, sessionId, slotId }: {
-  content: { prompt: string; optional_qualitative?: boolean; scale_mode?: "numbers" | "likert"; max?: number };
+  content: { prompt: string; optional_qualitative?: boolean; scale_mode?: "numbers" | "emoji"; max?: number };
   screen: "screen1" | "screen2";
   sessionId?: string; slotId?: string;
 }) {
@@ -512,14 +427,15 @@ function ConfidenceCheckerInput({ content, screen, sessionId, slotId }: {
         {content.prompt || "How confident are you?"}
       </div>
 
-      {mode === "likert" ? (
-        <div className="flex flex-col gap-3 w-full max-w-lg">
+      {mode === "emoji" ? (
+        <div className="flex flex-wrap justify-center gap-3 md:gap-4 max-w-2xl">
           {options.map(n => (
             <button key={n} onClick={() => setScore(n)}
-              className={`w-full px-6 py-4 rounded-2xl text-left text-lg font-semibold border-2 transition-all duration-150
-                ${score === n ? "border-[color:var(--cyan)] bg-[color:var(--cyan)]/20 text-[color:var(--cyan)]"
-                  : "border-border text-foreground hover:border-[color:var(--cyan)]/50 active:scale-[0.99]"}`}>
-              {LIKERT_LABELS[n - 1]}
+              className={`flex flex-col items-center gap-1 px-4 py-3 rounded-2xl border-2 transition-all duration-150
+                ${score === n ? "border-[color:var(--cyan)] bg-[color:var(--cyan)]/20"
+                  : "border-border hover:border-[color:var(--cyan)]/50 active:scale-95"}`}>
+              <span className="text-5xl md:text-6xl leading-none">{EMOJI_FACES[n - 1]}</span>
+              <span className="text-[10px] uppercase tracking-widest text-muted-foreground">{EMOJI_LABELS[n - 1]}</span>
             </button>
           ))}
         </div>
@@ -573,7 +489,7 @@ function ConfidenceCheckerInput({ content, screen, sessionId, slotId }: {
 // ─────────────────────────────────────────────
 
 function ConfidenceCheckerHost({ content, sessionId, slotId }: {
-  content: { scale_mode?: "numbers" | "likert"; max?: number };
+  content: { scale_mode?: "numbers" | "emoji"; max?: number };
   sessionId?: string; slotId?: string;
 }) {
   const { mode, options } = resolveScale(content);
@@ -621,8 +537,8 @@ function ConfidenceCheckerHost({ content, sessionId, slotId }: {
         ))}
       </div>
       <div className="flex justify-between w-full max-w-md text-xs text-muted-foreground uppercase tracking-widest">
-        <span>{mode === "likert" ? LIKERT_LABELS[0] : "Not at all"}</span>
-        <span>{mode === "likert" ? LIKERT_LABELS[LIKERT_LABELS.length - 1] : "Very confident"}</span>
+        <span>{mode === "emoji" ? `${EMOJI_FACES[0]} ${EMOJI_LABELS[0]}` : "Not at all"}</span>
+        <span>{mode === "emoji" ? `${EMOJI_FACES[EMOJI_FACES.length - 1]} ${EMOJI_LABELS[EMOJI_LABELS.length - 1]}` : "Very confident"}</span>
       </div>
       <div className="flex gap-16 text-center">
         <div>
@@ -1338,10 +1254,12 @@ function VotingInput({ question, options, screen, sessionId, slotId }: {
 }) {
   const [picked, setPicked] = useState<number | null>(null);
   const [submitting, setSubmitting] = useState(false);
-  const [done, setDone] = useState(false);
+  const [personNum, setPersonNum] = useState(1);
+  const [recorded, setRecorded] = useState(0);
+  const [phase, setPhase] = useState<"input" | "confirm" | "done">("input");
 
   const submit = async (i: number) => {
-    if (!sessionId || submitting || done) return;
+    if (!sessionId || submitting || phase !== "input") return;
     setPicked(i);
     setSubmitting(true);
     await supabase.from("responses").insert({
@@ -1349,26 +1267,42 @@ function VotingInput({ question, options, screen, sessionId, slotId }: {
       response_type: "voting", response_data: { option: i } as never,
     });
     setSubmitting(false);
-    setDone(true);
+    setRecorded(c => c + 1);
+    setPhase("confirm");
   };
 
-  if (done) {
+  const nextPerson = () => { setPicked(null); setPersonNum(n => n + 1); setPhase("input"); };
+
+  if (phase === "done") {
     return (
       <div className="min-h-screen w-full bg-immersive bg-grid flex flex-col items-center justify-center gap-6 p-10 animate-slot-in">
-        <div className="text-xs uppercase tracking-[0.5em] text-[color:var(--success)]">Vote recorded</div>
-        <div className="text-5xl md:text-7xl font-extrabold text-glow text-center">Thanks!</div>
+        <div className="text-xs uppercase tracking-[0.5em] text-[color:var(--success)]">All votes in</div>
+        <div className="text-5xl md:text-7xl font-extrabold text-glow text-center">That's everyone!</div>
+        <div className="text-xl text-muted-foreground">{recorded} {recorded === 1 ? "vote" : "votes"} recorded</div>
+      </div>
+    );
+  }
+
+  if (phase === "confirm") {
+    return (
+      <div className="min-h-screen w-full bg-immersive bg-grid flex flex-col items-center justify-center gap-8 p-10 animate-slot-in">
+        <div className="text-xs uppercase tracking-[0.5em] text-[color:var(--success)]">Person {personNum} recorded</div>
+        <div className="text-4xl md:text-5xl font-extrabold text-glow text-center">Thanks!</div>
         {picked !== null && (
-          <div className="text-2xl text-muted-foreground">You voted: <span className="font-bold text-foreground">{options[picked]}</span></div>
+          <div className="text-2xl text-muted-foreground">Voted: <span className="font-bold text-foreground">{options[picked]}</span></div>
         )}
-        <Button onClick={() => { setDone(false); setPicked(null); }} variant="outline" className="h-12 px-8 text-sm uppercase tracking-widest">
-          Vote again
-        </Button>
+        <div className="text-sm text-muted-foreground uppercase tracking-widest">{recorded} so far</div>
+        <div className="flex flex-col sm:flex-row gap-4">
+          <Button onClick={nextPerson} className="h-16 px-10 text-xl uppercase tracking-widest font-extrabold">Next Person →</Button>
+          <Button onClick={() => setPhase("done")} variant="outline" className="h-16 px-10 text-xl uppercase tracking-widest font-extrabold border-2">That's Everyone ✓</Button>
+        </div>
       </div>
     );
   }
 
   return (
     <div className="min-h-screen w-full bg-immersive bg-grid flex flex-col items-center justify-center p-8 gap-8 animate-slot-in">
+      <div className="text-xs uppercase tracking-[0.5em] text-[color:var(--cyan)]">Person {personNum}</div>
       <div className="text-2xl md:text-4xl font-bold text-center max-w-2xl">{question || "Cast your vote"}</div>
       <div className={`grid gap-4 w-full max-w-3xl ${options.length <= 2 ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-2"}`}>
         {options.map((opt, i) => (
@@ -1448,16 +1382,21 @@ function VotingHost({ question, options, sessionId, slotId }: {
 type QuizState = {
   buzzed: "team1" | "team2" | null;
   scores: { team1: number; team2: number };
+  currentQuestion: number;
 };
 
 function QuizBuzzerRenderer({ content, screen, sessionId }: {
-  content: { question?: string; team1_name?: string; team2_name?: string };
+  content: { question?: string; questions?: string[]; team1_name?: string; team2_name?: string };
   screen: "host" | "screen1" | "screen2";
   sessionId?: string;
 }) {
   const team1Name = content.team1_name?.trim() || "Team 1";
   const team2Name = content.team2_name?.trim() || "Team 2";
-  const [state, setState] = useState<QuizState>({ buzzed: null, scores: { team1: 0, team2: 0 } });
+  // Build question list — prefer `questions` array, else fall back to single `question`.
+  const questions = (content.questions && content.questions.length > 0)
+    ? content.questions
+    : (content.question ? [content.question] : []);
+  const [state, setState] = useState<QuizState>({ buzzed: null, scores: { team1: 0, team2: 0 }, currentQuestion: 0 });
   const stateRef = useRef(state);
   const channelRef = useRef<RealtimeChannel | null>(null);
   useEffect(() => { stateRef.current = state; }, [state]);
@@ -1467,7 +1406,7 @@ function QuizBuzzerRenderer({ content, screen, sessionId }: {
     const ch = supabase.channel(`quiz:${sessionId}`, { config: { broadcast: { self: true } } });
     channelRef.current = ch;
     ch.on("broadcast", { event: "quiz_state" }, ({ payload }: { payload: QuizState }) => {
-      setState(payload);
+      setState({ ...payload, buzzed: payload.buzzed ?? null, scores: payload.scores ?? { team1: 0, team2: 0 }, currentQuestion: payload.currentQuestion ?? 0 });
     });
     if (screen === "host") {
       ch.on("broadcast", { event: "quiz_sync_request" }, () => {
@@ -1494,6 +1433,9 @@ function QuizBuzzerRenderer({ content, screen, sessionId }: {
     sounds.questionReveal();
   };
 
+  const currentQ = questions[state.currentQuestion] ?? "";
+  const qLabel = questions.length > 1 ? `Question ${state.currentQuestion + 1} / ${questions.length}` : "Quiz";
+
   // ── TS1 / TS2: massive buzz button
   if (screen === "screen1" || screen === "screen2") {
     const team = screen === "screen1" ? "team1" : "team2";
@@ -1504,11 +1446,11 @@ function QuizBuzzerRenderer({ content, screen, sessionId }: {
     return (
       <div className="min-h-screen w-full bg-immersive flex flex-col p-6 gap-4 animate-slot-in">
         <div className="text-center">
-          <div className="text-xs uppercase tracking-[0.4em] text-muted-foreground">Quiz</div>
+          <div className="text-xs uppercase tracking-[0.4em] text-muted-foreground">{qLabel}</div>
           <div className="text-3xl md:text-5xl font-extrabold mt-1" style={{ color }}>{name}</div>
         </div>
-        {content.question && (
-          <div className="text-xl md:text-2xl font-bold text-center px-4">{content.question}</div>
+        {currentQ && (
+          <div className="text-xl md:text-2xl font-bold text-center px-4">{currentQ}</div>
         )}
         <button
           onClick={() => buzz(team)}
@@ -1542,13 +1484,17 @@ function QuizBuzzerRenderer({ content, screen, sessionId }: {
     const scores = { ...state.scores, [team]: Math.max(0, state.scores[team] + n) };
     broadcast({ ...state, scores, buzzed: null });
   };
-  const resetScores = () => broadcast({ buzzed: null, scores: { team1: 0, team2: 0 } });
+  const resetScores = () => broadcast({ ...state, buzzed: null, scores: { team1: 0, team2: 0 } });
+  const goQuestion = (delta: number) => {
+    const next = Math.max(0, Math.min(questions.length - 1, state.currentQuestion + delta));
+    broadcast({ ...state, currentQuestion: next, buzzed: null });
+  };
 
   return (
     <div className="min-h-screen w-full bg-immersive bg-grid flex flex-col items-center justify-center p-10 gap-8 animate-slot-in">
-      <div className="text-xs uppercase tracking-[0.4em] text-[color:var(--cyan)]">Quiz Buzzer</div>
-      {content.question && (
-        <div className="text-3xl md:text-5xl font-bold text-center max-w-4xl">{content.question}</div>
+      <div className="text-xs uppercase tracking-[0.4em] text-[color:var(--cyan)]">{qLabel}</div>
+      {currentQ && (
+        <div className="text-3xl md:text-5xl font-bold text-center max-w-4xl">{currentQ}</div>
       )}
       <div className="grid grid-cols-2 gap-8 w-full max-w-4xl">
         {(["team1", "team2"] as const).map((t) => {
@@ -1565,17 +1511,28 @@ function QuizBuzzerRenderer({ content, screen, sessionId }: {
               <div className="flex gap-2 mt-2">
                 <Button onClick={() => award(t, 1)} className="h-10 px-4 text-sm font-bold">+1</Button>
                 <Button onClick={() => award(t, 5)} variant="outline" className="h-10 px-4 text-sm font-bold">+5</Button>
-                <Button onClick={() => award(t, -1)} variant="outline" className="h-10 px-3 text-sm">−1</Button>
               </div>
             </div>
           );
         })}
       </div>
-      <div className="flex gap-4">
+      <div className="flex flex-wrap gap-3 justify-center">
         <Button onClick={resetBuzz} disabled={!state.buzzed} variant="outline"
           className="h-12 px-6 text-sm uppercase tracking-widest font-bold">
           Reset Buzzers
         </Button>
+        {questions.length > 1 && (
+          <>
+            <Button onClick={() => goQuestion(-1)} disabled={state.currentQuestion === 0} variant="outline"
+              className="h-12 px-6 text-sm uppercase tracking-widest font-bold">
+              ← Prev Question
+            </Button>
+            <Button onClick={() => goQuestion(1)} disabled={state.currentQuestion >= questions.length - 1}
+              className="h-12 px-6 text-sm uppercase tracking-widest font-bold">
+              Next Question →
+            </Button>
+          </>
+        )}
         <Button onClick={resetScores} variant="outline"
           className="h-12 px-6 text-sm uppercase tracking-widest font-bold border-destructive/40 text-destructive hover:bg-destructive/10">
           Reset Scores
