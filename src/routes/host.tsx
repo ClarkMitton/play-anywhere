@@ -485,7 +485,7 @@ function HostScreen() {
           />
         </div>
         {/* Floating slot navigation bar */}
-        <div className="fixed bottom-0 left-0 right-0 p-4 opacity-20 hover:opacity-100 transition-opacity z-50">
+        <div className="fixed top-2 left-1/2 -translate-x-1/2 opacity-40 hover:opacity-100 transition-opacity z-50">
           <SlotNavBar
             currentIndex={Math.min(session.current_slot_index, Math.max(0, slots.length - 1))}
             total={slots.length}
@@ -515,7 +515,7 @@ function HostScreen() {
           channel={channelRef.current ?? undefined}
         />
         {/* Floating slot navigation bar */}
-        <div className="fixed bottom-0 left-0 right-0 p-4 opacity-20 hover:opacity-100 transition-opacity z-50">
+        <div className="fixed top-2 left-1/2 -translate-x-1/2 opacity-40 hover:opacity-100 transition-opacity z-50">
           <SlotNavBar
             currentIndex={Math.min(session.current_slot_index, Math.max(0, slots.length - 1))}
             total={slots.length}
