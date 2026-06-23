@@ -1854,6 +1854,103 @@ function ContentTypeForm({
       );
     }
 
+    case "voting": {
+      const opts = (content.options as string[] | undefined) ?? ["", ""];
+      const setOpt = (i: number, v: string) => {
+        const next = [...opts];
+        next[i] = v;
+        onChange({ options: next });
+      };
+      return (
+        <div className="space-y-3">
+          <div className="space-y-1.5">
+            <Label className="text-[10px] uppercase tracking-widest text-muted-foreground">Question</Label>
+            <Input
+              value={String(content.question ?? "")}
+              onChange={(e) => onChange({ question: e.target.value })}
+              placeholder="What should we do next?"
+              className="bg-background/60 border-border focus-visible:border-[color:var(--cyan)]"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-[10px] uppercase tracking-widest text-muted-foreground">Options (2–4)</Label>
+            <div className="space-y-1.5">
+              {opts.map((o, i) => (
+                <div key={i} className="flex items-center gap-2">
+                  <Input
+                    value={o}
+                    onChange={(e) => setOpt(i, e.target.value)}
+                    placeholder={`Option ${String.fromCharCode(65 + i)}`}
+                    className="flex-1 h-8 text-xs bg-background/60 border-border focus-visible:border-[color:var(--cyan)]"
+                  />
+                  {opts.length > 2 && (
+                    <button
+                      onClick={() => onChange({ options: opts.filter((_, j) => j !== i) })}
+                      className="text-muted-foreground hover:text-destructive text-lg px-1"
+                    >×</button>
+                  )}
+                </div>
+              ))}
+            </div>
+            {opts.length < 4 && (
+              <Button size="sm" variant="outline" className="h-8 text-[10px] uppercase tracking-widest w-full"
+                onClick={() => onChange({ options: [...opts, ""] })}>
+                + Add option
+              </Button>
+            )}
+            <div className="flex gap-2">
+              <Button size="sm" variant="outline" className="flex-1 h-7 text-[10px]"
+                onClick={() => onChange({ options: ["Yes", "No"] })}>Yes / No</Button>
+              <Button size="sm" variant="outline" className="flex-1 h-7 text-[10px]"
+                onClick={() => onChange({ options: ["A", "B", "C", "D"] })}>A / B / C / D</Button>
+            </div>
+          </div>
+          <p className="text-[10px] text-muted-foreground">
+            Place on all 3 screens (use Mirror) — Host shows live bars, touch screens show vote buttons.
+          </p>
+        </div>
+      );
+    }
+
+    case "quiz_buzzer":
+      return (
+        <div className="space-y-3">
+          <div className="space-y-1.5">
+            <Label className="text-[10px] uppercase tracking-widest text-muted-foreground">Question (optional)</Label>
+            <Textarea
+              value={String(content.question ?? "")}
+              onChange={(e) => onChange({ question: e.target.value })}
+              placeholder="Read aloud or type your question here…"
+              rows={2}
+              className="bg-background/60 border-border focus-visible:border-[color:var(--cyan)]"
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <div className="space-y-1.5">
+              <Label className="text-[10px] uppercase tracking-widest text-muted-foreground">Team 1 name</Label>
+              <Input
+                value={String(content.team1_name ?? "")}
+                onChange={(e) => onChange({ team1_name: e.target.value })}
+                placeholder="Team 1"
+                className="h-8 text-xs bg-background/60 border-border focus-visible:border-[color:var(--cyan)]"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-[10px] uppercase tracking-widest text-muted-foreground">Team 2 name</Label>
+              <Input
+                value={String(content.team2_name ?? "")}
+                onChange={(e) => onChange({ team2_name: e.target.value })}
+                placeholder="Team 2"
+                className="h-8 text-xs bg-background/60 border-border focus-visible:border-[color:var(--cyan)]"
+              />
+            </div>
+          </div>
+          <p className="text-[10px] text-muted-foreground">
+            Place on all 3 screens (use Mirror). TS1 = Team 1 buzzer, TS2 = Team 2 buzzer. Host shows scores + controls.
+          </p>
+        </div>
+      );
+
     case "wheel_spinner":
       return (
         <WheelItemsEditor
