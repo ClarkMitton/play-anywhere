@@ -120,7 +120,8 @@ function ThumbContent({ content }: { content: ContentDef | null | undefined }) {
       return <Label icon="🗳" label="Vote" tint="oklch(0.32 0.15 140)" />;
 
     case "quiz":
-      return <Label icon="⚡" label="Quiz" tint="oklch(0.34 0.18 80)" />;
+    case "quiz_buzzer":
+      return <Label icon="⚡" label="Buzzer" tint="oklch(0.34 0.18 80)" />;
 
     case "multiple_choice":
     case "poll":
