@@ -29,6 +29,8 @@ export type SlotContent =
   | { type: "true_or_false"; id?: string; text: string; correct_tf?: boolean }
   | { type: "poll"; id?: string; text: string; options: string[] }
   | { type: "likert"; id?: string; text: string; optional_qualitative?: boolean }
+  | { type: "voting"; question: string; options: string[] }
+  | { type: "quiz_buzzer"; question?: string; team1_name?: string; team2_name?: string }
   | { type: string; [k: string]: unknown };
 
 type QuestionContent = Extract<SlotContent,
