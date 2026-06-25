@@ -26,7 +26,7 @@ export type SlotContent =
   | { type: "poll"; id?: string; text: string; options: string[] }
   | { type: "likert"; id?: string; text: string; optional_qualitative?: boolean }
   | { type: "voting"; question: string; options: string[] }
-  | { type: "quiz_buzzer"; question?: string; questions?: string[]; team1_name?: string; team2_name?: string }
+  | { type: "quiz_buzzer"; question?: string; questions?: string[]; answers?: string[]; team1_name?: string; team2_name?: string }
   | { type: string; [k: string]: unknown };
 
 type QuestionContent = Extract<SlotContent,

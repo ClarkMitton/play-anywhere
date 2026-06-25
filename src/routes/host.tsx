@@ -534,23 +534,23 @@ function HostScreen() {
   // ── Waiting ────────────────────────────────────
 
   return (
-    <div className="min-h-screen bg-immersive bg-grid p-8">
-      <header className="flex items-center justify-between mb-12">
+    <div className="min-h-screen bg-immersive bg-grid p-4">
+      <header className="flex items-center justify-between mb-4">
         <div>
-          <div className="text-xs uppercase tracking-[0.4em] text-[color:var(--cyan)]">
+          <div className="text-[10px] uppercase tracking-[0.4em] text-[color:var(--cyan)]">
             Bradford College · Host
           </div>
-          <h1 className="text-4xl font-extrabold mt-1 text-glow">Immersive Learning</h1>
+          <h1 className="text-2xl font-extrabold mt-0.5 text-glow">Immersive Learning</h1>
         </div>
         <div className="text-right">
-          <div className="text-xs uppercase tracking-widest text-muted-foreground">Session</div>
-          <div className="text-sm font-mono text-muted-foreground">
+          <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Session</div>
+          <div className="text-xs font-mono text-muted-foreground">
             {session?.id?.slice(0, 8) ?? "…"}
           </div>
         </div>
       </header>
 
-      <main className="grid md:grid-cols-2 gap-8 max-w-6xl mx-auto">
+      <main className="grid md:grid-cols-3 gap-4 max-w-6xl mx-auto items-stretch">
         <CodeCard
           label="Student Touch Screen 1"
           code={session?.screen1_code}
@@ -563,30 +563,32 @@ function HostScreen() {
           url={screen2Url}
           connected={!!session?.screen2_connected}
         />
+        {/* Remote control QR — host scans with phone to drive all screens */}
+        {session?.id && origin ? (
+          <div className="flex flex-col items-center justify-center gap-2 rounded-2xl border border-border bg-card/40 p-3">
+            <div className="text-[10px] uppercase tracking-[0.3em] text-[color:var(--cyan)] text-center">
+              Host Remote · Scan with phone
+            </div>
+            <div className="bg-white rounded-xl p-2">
+              <QRCodeSVG value={`${origin}/remote/${session.id}`} size={110} />
+            </div>
+            <a
+              href={`/remote/${session.id}`}
+              target="_blank"
+              rel="noopener"
+              className="text-[9px] font-mono text-muted-foreground hover:text-[color:var(--cyan)] break-all text-center"
+            >
+              /remote/{session.id.slice(0, 8)}…
+            </a>
+          </div>
+        ) : (
+          <div />
+        )}
       </main>
 
-      {/* Remote control QR — host scans with phone to drive all screens */}
-      {session?.id && origin && (
-        <div className="max-w-6xl mx-auto mt-12 flex flex-col items-center gap-3">
-          <div className="text-xs uppercase tracking-[0.4em] text-[color:var(--cyan)]">
-            Host Remote · Scan with your phone
-          </div>
-          <div className="bg-white rounded-2xl p-3">
-            <QRCodeSVG value={`${origin}/remote/${session.id}`} size={140} />
-          </div>
-          <a
-            href={`/remote/${session.id}`}
-            target="_blank"
-            rel="noopener"
-            className="text-[10px] font-mono text-muted-foreground hover:text-[color:var(--cyan)] break-all"
-          >
-            {origin}/remote/{session.id.slice(0, 8)}…
-          </a>
-        </div>
-      )}
-
       {/* Step 13: timeout banner or normal launch button */}
-      <div className="max-w-6xl mx-auto mt-16 text-center">
+      <div className="max-w-6xl mx-auto mt-6 text-center">
+
         {countdownDone && !session?.screen2_connected ? (
           // ── Screen 2 timeout banner ──
           <div className="animate-slot-in space-y-6">
