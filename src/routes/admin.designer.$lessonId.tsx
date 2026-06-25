@@ -2268,42 +2268,69 @@ function WheelItemsEditor({
   );
 }
 
-// Multi-question editor for Quiz Buzzer. Stores as a string[].
+// Multi-question editor for Quiz Buzzer. Stores questions + parallel answers.
 function QuizQuestionsEditor({
   questions,
+  answers,
   onChange,
 }: {
   questions: string[];
-  onChange: (questions: string[]) => void;
+  answers: string[];
+  onChange: (questions: string[], answers: string[]) => void;
 }) {
   const [newQ, setNewQ] = useState("");
+  const [newA, setNewA] = useState("");
+  const normAnswers = (qs: string[], as: string[]) => {
+    const out = qs.map((_, i) => as[i] ?? "");
+    return out;
+  };
   const addQ = () => {
     const t = newQ.trim();
     if (!t) return;
-    onChange([...questions, t]);
+    const nextQs = [...questions, t];
+    const nextAs = [...normAnswers(questions, answers), newA.trim()];
+    onChange(nextQs, nextAs);
     setNewQ("");
+    setNewA("");
   };
   return (
     <div className="space-y-2">
       <Label className="text-[10px] uppercase tracking-widest text-muted-foreground">
-        Questions ({questions.length}) — host advances with "Next Question"
+        Questions ({questions.length}) — answers shown only on host's phone remote
       </Label>
-      <div className="space-y-1.5 max-h-56 overflow-y-auto">
+      <div className="space-y-2 max-h-72 overflow-y-auto">
         {questions.map((q, i) => (
-          <div key={i} className="flex items-start gap-2">
+          <div key={i} className="flex items-start gap-2 rounded-md border border-border/60 p-1.5 bg-background/30">
             <span className="text-[10px] font-bold text-muted-foreground mt-2 w-5 text-right shrink-0">{i + 1}.</span>
-            <Textarea
-              value={q}
-              onChange={(e) => {
-                const next = [...questions];
-                next[i] = e.target.value;
-                onChange(next);
-              }}
-              rows={2}
-              className="flex-1 text-xs bg-background/60 border-border focus-visible:border-[color:var(--cyan)]"
-            />
+            <div className="flex-1 space-y-1">
+              <Textarea
+                value={q}
+                onChange={(e) => {
+                  const next = [...questions];
+                  next[i] = e.target.value;
+                  onChange(next, normAnswers(next, answers));
+                }}
+                rows={2}
+                placeholder="Question"
+                className="text-xs bg-background/60 border-border focus-visible:border-[color:var(--cyan)]"
+              />
+              <Input
+                value={answers[i] ?? ""}
+                onChange={(e) => {
+                  const next = normAnswers(questions, answers);
+                  next[i] = e.target.value;
+                  onChange(questions, next);
+                }}
+                placeholder="✓ Correct answer (private — phone only)"
+                className="h-8 text-xs bg-[color:var(--success)]/5 border-[color:var(--success)]/30 focus-visible:border-[color:var(--success)]"
+              />
+            </div>
             <button
-              onClick={() => onChange(questions.filter((_, j) => j !== i))}
+              onClick={() => {
+                const nextQs = questions.filter((_, j) => j !== i);
+                const nextAs = normAnswers(questions, answers).filter((_, j) => j !== i);
+                onChange(nextQs, nextAs);
+              }}
               className="text-muted-foreground hover:text-destructive transition-colors text-lg leading-none shrink-0 px-1 mt-1"
             >
               ×
@@ -2311,7 +2338,7 @@ function QuizQuestionsEditor({
           </div>
         ))}
       </div>
-      <div className="flex gap-2">
+      <div className="space-y-1 rounded-md border border-dashed border-border p-1.5">
         <Textarea
           value={newQ}
           onChange={(e) => setNewQ(e.target.value)}
@@ -2323,15 +2350,24 @@ function QuizQuestionsEditor({
           }}
           rows={2}
           placeholder="Add a question… (⌘/Ctrl+Enter to add)"
-          className="flex-1 text-xs bg-background/60 border-border focus-visible:border-[color:var(--cyan)]"
+          className="text-xs bg-background/60 border-border focus-visible:border-[color:var(--cyan)]"
         />
-        <button
-          onClick={addQ}
-          className="px-3 h-8 border border-border rounded-md text-sm hover:border-[color:var(--cyan)] transition-colors shrink-0 self-start"
-        >
-          +
-        </button>
+        <div className="flex gap-2">
+          <Input
+            value={newA}
+            onChange={(e) => setNewA(e.target.value)}
+            placeholder="Correct answer (optional)"
+            className="h-8 text-xs bg-[color:var(--success)]/5 border-[color:var(--success)]/30 focus-visible:border-[color:var(--success)]"
+          />
+          <button
+            onClick={addQ}
+            className="px-3 h-8 border border-border rounded-md text-sm hover:border-[color:var(--cyan)] transition-colors shrink-0"
+          >
+            + Add
+          </button>
+        </div>
       </div>
     </div>
   );
 }
+
