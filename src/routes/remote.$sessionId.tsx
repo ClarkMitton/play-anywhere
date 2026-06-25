@@ -500,13 +500,16 @@ function QuizRemoteControls({
   sessionId,
   team1Name,
   team2Name,
-  totalQuestions,
+  questions,
+  answers,
 }: {
   sessionId: string;
   team1Name: string;
   team2Name: string;
-  totalQuestions: number;
+  questions: string[];
+  answers: string[];
 }) {
+  const totalQuestions = questions.length;
   const [state, setState] = useState<QuizState>({
     buzzed: null,
     scores: { team1: 0, team2: 0 },
@@ -550,6 +553,14 @@ function QuizRemoteControls({
     send({ ...state, currentQuestion: next, buzzed: null });
   };
 
+  const currentQuestion = questions[state.currentQuestion] ?? "";
+  const currentAnswer = answers[state.currentQuestion] ?? "";
+  const [revealAnswer, setRevealAnswer] = useState(false);
+  // Auto-collapse on question change so the host taps to re-reveal each round.
+  useEffect(() => {
+    setRevealAnswer(false);
+  }, [state.currentQuestion]);
+
   return (
     <div className="shrink-0 rounded-2xl border-2 border-[color:var(--orange)]/40 bg-[color:var(--orange)]/5 p-3 space-y-3">
       <div className="flex items-center justify-between">
@@ -562,6 +573,33 @@ function QuizRemoteControls({
           </div>
         )}
       </div>
+
+      {/* Private host-only cheat sheet: current question + answer */}
+      {currentQuestion && (
+        <div className="rounded-xl border-2 border-[color:var(--success)]/40 bg-[color:var(--success)]/5 p-2.5 space-y-1.5">
+          <div className="text-[9px] uppercase tracking-[0.3em] text-[color:var(--success)] font-bold">
+            🔒 Private · Phone only
+          </div>
+          <div className="text-sm font-semibold leading-snug">{currentQuestion}</div>
+          {currentAnswer ? (
+            revealAnswer ? (
+              <div className="text-base font-extrabold text-[color:var(--success)] leading-snug">
+                ✓ {currentAnswer}
+              </div>
+            ) : (
+              <button
+                onClick={() => setRevealAnswer(true)}
+                className="w-full h-9 rounded-md border-2 border-dashed border-[color:var(--success)]/50 text-[color:var(--success)] text-[11px] uppercase tracking-widest font-bold active:scale-95"
+              >
+                Tap to reveal answer
+              </button>
+            )
+          ) : (
+            <div className="text-[10px] italic text-muted-foreground">No answer set</div>
+          )}
+        </div>
+      )}
+
       {(["team1", "team2"] as const).map((t) => {
         const isBuzzed = state.buzzed === t;
         const color = t === "team1" ? "var(--cyan)" : "var(--orange)";
