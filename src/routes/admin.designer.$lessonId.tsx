@@ -24,7 +24,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { SlotStackThumbnail } from "@/components/SlotThumbnail";
+import { SlotStackThumbnail, SlotThumbnail } from "@/components/SlotThumbnail";
 
 // ─────────────────────────────────────────────
 // Constants
@@ -621,29 +621,35 @@ function ScreenMockupsRow({
   onSelectScreen: (s: ActiveScreen) => void;
 }) {
   return (
-    <div className="flex items-end justify-center gap-6 px-8 py-4 bg-background/40 border-b border-border/60 shrink-0">
+    <div className="flex items-center justify-center gap-5 px-8 py-4 bg-background/40 border-b border-border/60 shrink-0">
       <ScreenMockup
         label="Student Screen 1"
         screen="screen1"
+        role="screen"
+        tag="1"
         isActive={activeScreen === "screen1"}
         content={selectedSlot?.screen1_content ?? null}
-        portrait
+        size="side"
         onClick={() => onSelectScreen("screen1")}
       />
       <ScreenMockup
-        label="Host · Teacher Screen"
+        label="Host · Teacher"
         screen="host"
+        role="host"
+        tag="H"
         isActive={activeScreen === "host"}
         content={selectedSlot?.host_content ?? null}
-        portrait={false}
+        size="host"
         onClick={() => onSelectScreen("host")}
       />
       <ScreenMockup
         label="Student Screen 2"
         screen="screen2"
+        role="screen"
+        tag="2"
         isActive={activeScreen === "screen2"}
         content={selectedSlot?.screen2_content ?? null}
-        portrait
+        size="side"
         onClick={() => onSelectScreen("screen2")}
       />
     </div>
@@ -654,31 +660,37 @@ function ScreenMockup({
   label,
   isActive,
   content,
-  portrait,
+  size,
+  role,
+  tag,
   onClick,
 }: {
   label: string;
   screen: ActiveScreen;
+  role: "host" | "screen";
+  tag: "H" | "1" | "2";
   isActive: boolean;
   content: ContentDef | null;
-  portrait: boolean;
+  size: "host" | "side";
   onClick: () => void;
 }) {
-  const typeLabel = content?.type
-    ? (ALL_TYPE_LABELS[content.type] ?? content.type)
-    : "Waiting";
+  // Host emphasised (larger), side screens slightly smaller. 16:9 aspect.
+  const dims =
+    size === "host"
+      ? "w-[340px] h-[192px]"
+      : "w-[220px] h-[124px]";
 
   return (
     <button
       onClick={onClick}
-      className={`relative rounded-xl border-2 transition-all duration-200 flex flex-col items-center justify-center gap-1 shrink-0
-        ${portrait ? "w-[88px] h-[156px]" : "w-[248px] h-[155px]"}
+      className={`relative rounded-xl border-2 transition-all duration-200 shrink-0 overflow-hidden group
+        ${dims}
         ${
           isActive
-            ? "border-[color:var(--cyan)] bg-card/80"
-            : "border-border/40 bg-card/40 opacity-40 hover:opacity-60"
+            ? "border-[color:var(--cyan)]"
+            : "border-border/40 opacity-70 hover:opacity-100"
         }
-        backdrop-blur cursor-pointer
+        cursor-pointer
       `}
       style={
         isActive
@@ -686,22 +698,21 @@ function ScreenMockup({
           : undefined
       }
     >
+      <SlotThumbnail content={content} tag={tag} size="lg" role={role} showTag={false} />
+      {/* Label chip overlay */}
       <span
-        className={`text-[9px] uppercase tracking-widest font-bold px-2 text-center leading-tight ${
-          isActive ? "text-[color:var(--cyan)]" : "text-muted-foreground"
+        className={`absolute top-1.5 left-1.5 text-[9px] uppercase tracking-widest font-bold px-2 py-0.5 rounded-sm backdrop-blur z-10 ${
+          isActive
+            ? "bg-[color:var(--cyan)] text-background"
+            : "bg-background/80 text-foreground/80"
         }`}
       >
         {label}
       </span>
-      {content && content.type !== "waiting" && (
-        <span
-          className={`text-[10px] font-bold px-2 text-center leading-tight max-w-full truncate ${
-            isActive ? "text-foreground" : "text-muted-foreground"
-          }`}
-        >
-          {typeLabel}
-        </span>
-      )}
+      {/* Edit hint on hover */}
+      <span className="absolute bottom-1.5 right-1.5 text-[9px] uppercase tracking-widest font-bold px-2 py-0.5 rounded-sm bg-background/70 text-foreground/70 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+        Click to edit
+      </span>
     </button>
   );
 }
