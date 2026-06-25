@@ -24,7 +24,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { SlotStackThumbnail } from "@/components/SlotThumbnail";
+import { SlotStackThumbnail, SlotThumbnail } from "@/components/SlotThumbnail";
 
 // ─────────────────────────────────────────────
 // Constants
