@@ -1927,8 +1927,12 @@ function ContentTypeForm({
                   ? [String(content.question)]
                   : []
             }
-            onChange={(questions) => onChange({ questions, question: questions[0] ?? "" })}
+            answers={Array.isArray(content.answers) ? (content.answers as string[]) : []}
+            onChange={(questions, answers) =>
+              onChange({ questions, answers, question: questions[0] ?? "" })
+            }
           />
+
           <div className="grid grid-cols-2 gap-2">
             <div className="space-y-1.5">
               <Label className="text-[10px] uppercase tracking-widest text-muted-foreground">Team 1 name</Label>
