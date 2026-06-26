@@ -60,7 +60,7 @@ export type SlotContent =
   | { type: "youtube"; url: string }
   | { type: "image"; url: string; file_name?: string; title?: string }
   | { type: "embed"; url: string }
-  | { type: "confidence_checker"; prompt: string; optional_qualitative?: boolean; scale_mode?: "numbers" | "emoji" | "likert"; max?: number }
+  | { type: "confidence_checker"; prompt: string; optional_qualitative?: boolean; scale_mode?: "numbers" | "emoji" | "likert"; max?: number; checkpoint?: "start" | "final" }
   | { type: "wheel_spinner"; items: string[] }
   | { type: "countdown_timer"; label?: string; duration_secs: number }
   | { type: "host_timer"; label?: string; duration_secs: number }
@@ -212,7 +212,9 @@ export function SlotRenderer({
       if (screen === "screen1" || screen === "screen2")
         return <ConfidenceCheckerInput content={c} screen={screen} sessionId={sessionId} slotId={slotId} />;
       if (screen === "host")
-        return <ConfidenceCheckerHost content={c} sessionId={sessionId} slotId={slotId} />;
+        return c.checkpoint === "final"
+          ? <ConfidenceCompareHost content={c} sessionId={sessionId} />
+          : <ConfidenceCheckerHost content={c} sessionId={sessionId} slotId={slotId} />;
       return <Waiting screen={screen} />;
     }
 
@@ -337,10 +339,11 @@ function resolveScale(content: { scale_mode?: "numbers" | "emoji" | "likert"; ma
 }
 
 function ConfidenceCheckerInput({ content, screen, sessionId, slotId }: {
-  content: { prompt: string; optional_qualitative?: boolean; scale_mode?: "numbers" | "emoji" | "likert"; max?: number };
+  content: { prompt: string; optional_qualitative?: boolean; scale_mode?: "numbers" | "emoji" | "likert"; max?: number; checkpoint?: "start" | "final" };
   screen: "screen1" | "screen2";
   sessionId?: string; slotId?: string;
 }) {
+  const checkpoint = content.checkpoint === "final" ? "final" : "start";
   const { mode, options } = resolveScale(content);
 
   const [score, setScore] = useState<number | null>(null);
@@ -365,7 +368,7 @@ function ConfidenceCheckerInput({ content, screen, sessionId, slotId }: {
     setSubmitting(true);
     await supabase.from("responses").insert({
       session_id: sessionId, slot_id: slotId ?? null, screen_role: screen,
-      response_type: "confidence_checker", response_data: { score, thoughts } as never,
+      response_type: "confidence_checker", response_data: { score, thoughts, checkpoint } as never,
     });
     setSubmitting(false);
     setRecorded(c => c + 1);
@@ -560,6 +563,115 @@ function ConfidenceCheckerHost({ content, sessionId, slotId }: {
           <div className="text-6xl font-extrabold text-[color:var(--cyan)]">{avg}</div>
         </div>
       </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────
+// CONFIDENCE CHECKER — Host comparison (start vs final/now)
+// ─────────────────────────────────────────────
+
+function confidenceBarColor(i: number, total: number) {
+  const t = total <= 1 ? 1 : i / (total - 1);
+  return `oklch(0.75 0.17 ${Math.round(25 + t * 120)})`;
+}
+
+function ConfidenceMiniBars({ scores, options, dim }: { scores: number[]; options: number[]; dim: boolean }) {
+  const counts = options.map(n => scores.filter(s => s === n).length);
+  const maxC = Math.max(...counts, 1);
+  return (
+    <div className="flex items-end gap-2 md:gap-3 h-28">
+      {options.map((n, i) => (
+        <div key={n} className="flex flex-col items-center gap-1">
+          <span className="text-sm font-bold">{counts[i]}</span>
+          <div className="w-7 md:w-10 rounded-t-lg transition-all duration-700"
+            style={{ height: `${counts[i] === 0 ? 3 : Math.max(8, (counts[i] / maxC) * 96)}px`, background: confidenceBarColor(i, options.length), opacity: dim ? 0.5 : 1 }} />
+          <span className="text-xs font-bold" style={{ color: confidenceBarColor(i, options.length) }}>{n}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function ConfidenceCompareHost({ content, sessionId }: {
+  content: { scale_mode?: "numbers" | "emoji" | "likert"; max?: number };
+  sessionId?: string;
+}) {
+  const { options } = resolveScale(content);
+  const [startScores, setStartScores] = useState<number[]>([]);
+  const [finalScores, setFinalScores] = useState<number[]>([]);
+
+  useEffect(() => {
+    if (!sessionId) return;
+    (async () => {
+      const { data } = await supabase.from("responses").select("response_data")
+        .eq("session_id", sessionId).eq("response_type", "confidence_checker");
+      const starts: number[] = [], finals: number[] = [];
+      for (const r of (data ?? [])) {
+        const d = r.response_data as { score?: number; checkpoint?: string };
+        if (typeof d?.score !== "number") continue;
+        if (d.checkpoint === "final") finals.push(d.score); else starts.push(d.score);
+      }
+      setStartScores(starts);
+      setFinalScores(finals);
+    })();
+    const ch = supabase.channel(`cccmp:${sessionId}`);
+    ch.on("postgres_changes", { event: "INSERT", schema: "public", table: "responses", filter: `session_id=eq.${sessionId}` },
+      (payload) => {
+        const row = payload.new as { response_type: string; response_data: { score?: number; checkpoint?: string } };
+        if (row.response_type !== "confidence_checker") return;
+        const d = row.response_data;
+        if (typeof d?.score !== "number") return;
+        if (d.checkpoint === "final") setFinalScores(p => [...p, d.score as number]);
+        else setStartScores(p => [...p, d.score as number]);
+      }).subscribe();
+    return () => { supabase.removeChannel(ch); };
+  }, [sessionId]);
+
+  const mean = (arr: number[]) => (arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length : null);
+  const startAvg = mean(startScores);
+  const finalAvg = mean(finalScores);
+  const delta = startAvg !== null && finalAvg !== null ? finalAvg - startAvg : null;
+  const improved = delta !== null && delta > 0.05 && finalScores.length > 0;
+  const fmt = (v: number | null) => (v === null ? "—" : v.toFixed(1));
+
+  return (
+    <div className="min-h-screen w-full bg-immersive bg-grid flex flex-col items-center justify-center p-10 gap-8 animate-slot-in">
+      {improved && <Confetti />}
+      <div className="text-xs uppercase tracking-[0.4em] text-[color:var(--cyan)]">Confidence · Start vs Now</div>
+
+      <div className="flex flex-col md:flex-row items-center gap-8 md:gap-14">
+        <div className="flex flex-col items-center gap-3">
+          <div className="text-xs uppercase tracking-widest text-muted-foreground">At the start</div>
+          <ConfidenceMiniBars scores={startScores} options={options} dim />
+          <div className="text-4xl font-extrabold text-muted-foreground">{fmt(startAvg)}</div>
+          <div className="text-[10px] uppercase tracking-widest text-muted-foreground">{startScores.length} responses</div>
+        </div>
+
+        <div className="text-4xl text-muted-foreground">→</div>
+
+        <div className="flex flex-col items-center gap-3">
+          <div className="text-xs uppercase tracking-widest text-[color:var(--cyan)]">Now · live</div>
+          <ConfidenceMiniBars scores={finalScores} options={options} dim={false} />
+          <div className="text-4xl font-extrabold text-[color:var(--cyan)]">{fmt(finalAvg)}</div>
+          <div className="text-[10px] uppercase tracking-widest text-muted-foreground">{finalScores.length} responses</div>
+        </div>
+      </div>
+
+      {delta !== null && finalScores.length > 0 && (
+        <div className="text-center">
+          {improved ? (
+            <>
+              <div className="text-5xl md:text-6xl font-extrabold text-[color:var(--success)] text-glow">↑ +{delta.toFixed(1)} 🎉</div>
+              <div className="text-lg text-[color:var(--success)] uppercase tracking-widest mt-2 font-bold">Brilliant — confidence is up! Well done.</div>
+            </>
+          ) : delta < -0.05 ? (
+            <div className="text-3xl font-extrabold text-[color:var(--orange)]">↓ {delta.toFixed(1)} — worth revisiting</div>
+          ) : (
+            <div className="text-3xl font-extrabold text-muted-foreground">≈ Holding steady</div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

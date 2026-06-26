@@ -359,6 +359,46 @@ function DesignerPage() {
     [markDirty],
   );
 
+  // Mark this confidence check as the "start" and append a matching "final"
+  // check at the end of the timeline. The Host of the final slot compares the two.
+  const replicateForFinal = useCallback(
+    (id: string) => {
+      setSlots((prev) => {
+        const src = prev.find((s) => s.id === id);
+        if (!src) return prev;
+        const pick = [src.screen2_content, src.host_content, src.screen1_content].find(
+          (c) => (c as ContentDef | undefined)?.type === "confidence_checker",
+        ) as ContentDef | undefined;
+        if (!pick) return prev;
+        const markStart = (c: ContentDef) =>
+          c?.type === "confidence_checker" ? ({ ...c, checkpoint: "start" } as ContentDef) : c;
+        const withStart = prev.map((s) =>
+          s.id === id
+            ? {
+                ...s,
+                host_content: markStart(s.host_content),
+                screen1_content: markStart(s.screen1_content),
+                screen2_content: markStart(s.screen2_content),
+              }
+            : s,
+        );
+        const finalContent = { ...pick, checkpoint: "final" } as ContentDef;
+        const finalSlot: SlotDef = {
+          ...makeSlot(lessonId, withStart.length),
+          name: "Final confidence check",
+          end_behaviour: "screen2_submit",
+          host_content: { ...finalContent },
+          screen1_content: { ...finalContent },
+          screen2_content: { ...finalContent },
+        };
+        setSelectedId(finalSlot.id);
+        return [...withStart, finalSlot].map((s, i) => ({ ...s, order_index: i }));
+      });
+      markDirty();
+    },
+    [lessonId, markDirty],
+  );
+
   const deleteSlot = useCallback(
     (id: string) => {
       setDeletedIds((prev) => [...prev, id]);
@@ -497,6 +537,7 @@ function DesignerPage() {
             showEndBehaviourError={showMissingEndBehaviour && !selectedSlot.end_behaviour}
             onActiveScreen={setActiveScreen}
             onUpdate={(patch) => updateSlot(selectedSlot.id, patch)}
+            onReplicateForFinal={() => replicateForFinal(selectedSlot.id)}
           />
         )}
       </div>
@@ -1357,6 +1398,7 @@ function SlotEditorPanel({
   showEndBehaviourError,
   onActiveScreen,
   onUpdate,
+  onReplicateForFinal,
 }: {
   slot: SlotDef;
   lessonId: string;
@@ -1364,6 +1406,7 @@ function SlotEditorPanel({
   showEndBehaviourError: boolean;
   onActiveScreen: (s: ActiveScreen) => void;
   onUpdate: (patch: Partial<SlotDef>) => void;
+  onReplicateForFinal: () => void;
 }) {
   // Question modal
   const [questionModalOpen, setQuestionModalOpen] = useState(false);
@@ -1513,6 +1556,7 @@ function SlotEditorPanel({
             setEditingQuestion(existing ?? null);
             setQuestionModalOpen(true);
           }}
+          onReplicateForFinal={onReplicateForFinal}
         />
 
         {/* Mirror Host content to all 3 screens */}
@@ -1560,12 +1604,14 @@ function ContentTypeForm({
   lessonId,
   onChange,
   onOpenQuestionModal,
+  onReplicateForFinal,
 }: {
   content: ContentDef;
   screen: ActiveScreen;
   lessonId: string;
   onChange: (patch: Record<string, unknown>) => void;
   onOpenQuestionModal?: (existing?: ContentDef) => void;
+  onReplicateForFinal?: () => void;
 }) {
   switch (content.type) {
     case "waiting":
@@ -1822,6 +1868,29 @@ function ContentTypeForm({
             Each touch screen labels responders “Person 1, 2, 3…” — submit, take the next
             person, then tap “That's everyone” to finish. Host shows a live bar chart.
           </p>
+
+          {/* Start → Final comparison */}
+          <div className="pt-2 border-t border-border/40">
+            {content.checkpoint === "final" ? (
+              <p className="text-[10px] text-[color:var(--cyan)] uppercase tracking-widest font-bold">
+                Final check ✓ — the Host compares this against the start and celebrates any improvement.
+              </p>
+            ) : (
+              <>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="w-full h-9 uppercase tracking-widest text-[10px]"
+                  onClick={() => onReplicateForFinal?.()}
+                >
+                  Replicate for final slide ›
+                </Button>
+                <p className="text-[10px] text-muted-foreground mt-1.5">
+                  Adds a matching check at the end so you can measure where they started vs finished.
+                </p>
+              </>
+            )}
+          </div>
         </div>
       );
     }
