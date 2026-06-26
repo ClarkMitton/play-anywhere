@@ -73,6 +73,7 @@ function RemotePage() {
   const [tMin, setTMin] = useState(1);
   const [tSec, setTSec] = useState(0);
   const [timerSetFlash, setTimerSetFlash] = useState(false);
+  const [timerOpen, setTimerOpen] = useState(false); // collapsed by default
 
   // Load session + slots
   useEffect(() => {
@@ -349,19 +350,24 @@ function RemotePage() {
         )}
       </header>
 
-      {/* Timer composer */}
-      <div className="shrink-0 rounded-2xl border-2 border-[color:var(--cyan)]/30 bg-[color:var(--cyan)]/5 p-3">
-        <div className="flex items-center justify-between mb-2">
+      {/* Timer composer — collapsed by default, tap the header to open */}
+      <div className="shrink-0 rounded-2xl border-2 border-[color:var(--cyan)]/30 bg-[color:var(--cyan)]/5">
+        <button
+          onClick={() => setTimerOpen((o) => !o)}
+          className="w-full flex items-center justify-between px-3 py-2.5 active:scale-[0.99] transition-transform"
+        >
           <div className="text-[10px] uppercase tracking-[0.3em] text-[color:var(--cyan)] font-bold">
             Timer
           </div>
-          <button
-            onClick={clearTimer}
-            className="text-[9px] uppercase tracking-widest text-muted-foreground hover:text-destructive transition-colors"
+          <span
+            className="text-[color:var(--cyan)] text-sm leading-none transition-transform"
+            style={{ transform: timerOpen ? "rotate(90deg)" : "none" }}
           >
-            Hide
-          </button>
-        </div>
+            ▸
+          </span>
+        </button>
+        {timerOpen && (
+        <div className="px-3 pb-3">
         <div className="flex items-stretch justify-center gap-2 mb-2">
           {/* Minutes */}
           <div className="flex flex-col items-center">
@@ -425,6 +431,14 @@ function RemotePage() {
             +1 min
           </button>
         </div>
+        <button
+          onClick={clearTimer}
+          className="mt-2 w-full text-[9px] uppercase tracking-widest text-muted-foreground hover:text-destructive transition-colors"
+        >
+          Clear timer from screens
+        </button>
+        </div>
+        )}
       </div>
 
       {/* Quiz Buzzer controls — only when the host's current slot is a quiz_buzzer */}

@@ -1,8 +1,54 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { sounds } from "@/lib/audio";
 import { Button } from "@/components/ui/button";
 import type { RealtimeChannel } from "@supabase/supabase-js";
+
+// ─────────────────────────────────────────────
+// CONFETTI — celebratory burst (wheel result, confidence improvement)
+// ─────────────────────────────────────────────
+
+const CONFETTI_COLORS = ["var(--cyan)", "var(--orange)", "var(--success)", "oklch(0.82 0.18 80)", "oklch(0.72 0.18 300)"];
+
+function Confetti({ count = 44 }: { count?: number }) {
+  const pieces = useMemo(
+    () =>
+      Array.from({ length: count }, (_, i) => {
+        const angle = Math.random() * Math.PI * 2;
+        const dist = 140 + Math.random() * 320;
+        return {
+          dx: Math.cos(angle) * dist,
+          dy: Math.sin(angle) * dist + 240, // gravity bias
+          rot: Math.random() * 900 - 450,
+          dur: 1.3 + Math.random() * 1.4,
+          color: CONFETTI_COLORS[i % CONFETTI_COLORS.length],
+          left: 50 + (Math.random() * 24 - 12),
+          delay: Math.random() * 0.18,
+        };
+      }),
+    [count],
+  );
+  return (
+    <div className="pointer-events-none fixed inset-0 z-[60] overflow-hidden">
+      {pieces.map((p, i) => (
+        <span
+          key={i}
+          className="confetti-piece"
+          style={{
+            left: `${p.left}%`,
+            top: "42%",
+            background: p.color,
+            ["--dx" as string]: `${p.dx}px`,
+            ["--dy" as string]: `${p.dy}px`,
+            ["--rot" as string]: `${p.rot}deg`,
+            ["--dur" as string]: `${p.dur}s`,
+            animationDelay: `${p.delay}s`,
+          }}
+        />
+      ))}
+    </div>
+  );
+}
 
 // ─────────────────────────────────────────────
 // TYPES
@@ -588,7 +634,7 @@ function WheelSpinnerRenderer({ content, screen, sessionId }: {
       <div className="relative">
         <div className="absolute left-1/2 -translate-x-1/2 z-10 text-4xl leading-none select-none"
           style={{ top: "-28px", filter: "drop-shadow(0 2px 10px color-mix(in oklab, var(--cyan) 60%, transparent))" }}>▼</div>
-        <div className="w-72 h-72 md:w-[400px] md:h-[400px] rounded-full relative"
+        <div className={`w-72 h-72 md:w-[400px] md:h-[400px] rounded-full relative ${spinning ? "animate-wheel-flash" : ""}`}
           style={{
             background: `conic-gradient(${conicParts})`,
             transform: `rotate(${rotation}deg)`,
@@ -613,15 +659,18 @@ function WheelSpinnerRenderer({ content, screen, sessionId }: {
         </div>
       </div>
       {result && (
-        <div className="animate-slot-in text-center">
-          <div className="text-xs uppercase tracking-[0.4em] text-[color:var(--orange)] mb-2">Result</div>
-          <div className="text-5xl md:text-7xl font-extrabold text-glow">{result}</div>
-        </div>
+        <>
+          <Confetti />
+          <div className="animate-slot-in text-center">
+            <div className="text-xs uppercase tracking-[0.4em] text-[color:var(--orange)] mb-2">Winner</div>
+            <div className="text-5xl md:text-7xl font-extrabold text-glow">{result}</div>
+          </div>
+        </>
       )}
-      {screen === "host" && (
-        <Button onClick={handleSpin} disabled={spinning || items.length === 0}
-          className="h-16 px-14 text-xl uppercase tracking-widest font-extrabold disabled:opacity-30">
-          {spinning ? "Spinning…" : "Spin"}
+      {items.length > 0 && (
+        <Button onClick={handleSpin} disabled={spinning}
+          className={`h-16 px-14 text-xl uppercase tracking-widest font-extrabold disabled:opacity-50 ${spinning ? "animate-pulse" : ""}`}>
+          {spinning ? "Spinning…" : "Spin!"}
         </Button>
       )}
       {items.length === 0 && <div className="text-sm text-muted-foreground uppercase tracking-widest">No items configured</div>}
