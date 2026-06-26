@@ -1113,6 +1113,19 @@ function normalizeQuestion(initial: QuestionDef | null): QuestionDef {
   return { ...blankQuestion(type), ...(initial ?? {}), type, text: initial?.text ?? "" };
 }
 
+// Turn incoming slot content into a list of questions (a "round").
+// Accepts a question_round, a single legacy question, or nothing.
+function normalizeRound(initial: ContentDef | null): QuestionDef[] {
+  const anyInit = initial as { type?: string; questions?: QuestionDef[] } | null;
+  if (anyInit && Array.isArray(anyInit.questions) && anyInit.questions.length > 0) {
+    return anyInit.questions.map((qq) => normalizeQuestion(qq));
+  }
+  if (anyInit && (anyInit.type === "multiple_choice" || anyInit.type === "true_or_false")) {
+    return [normalizeQuestion(anyInit as unknown as QuestionDef)];
+  }
+  return [blankQuestion("multiple_choice")];
+}
+
 function QuestionModal({
   open,
   initial,
@@ -1121,49 +1134,51 @@ function QuestionModal({
   onSave,
 }: {
   open: boolean;
-  initial: QuestionDef | null;
+  initial: ContentDef | null;
   onClose: () => void;
-  onInsert: (q: QuestionDef) => void;
-  onSave: (q: QuestionDef) => Promise<void>;
+  onInsert: (questions: QuestionDef[]) => void;
+  onSave: (questions: QuestionDef[]) => Promise<void>;
 }) {
-  const [q, setQ] = useState<QuestionDef>(() => normalizeQuestion(initial));
+  const [questions, setQuestions] = useState<QuestionDef[]>(() => normalizeRound(initial));
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    if (open) setQ(normalizeQuestion(initial));
+    if (open) setQuestions(normalizeRound(initial));
   }, [open, initial]);
 
-  const setType = (type: QuestionDef["type"]) => setQ(blankQuestion(type));
+  const updateQ = (i: number, patch: Partial<QuestionDef>) =>
+    setQuestions((qs) => qs.map((q, j) => (j === i ? { ...q, ...patch } : q)));
+  const setType = (i: number, type: QuestionDef["type"]) =>
+    setQuestions((qs) => qs.map((q, j) => (j === i ? blankQuestion(type) : q)));
+  const setOption = (i: number, oi: number, val: string) =>
+    setQuestions((qs) => qs.map((q, j) => (j === i ? { ...q, options: (q.options ?? []).map((o, k) => (k === oi ? val : o)) } : q)));
+  const addOption = (i: number) =>
+    setQuestions((qs) => qs.map((q, j) => (j === i && (q.options?.length ?? 0) < 6 ? { ...q, options: [...(q.options ?? []), ""] } : q)));
+  const removeOption = (i: number, oi: number) =>
+    setQuestions((qs) =>
+      qs.map((q, j) => {
+        if (j !== i) return q;
+        const options = (q.options ?? []).filter((_, k) => k !== oi);
+        return { ...q, options, correct: Math.min(q.correct ?? 0, Math.max(0, options.length - 1)) };
+      }),
+    );
+  const addQuestion = () => setQuestions((qs) => [...qs, blankQuestion("multiple_choice")]);
+  const removeQuestion = (i: number) => setQuestions((qs) => (qs.length > 1 ? qs.filter((_, j) => j !== i) : qs));
 
-  const setOption = (i: number, val: string) => {
-    const opts = [...(q.options ?? [])];
-    opts[i] = val;
-    setQ({ ...q, options: opts });
-  };
-
-  const addOption = () => {
-    if ((q.options?.length ?? 0) >= 6) return;
-    setQ({ ...q, options: [...(q.options ?? []), ""] });
-  };
-
-  const removeOption = (i: number) => {
-    const opts = (q.options ?? []).filter((_, j) => j !== i);
-    setQ({ ...q, options: opts, correct: Math.min(q.correct ?? 0, Math.max(0, opts.length - 1)) });
-  };
-
-  const isValid =
+  const qValid = (q: QuestionDef) =>
     (q.text ?? "").trim().length > 0 &&
     (q.type === "multiple_choice"
       ? (q.options?.length ?? 0) >= 2 && (q.options ?? []).every((o) => o.trim().length > 0)
       : true);
+  const isValid = questions.length > 0 && questions.every(qValid);
 
   const handleSave = async () => {
     setSaving(true);
-    await onSave(q);
+    await onSave(questions);
     setSaving(false);
   };
 
-  const QUESTION_TYPES: { value: QuestionDef["type"]; label: string }[] = [
+  const TYPES: { value: QuestionDef["type"]; label: string }[] = [
     { value: "multiple_choice", label: "Multiple Choice" },
     { value: "true_or_false", label: "True / False" },
   ];
@@ -1173,117 +1188,137 @@ function QuestionModal({
       <DialogContent className="bg-card border-border max-w-lg max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-[color:var(--cyan)] uppercase tracking-[0.4em] text-sm font-extrabold">
-            Question Editor
+            Question Round
           </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-5 pt-1">
-          {/* Type selector */}
-          <div className="space-y-2">
-            <Label className="text-[10px] uppercase tracking-widest text-muted-foreground">Type</Label>
-            <div className="grid grid-cols-2 gap-2">
-              {QUESTION_TYPES.map(({ value, label }) => (
-                <button
-                  key={value}
-                  onClick={() => setType(value)}
-                  className={`px-3 py-2 rounded-lg border text-[10px] uppercase tracking-widest font-bold transition-colors
-                    ${q.type === value
-                      ? "border-[color:var(--cyan)] text-[color:var(--cyan)] bg-[color:var(--cyan)]/10"
-                      : "border-border text-muted-foreground hover:border-[color:var(--cyan)]/50"
-                    }`}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
-          </div>
+        <div className="space-y-4 pt-1">
+          <p className="text-[10px] text-muted-foreground">
+            Add one or more questions. In the session the Host reveals each question's
+            results, then taps Next to move everyone to the next one.
+          </p>
 
-          {/* Question text */}
-          <div className="space-y-1.5">
-            <Label className="text-[10px] uppercase tracking-widest text-muted-foreground">Question text</Label>
-            <Textarea
-              value={q.text}
-              onChange={(e) => setQ({ ...q, text: e.target.value })}
-              placeholder="Enter your question…"
-              rows={3}
-              className="bg-background/60 border-border focus-visible:border-[color:var(--cyan)] resize-none"
-            />
-          </div>
+          {questions.map((q, i) => (
+            <div key={i} className="rounded-xl border border-border bg-background/40 p-3 space-y-3">
+              <div className="flex items-center justify-between">
+                <Label className="text-[10px] uppercase tracking-widest text-[color:var(--cyan)] font-bold">
+                  Question {i + 1}
+                </Label>
+                {questions.length > 1 && (
+                  <button
+                    onClick={() => removeQuestion(i)}
+                    className="text-[10px] uppercase tracking-widest text-muted-foreground hover:text-destructive transition-colors"
+                  >
+                    Remove
+                  </button>
+                )}
+              </div>
 
-          {/* multiple_choice options */}
-          {q.type === "multiple_choice" && (
-            <div className="space-y-2">
-              <Label className="text-[10px] uppercase tracking-widest text-muted-foreground">
-                Options — click circle to mark correct
-              </Label>
-              <div className="space-y-2">
-                {(q.options ?? []).map((opt, i) => (
-                  <div key={i} className="flex items-center gap-2">
-                    {q.type === "multiple_choice" && (
+              {/* Type selector */}
+              <div className="grid grid-cols-2 gap-2">
+                {TYPES.map(({ value, label }) => (
+                  <button
+                    key={value}
+                    onClick={() => setType(i, value)}
+                    className={`px-3 py-2 rounded-lg border text-[10px] uppercase tracking-widest font-bold transition-colors
+                      ${q.type === value
+                        ? "border-[color:var(--cyan)] text-[color:var(--cyan)] bg-[color:var(--cyan)]/10"
+                        : "border-border text-muted-foreground hover:border-[color:var(--cyan)]/50"
+                      }`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+
+              {/* Question text */}
+              <Textarea
+                value={q.text}
+                onChange={(e) => updateQ(i, { text: e.target.value })}
+                placeholder="Enter your question…"
+                rows={2}
+                className="bg-background/60 border-border focus-visible:border-[color:var(--cyan)] resize-none"
+              />
+
+              {/* multiple_choice options */}
+              {q.type === "multiple_choice" && (
+                <div className="space-y-2">
+                  <Label className="text-[10px] uppercase tracking-widest text-muted-foreground">
+                    Options — click circle to mark correct
+                  </Label>
+                  {(q.options ?? []).map((opt, oi) => (
+                    <div key={oi} className="flex items-center gap-2">
                       <button
-                        onClick={() => setQ({ ...q, correct: i })}
+                        onClick={() => updateQ(i, { correct: oi })}
                         title="Mark as correct"
                         className={`w-5 h-5 rounded-full border-2 shrink-0 transition-colors
-                          ${q.correct === i
+                          ${q.correct === oi
                             ? "border-[color:var(--success)] bg-[color:var(--success)]"
                             : "border-border hover:border-[color:var(--success)]/60"
                           }`}
                       />
-                    )}
-                    <span className="text-[10px] font-bold text-muted-foreground w-4 shrink-0 text-center">
-                      {String.fromCharCode(65 + i)}
-                    </span>
-                    <Input
-                      value={opt}
-                      onChange={(e) => setOption(i, e.target.value)}
-                      placeholder={`Option ${String.fromCharCode(65 + i)}…`}
-                      className="flex-1 h-8 text-xs bg-background/60 border-border focus-visible:border-[color:var(--cyan)]"
-                    />
-                    {(q.options?.length ?? 0) > 2 && (
+                      <span className="text-[10px] font-bold text-muted-foreground w-4 shrink-0 text-center">
+                        {String.fromCharCode(65 + oi)}
+                      </span>
+                      <Input
+                        value={opt}
+                        onChange={(e) => setOption(i, oi, e.target.value)}
+                        placeholder={`Option ${String.fromCharCode(65 + oi)}…`}
+                        className="flex-1 h-8 text-xs bg-background/60 border-border focus-visible:border-[color:var(--cyan)]"
+                      />
+                      {(q.options?.length ?? 0) > 2 && (
+                        <button
+                          onClick={() => removeOption(i, oi)}
+                          className="text-muted-foreground hover:text-destructive transition-colors text-lg leading-none shrink-0 px-1"
+                        >
+                          ×
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                  {(q.options?.length ?? 0) < 6 && (
+                    <button
+                      onClick={() => addOption(i)}
+                      className="text-[10px] uppercase tracking-widest text-[color:var(--cyan)] hover:opacity-70 transition-opacity"
+                    >
+                      + Add option
+                    </button>
+                  )}
+                </div>
+              )}
+
+              {/* true_or_false */}
+              {q.type === "true_or_false" && (
+                <div className="space-y-2">
+                  <Label className="text-[10px] uppercase tracking-widest text-muted-foreground">Correct answer</Label>
+                  <div className="flex gap-3">
+                    {([true, false] as const).map((v) => (
                       <button
-                        onClick={() => removeOption(i)}
-                        className="text-muted-foreground hover:text-destructive transition-colors text-lg leading-none shrink-0 px-1"
+                        key={String(v)}
+                        onClick={() => updateQ(i, { correct_tf: v })}
+                        className={`flex-1 py-3 rounded-xl border-2 text-sm font-extrabold uppercase tracking-widest transition-colors
+                          ${q.correct_tf === v
+                            ? v
+                              ? "border-[color:var(--success)] text-[color:var(--success)] bg-[color:var(--success)]/10"
+                              : "border-destructive text-destructive bg-destructive/10"
+                            : "border-border text-muted-foreground hover:border-border/80"
+                          }`}
                       >
-                        ×
+                        {v ? "True" : "False"}
                       </button>
-                    )}
+                    ))}
                   </div>
-                ))}
-              </div>
-              {(q.options?.length ?? 0) < 6 && (
-                <button
-                  onClick={addOption}
-                  className="text-[10px] uppercase tracking-widest text-[color:var(--cyan)] hover:opacity-70 transition-opacity"
-                >
-                  + Add option
-                </button>
+                </div>
               )}
             </div>
-          )}
+          ))}
 
-          {/* true_or_false */}
-          {q.type === "true_or_false" && (
-            <div className="space-y-2">
-              <Label className="text-[10px] uppercase tracking-widest text-muted-foreground">Correct answer</Label>
-              <div className="flex gap-3">
-                {([true, false] as const).map((v) => (
-                  <button
-                    key={String(v)}
-                    onClick={() => setQ({ ...q, correct_tf: v })}
-                    className={`flex-1 py-3 rounded-xl border-2 text-sm font-extrabold uppercase tracking-widest transition-colors
-                      ${q.correct_tf === v
-                        ? v
-                          ? "border-[color:var(--success)] text-[color:var(--success)] bg-[color:var(--success)]/10"
-                          : "border-destructive text-destructive bg-destructive/10"
-                        : "border-border text-muted-foreground hover:border-border/80"
-                      }`}
-                  >
-                    {v ? "True" : "False"}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
+          <button
+            onClick={addQuestion}
+            className="w-full py-2.5 rounded-xl border-2 border-dashed border-border text-[10px] uppercase tracking-widest font-bold text-muted-foreground hover:border-[color:var(--cyan)]/50 hover:text-[color:var(--cyan)] transition-colors"
+          >
+            + Add another question
+          </button>
 
           {/* Actions */}
           <div className="flex gap-2 pt-2 border-t border-border/40">
@@ -1294,15 +1329,15 @@ function QuestionModal({
               disabled={!isValid || saving}
               onClick={handleSave}
             >
-              {saving ? "Saving…" : "Save to resource bucket"}
+              {saving ? "Saving…" : "Save to bucket"}
             </Button>
             <Button
               size="sm"
               className="flex-1 h-10 uppercase tracking-widest text-[10px]"
               disabled={!isValid}
-              onClick={() => onInsert(q)}
+              onClick={() => onInsert(questions)}
             >
-              Insert into slot
+              {questions.length > 1 ? `Insert ${questions.length} questions` : "Insert into slot"}
             </Button>
           </div>
         </div>
@@ -1332,28 +1367,32 @@ function SlotEditorPanel({
 }) {
   // Question modal
   const [questionModalOpen, setQuestionModalOpen] = useState(false);
-  const [editingQuestion, setEditingQuestion] = useState<QuestionDef | null>(null);
+  const [editingQuestion, setEditingQuestion] = useState<ContentDef | null>(null);
 
-  const handleInsertQuestion = (q: QuestionDef) => {
+  const handleInsertQuestion = (questions: QuestionDef[]) => {
+    // A question round drives all three screens: Host shows live results + controls,
+    // both touch screens collect answers. Use separate objects per screen.
     onUpdate({
-      screen2_content: { ...q } as ContentDef,
-      host_content: { ...q } as ContentDef,
-      screen1_content: { type: "waiting" } as ContentDef,
+      host_content: { type: "question_round", questions } as ContentDef,
+      screen1_content: { type: "question_round", questions } as ContentDef,
+      screen2_content: { type: "question_round", questions } as ContentDef,
       end_behaviour: "screen2_submit",
     });
     setQuestionModalOpen(false);
   };
 
-  const handleSaveToResourceBucket = async (q: QuestionDef) => {
+  const handleSaveToResourceBucket = async (questions: QuestionDef[]) => {
     const { data: lesson } = await supabase
       .from("lessons")
       .select("resource_bucket")
       .eq("id", lessonId)
       .single();
-    const existing = (lesson?.resource_bucket as QuestionDef[] | null) ?? [];
-    const updated = existing.some((r) => r.id === q.id)
-      ? existing.map((r) => (r.id === q.id ? q : r))
-      : [...existing, q];
+    let updated = (lesson?.resource_bucket as QuestionDef[] | null) ?? [];
+    for (const q of questions) {
+      updated = updated.some((r) => r.id === q.id)
+        ? updated.map((r) => (r.id === q.id ? q : r))
+        : [...updated, q];
+    }
     await supabase
       .from("lessons")
       .update({ resource_bucket: updated as never })
@@ -1526,7 +1565,7 @@ function ContentTypeForm({
   screen: ActiveScreen;
   lessonId: string;
   onChange: (patch: Record<string, unknown>) => void;
-  onOpenQuestionModal?: (existing?: QuestionDef) => void;
+  onOpenQuestionModal?: (existing?: ContentDef) => void;
 }) {
   switch (content.type) {
     case "waiting":
@@ -2023,23 +2062,33 @@ function ContentTypeForm({
 
     case "multiple_choice":
     case "true_or_false":
+    case "question_round": {
+      const roundQs = Array.isArray((content as Record<string, unknown>).questions)
+        ? ((content as Record<string, unknown>).questions as unknown[])
+        : null;
+      const summary = roundQs
+        ? `Round of ${roundQs.length} question${roundQs.length !== 1 ? "s" : ""}`
+        : content.text
+          ? String(content.text)
+          : null;
       return (
         <div className="py-2 space-y-2">
-          {content.text ? (
+          {summary ? (
             <div className="text-xs text-foreground bg-card/60 rounded-lg px-3 py-2 truncate">
-              {String(content.text)}
+              {summary}
             </div>
           ) : null}
           <Button
             size="sm"
             variant="outline"
             className="w-full h-9 uppercase tracking-widest text-[10px]"
-            onClick={() => onOpenQuestionModal?.(content as unknown as QuestionDef)}
+            onClick={() => onOpenQuestionModal?.(content)}
           >
-            {content.text ? "Edit question ›" : "Configure question ›"}
+            {summary ? "Edit questions ›" : "Configure questions ›"}
           </Button>
         </div>
       );
+    }
 
     default:
       return null;

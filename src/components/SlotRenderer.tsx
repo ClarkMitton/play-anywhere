@@ -66,6 +66,7 @@ export type SlotContent =
   | { type: "host_timer"; label?: string; duration_secs: number }
   | { type: "multiple_choice"; id?: string; text: string; options: string[]; correct?: number }
   | { type: "true_or_false"; id?: string; text: string; correct_tf?: boolean }
+  | { type: "question_round"; questions: RoundQ[] }
   | { type: "voting"; question: string; options: string[] }
   | { type: "quiz_buzzer"; question?: string; questions?: string[]; answers?: string[]; team1_name?: string; team2_name?: string }
   | { type: string; [k: string]: unknown };
@@ -239,6 +240,11 @@ export function SlotRenderer({
       if (screen === "host")
         return <QuestionRendererHost content={c} sessionId={sessionId} />;
       return <Waiting screen={screen} />;
+    }
+
+    case "question_round": {
+      const c = content as Extract<SlotContent, { type: "question_round" }>;
+      return <QuestionRoundRenderer content={c} screen={screen} sessionId={sessionId} slotId={slotId} />;
     }
 
     case "voting": {
@@ -878,6 +884,224 @@ function QuestionResults({ content, responses }: { content: QuestionContent; res
         })}
       </div>
       <div className="text-sm text-muted-foreground">{total} response{total !== 1 ? "s" : ""}</div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────
+// QUESTION ROUND — several MC / T-F questions on one slot, host-advanced
+// ─────────────────────────────────────────────
+
+type RoundQ = {
+  id?: string;
+  type: "multiple_choice" | "true_or_false";
+  text?: string;
+  options?: string[];
+  correct?: number;
+  correct_tf?: boolean;
+};
+
+type RoundState = { index: number; revealed: boolean };
+
+// Shared answer input (matches the single-question styling).
+function QuestionInputUI({ question, answer, setAnswer }: {
+  question: RoundQ; answer: number | string | null; setAnswer: (a: number | string) => void;
+}) {
+  if (question.type === "true_or_false") {
+    return (
+      <div className="flex gap-6">
+        {(["true", "false"] as const).map(v => (
+          <button key={v} onClick={() => setAnswer(v)}
+            className={`w-36 h-20 rounded-2xl text-2xl font-extrabold border-2 uppercase tracking-widest transition-all duration-150
+              ${answer === v ? "border-[color:var(--cyan)] bg-[color:var(--cyan)]/20 text-[color:var(--cyan)] scale-105" : "border-border text-muted-foreground hover:border-[color:var(--cyan)]/50"}`}>
+            {v}
+          </button>
+        ))}
+      </div>
+    );
+  }
+  const opts = question.options ?? [];
+  return (
+    <div className="flex flex-col gap-3 w-full max-w-lg">
+      {opts.map((opt, i) => (
+        <button key={i} onClick={() => setAnswer(i)}
+          className={`w-full px-6 py-4 rounded-2xl text-left text-lg font-semibold border-2 transition-all duration-150
+            ${answer === i ? "border-[color:var(--cyan)] bg-[color:var(--cyan)]/20 text-[color:var(--cyan)]" : "border-border text-foreground hover:border-[color:var(--cyan)]/50"}`}>
+          <span className="mr-3 text-muted-foreground font-bold">{String.fromCharCode(65 + i)}.</span>{opt}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function QuestionRoundRenderer({ content, screen, sessionId, slotId }: {
+  content: { questions?: RoundQ[] };
+  screen: "host" | "screen1" | "screen2";
+  sessionId?: string; slotId?: string;
+}) {
+  const questions = (content.questions ?? []).filter(q => q && q.type);
+  const [state, setState] = useState<RoundState>({ index: 0, revealed: false });
+  const stateRef = useRef(state);
+  const channelRef = useRef<RealtimeChannel | null>(null);
+  useEffect(() => { stateRef.current = state; }, [state]);
+
+  useEffect(() => {
+    if (!sessionId) return;
+    const ch = supabase.channel(`qround:${sessionId}`, { config: { broadcast: { self: true } } });
+    channelRef.current = ch;
+    ch.on("broadcast", { event: "qround_state" }, ({ payload }: { payload: RoundState }) => {
+      setState({ index: payload.index ?? 0, revealed: Boolean(payload.revealed) });
+    });
+    if (screen === "host") {
+      ch.on("broadcast", { event: "qround_sync_request" }, () => {
+        ch.send({ type: "broadcast", event: "qround_state", payload: stateRef.current });
+      });
+    }
+    ch.subscribe(() => {
+      if (screen !== "host")
+        setTimeout(() => ch.send({ type: "broadcast", event: "qround_sync_request", payload: {} }), 200);
+    });
+    return () => { supabase.removeChannel(ch); channelRef.current = null; };
+  }, [sessionId, screen]);
+
+  const broadcast = (next: RoundState) => {
+    setState(next);
+    channelRef.current?.send({ type: "broadcast", event: "qround_state", payload: next });
+  };
+
+  if (questions.length === 0) return <Waiting screen={screen} />;
+  const current = questions[state.index];
+  const isLast = state.index >= questions.length - 1;
+
+  if (screen === "screen1" || screen === "screen2")
+    return <QuestionRoundTS2 question={current} qIndex={state.index} total={questions.length}
+      screen={screen} sessionId={sessionId} slotId={slotId} />;
+
+  if (screen === "host")
+    return <QuestionRoundHost question={current} qIndex={state.index} total={questions.length}
+      revealed={state.revealed} isLast={isLast} sessionId={sessionId}
+      onReveal={() => broadcast({ ...state, revealed: true })}
+      onNext={() => broadcast({ index: Math.min(questions.length - 1, state.index + 1), revealed: false })} />;
+
+  return <Waiting screen={screen} />;
+}
+
+function QuestionRoundTS2({ question, qIndex, total, screen, sessionId, slotId }: {
+  question: RoundQ; qIndex: number; total: number;
+  screen: "screen1" | "screen2"; sessionId?: string; slotId?: string;
+}) {
+  const [answer, setAnswer] = useState<number | string | null>(null);
+  const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+
+  // Reset whenever the host advances to a new question.
+  useEffect(() => { setAnswer(null); setSubmitted(false); }, [qIndex]);
+
+  const handleSubmit = async () => {
+    if (answer === null || !sessionId || submitting) return;
+    setSubmitting(true);
+    await supabase.from("responses").insert({
+      session_id: sessionId, slot_id: slotId ?? null, screen_role: screen,
+      response_type: "question",
+      response_data: { type: question.type, answer, questionId: question.id ?? `q${qIndex}`, qIndex } as never,
+    });
+    setSubmitting(false);
+    setSubmitted(true);
+  };
+
+  if (!question) return <SubmittedState />;
+
+  if (submitted) {
+    return (
+      <div className="min-h-screen w-full bg-immersive bg-grid flex flex-col items-center justify-center p-10 gap-5 animate-slot-in">
+        <div className="text-xs uppercase tracking-[0.5em] text-[color:var(--success)]">Answer recorded</div>
+        <div className="text-4xl md:text-5xl font-extrabold text-glow text-center">Nice!</div>
+        <div className="text-sm text-muted-foreground uppercase tracking-widest">Waiting for the next question…</div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen w-full bg-immersive bg-grid flex flex-col items-center justify-center p-8 gap-7 animate-slot-in">
+      <div className="text-xs uppercase tracking-[0.5em] text-[color:var(--cyan)]">Question {qIndex + 1} of {total}</div>
+      <div className="text-2xl md:text-3xl font-bold text-center max-w-lg">{question.text || "Question"}</div>
+      <QuestionInputUI question={question} answer={answer} setAnswer={setAnswer} />
+      <Button onClick={handleSubmit} disabled={answer === null || submitting}
+        className="h-14 px-12 text-lg uppercase tracking-widest font-extrabold disabled:opacity-30">
+        {submitting ? "Submitting…" : "Submit"}
+      </Button>
+    </div>
+  );
+}
+
+function QuestionRoundHost({ question, qIndex, total, revealed, isLast, sessionId, onReveal, onNext }: {
+  question: RoundQ; qIndex: number; total: number; revealed: boolean; isLast: boolean;
+  sessionId?: string; onReveal: () => void; onNext: () => void;
+}) {
+  const [count, setCount] = useState(0);
+  const [responses, setResponses] = useState<ResponseRow[]>([]);
+
+  // Live response count for the current question only (matched on qIndex).
+  useEffect(() => {
+    if (!sessionId) return;
+    setCount(0);
+    (async () => {
+      const { data } = await supabase.from("responses").select("response_data")
+        .eq("session_id", sessionId).eq("response_type", "question");
+      const forThis = (data ?? []).filter(r => (r.response_data as { qIndex?: number })?.qIndex === qIndex);
+      setCount(forThis.length);
+    })();
+    const ch = supabase.channel(`qround-resp:${sessionId}:${qIndex}`);
+    ch.on("postgres_changes", { event: "INSERT", schema: "public", table: "responses", filter: `session_id=eq.${sessionId}` },
+      (payload) => {
+        const row = payload.new as { response_type: string; response_data: { qIndex?: number } };
+        if (row.response_type === "question" && row.response_data?.qIndex === qIndex) setCount(c => c + 1);
+      }).subscribe();
+    return () => { supabase.removeChannel(ch); };
+  }, [sessionId, qIndex]);
+
+  const doReveal = async () => {
+    if (!sessionId) return;
+    const { data } = await supabase.from("responses").select("response_data")
+      .eq("session_id", sessionId).eq("response_type", "question");
+    const forThis = (data ?? []).filter(r => (r.response_data as { qIndex?: number })?.qIndex === qIndex) as ResponseRow[];
+    setResponses(forThis);
+    sounds.questionReveal();
+    onReveal();
+  };
+
+  if (!question) return <Waiting screen="host" />;
+
+  if (!revealed) {
+    return (
+      <div className="min-h-screen w-full bg-immersive bg-grid flex flex-col items-center justify-center gap-8 animate-slot-in">
+        <div className="text-xs uppercase tracking-[0.4em] text-[color:var(--cyan)]">Question {qIndex + 1} of {total} · Live</div>
+        {question.text && <div className="text-2xl md:text-4xl font-bold text-center max-w-2xl">{question.text}</div>}
+        <div>
+          <div className="text-xs uppercase tracking-widest text-muted-foreground mb-1 text-center">Responses</div>
+          <div className="text-8xl font-extrabold text-glow">{count}</div>
+        </div>
+        <Button onClick={doReveal} disabled={count === 0}
+          className="h-16 px-12 text-xl uppercase tracking-widest font-extrabold disabled:opacity-30">
+          Reveal Results
+        </Button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="relative min-h-screen w-full">
+      <QuestionResults content={question as unknown as QuestionContent} responses={responses} />
+      <div className="absolute bottom-10 left-1/2 -translate-x-1/2">
+        {isLast ? (
+          <div className="text-sm uppercase tracking-[0.4em] text-[color:var(--success)]">End of round ✓</div>
+        ) : (
+          <Button onClick={onNext}
+            className="h-16 px-12 text-xl uppercase tracking-widest font-extrabold">
+            Next Question ▶
+          </Button>
+        )}
+      </div>
     </div>
   );
 }

@@ -306,6 +306,11 @@ function ThumbContent({
         </div>
       );
 
+    case "question_round": {
+      const qs = Array.isArray(c.questions) ? (c.questions as unknown[]) : [];
+      return <Label icon="❓" label={`Round · ${qs.length} Q${qs.length !== 1 ? "s" : ""}`} tint="oklch(0.16 0.04 240)" />;
+    }
+
     default:
       return <Label icon="●" label={c.type} />;
   }
