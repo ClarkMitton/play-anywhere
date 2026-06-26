@@ -17,7 +17,7 @@ export type SlotContent =
   | { type: "video_upload"; url: string; file_name?: string; loop?: boolean }
   | { type: "image"; url: string; file_name?: string; title?: string }
   | { type: "embed"; url: string }
-  | { type: "confidence_checker"; prompt: string; optional_qualitative?: boolean; scale_mode?: "numbers" | "emoji"; max?: number }
+  | { type: "confidence_checker"; prompt: string; optional_qualitative?: boolean; scale_mode?: "numbers" | "emoji" | "likert"; max?: number }
   | { type: "wheel_spinner"; items: string[] }
   | { type: "countdown_timer"; label?: string; duration_secs: number }
   | { type: "host_timer"; label?: string; duration_secs: number }
@@ -329,16 +329,21 @@ function SubmittedState() {
 const EMOJI_LABELS = ["Really angry", "Slightly angry", "Neutral", "Happy", "Really happy"];
 const EMOJI_FACES = ["😡", "😠", "😐", "🙂", "😄"];
 
+// Likert scale (low → high). Stored as 1–5.
+const LIKERT_LABELS = ["Strongly disagree", "Disagree", "Neutral", "Agree", "Strongly agree"];
+
 // Normalise the configured scale into a list of option values.
-// numbers → 1..max (max clamped 2–10). emoji → fixed 1..5.
-function resolveScale(content: { scale_mode?: "numbers" | "emoji"; max?: number }) {
-  const mode = content.scale_mode === "emoji" ? "emoji" : "numbers";
-  const max = mode === "emoji" ? 5 : Math.min(10, Math.max(2, Math.round(content.max ?? 5)));
+// numbers → 1..max (max clamped 2–10). emoji / likert → fixed 1..5.
+function resolveScale(content: { scale_mode?: "numbers" | "emoji" | "likert"; max?: number }) {
+  const mode =
+    content.scale_mode === "emoji" ? "emoji" :
+    content.scale_mode === "likert" ? "likert" : "numbers";
+  const max = mode === "numbers" ? Math.min(10, Math.max(2, Math.round(content.max ?? 5))) : 5;
   return { mode, max, options: Array.from({ length: max }, (_, i) => i + 1) };
 }
 
 function ConfidenceCheckerInput({ content, screen, sessionId, slotId }: {
-  content: { prompt: string; optional_qualitative?: boolean; scale_mode?: "numbers" | "emoji"; max?: number };
+  content: { prompt: string; optional_qualitative?: boolean; scale_mode?: "numbers" | "emoji" | "likert"; max?: number };
   screen: "screen1" | "screen2";
   sessionId?: string; slotId?: string;
 }) {
@@ -439,6 +444,17 @@ function ConfidenceCheckerInput({ content, screen, sessionId, slotId }: {
             </button>
           ))}
         </div>
+      ) : mode === "likert" ? (
+        <div className="flex flex-col gap-3 w-full max-w-lg">
+          {options.map(n => (
+            <button key={n} onClick={() => setScore(n)}
+              className={`w-full px-6 py-4 rounded-2xl text-left text-lg font-semibold border-2 transition-all duration-150
+                ${score === n ? "border-[color:var(--cyan)] bg-[color:var(--cyan)]/20 text-[color:var(--cyan)]"
+                  : "border-border text-foreground hover:border-[color:var(--cyan)]/50 active:scale-[0.99]"}`}>
+              {LIKERT_LABELS[n - 1]}
+            </button>
+          ))}
+        </div>
       ) : (
         <>
           <div className="flex flex-wrap justify-center gap-3 md:gap-4 max-w-2xl">
@@ -489,7 +505,7 @@ function ConfidenceCheckerInput({ content, screen, sessionId, slotId }: {
 // ─────────────────────────────────────────────
 
 function ConfidenceCheckerHost({ content, sessionId, slotId }: {
-  content: { scale_mode?: "numbers" | "emoji"; max?: number };
+  content: { scale_mode?: "numbers" | "emoji" | "likert"; max?: number };
   sessionId?: string; slotId?: string;
 }) {
   const { mode, options } = resolveScale(content);
@@ -537,8 +553,8 @@ function ConfidenceCheckerHost({ content, sessionId, slotId }: {
         ))}
       </div>
       <div className="flex justify-between w-full max-w-md text-xs text-muted-foreground uppercase tracking-widest">
-        <span>{mode === "emoji" ? `${EMOJI_FACES[0]} ${EMOJI_LABELS[0]}` : "Not at all"}</span>
-        <span>{mode === "emoji" ? `${EMOJI_FACES[EMOJI_FACES.length - 1]} ${EMOJI_LABELS[EMOJI_LABELS.length - 1]}` : "Very confident"}</span>
+        <span>{mode === "emoji" ? `${EMOJI_FACES[0]} ${EMOJI_LABELS[0]}` : mode === "likert" ? LIKERT_LABELS[0] : "Not at all"}</span>
+        <span>{mode === "emoji" ? `${EMOJI_FACES[EMOJI_FACES.length - 1]} ${EMOJI_LABELS[EMOJI_LABELS.length - 1]}` : mode === "likert" ? LIKERT_LABELS[LIKERT_LABELS.length - 1] : "Very confident"}</span>
       </div>
       <div className="flex gap-16 text-center">
         <div>

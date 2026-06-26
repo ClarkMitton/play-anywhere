@@ -1799,7 +1799,9 @@ function ContentTypeForm({
       );
 
     case "confidence_checker": {
-      const ccMode = content.scale_mode === "emoji" ? "emoji" : "numbers";
+      const ccMode =
+        content.scale_mode === "emoji" ? "emoji" :
+        content.scale_mode === "likert" ? "likert" : "numbers";
       const ccMax = Math.min(10, Math.max(2, Math.round(Number(content.max ?? 5))));
       return (
         <div className="space-y-3">
@@ -1828,6 +1830,7 @@ function ContentTypeForm({
               <SelectContent>
                 <SelectItem value="numbers">Numbers (1 → N)</SelectItem>
                 <SelectItem value="emoji">Emoji faces (😡 → 😄)</SelectItem>
+                <SelectItem value="likert">Likert (Strongly disagree → Strongly agree)</SelectItem>
               </SelectContent>
             </Select>
           </div>
