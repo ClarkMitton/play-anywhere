@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { sounds } from "@/lib/audio";
-import { broadcast } from "@/lib/realtime";
 import { Button } from "@/components/ui/button";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 
@@ -12,9 +11,7 @@ import type { RealtimeChannel } from "@supabase/supabase-js";
 export type SlotContent =
   | { type: "waiting" }
   | { type: "text_slide"; text: string; subtitle?: string; size?: "sm" | "md" | "lg" | "xl" | "2xl"; color?: string }
-  | { type: "teacher_note"; text: string; has_reveal_button?: boolean; question_id?: string }
   | { type: "youtube"; url: string }
-  | { type: "video_upload"; url: string; file_name?: string; loop?: boolean }
   | { type: "image"; url: string; file_name?: string; title?: string }
   | { type: "embed"; url: string }
   | { type: "confidence_checker"; prompt: string; optional_qualitative?: boolean; scale_mode?: "numbers" | "emoji" | "likert"; max?: number }
@@ -23,8 +20,6 @@ export type SlotContent =
   | { type: "host_timer"; label?: string; duration_secs: number }
   | { type: "multiple_choice"; id?: string; text: string; options: string[]; correct?: number }
   | { type: "true_or_false"; id?: string; text: string; correct_tf?: boolean }
-  | { type: "poll"; id?: string; text: string; options: string[] }
-  | { type: "likert"; id?: string; text: string; optional_qualitative?: boolean }
   | { type: "voting"; question: string; options: string[] }
   | { type: "quiz_buzzer"; question?: string; questions?: string[]; answers?: string[]; team1_name?: string; team2_name?: string }
   | { type: string; [k: string]: unknown };
@@ -32,8 +27,6 @@ export type SlotContent =
 type QuestionContent = Extract<SlotContent,
   | { type: "multiple_choice" }
   | { type: "true_or_false" }
-  | { type: "poll" }
-  | { type: "likert" }
 >;
 
 // ─────────────────────────────────────────────
@@ -46,7 +39,6 @@ export function SlotRenderer({
   muted = true,
   sessionId,
   slotId,
-  channel,
 }: {
   content: SlotContent | null | undefined;
   screen: "host" | "screen1" | "screen2";
@@ -101,42 +93,6 @@ export function SlotRenderer({
       );
     }
 
-    case "teacher_note": {
-      if (screen !== "host") return <Waiting screen={screen} />;
-      const c = content as Extract<SlotContent, { type: "teacher_note" }>;
-      return (
-        <div className="min-h-screen w-full flex flex-col p-10 animate-slot-in"
-          style={{ background: "oklch(0.18 0.06 60)" }}>
-          <div className="flex items-center gap-2 text-xs uppercase tracking-[0.4em] text-[color:var(--orange)] mb-6">
-            <span className="w-2 h-2 rounded-full bg-[color:var(--orange)] animate-pulse shrink-0" />
-            Teacher note · visible on Host only
-          </div>
-          <div className="text-3xl font-bold leading-snug whitespace-pre-wrap flex-1"
-            style={{ color: "oklch(0.95 0.08 60)" }}>
-            {c.text || ""}
-          </div>
-          {c.has_reveal_button && (
-            <div className="mt-10">
-              <Button
-                onClick={() => {
-                  if (channel) {
-                    broadcast(channel, {
-                      type: "reveal_results",
-                      payload: { slotId: c.question_id ?? slotId ?? "current" },
-                    });
-                    sounds.questionReveal();
-                  }
-                }}
-                className="h-16 px-10 text-xl uppercase tracking-widest font-extrabold"
-              >
-                Reveal Results
-              </Button>
-            </div>
-          )}
-        </div>
-      );
-    }
-
     case "youtube": {
       const c = content as Extract<SlotContent, { type: "youtube" }>;
       if (!c.url) return <Waiting screen={screen} />;
@@ -151,17 +107,6 @@ export function SlotRenderer({
             src={`https://www.youtube.com/embed/${videoId}?${params}`}
             className="w-full h-screen border-0"
             allow="autoplay; fullscreen" allowFullScreen title="YouTube video" />
-        </div>
-      );
-    }
-
-    case "video_upload": {
-      const c = content as Extract<SlotContent, { type: "video_upload" }>;
-      if (!c.url) return <Waiting screen={screen} />;
-      return (
-        <div className="min-h-screen w-full bg-black animate-slot-in">
-          <video key={c.url} src={c.url} className="w-full h-screen object-cover"
-            autoPlay loop={c.loop !== false} playsInline muted={muted || screen !== "host"} />
         </div>
       );
     }
@@ -241,15 +186,12 @@ export function SlotRenderer({
     }
 
     case "multiple_choice":
-    case "true_or_false":
-    case "poll":
-    case "likert": {
+    case "true_or_false": {
       const c = content as QuestionContent;
       if (screen === "screen2")
         return <QuestionRendererTS2 content={c} sessionId={sessionId} slotId={slotId} />;
       if (screen === "host")
         return <QuestionRendererHost content={c} sessionId={sessionId} />;
-      // TS1 content should be set to teacher_note with has_reveal_button by designer
       return <Waiting screen={screen} />;
     }
 
@@ -695,17 +637,8 @@ function QuestionRendererTS2({ content, sessionId, slotId }: {
   content: QuestionContent; sessionId?: string; slotId?: string;
 }) {
   const [answer, setAnswer] = useState<number | string | null>(null);
-  const [thoughts, setThoughts] = useState<string[]>([]);
-  const [newThought, setNewThought] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-
-  const addThought = () => {
-    const t = newThought.trim();
-    if (!t || thoughts.length >= 5) return;
-    setThoughts(p => [...p, t]);
-    setNewThought("");
-  };
 
   const handleSubmit = async () => {
     if (answer === null || !sessionId || submitting) return;
@@ -713,7 +646,7 @@ function QuestionRendererTS2({ content, sessionId, slotId }: {
     await supabase.from("responses").insert({
       session_id: sessionId, slot_id: slotId ?? null, screen_role: "screen2",
       response_type: "question",
-      response_data: { type: content.type, answer, questionId: content.id ?? "unknown", thoughts: content.type === "likert" ? thoughts : undefined } as never,
+      response_data: { type: content.type, answer, questionId: content.id ?? "unknown" } as never,
     });
     setSubmitting(false);
     setSubmitted(true);
@@ -743,52 +676,7 @@ function QuestionRendererTS2({ content, sessionId, slotId }: {
     );
   }
 
-  // Likert
-  if (content.type === "likert") {
-    const lc = content as Extract<QuestionContent, { type: "likert" }>;
-    return (
-      <div className="min-h-screen w-full bg-immersive bg-grid flex flex-col items-center justify-center p-8 gap-8 animate-slot-in">
-        <div className="text-2xl md:text-3xl font-bold text-center max-w-lg">{lc.text || "Rate your understanding"}</div>
-        <div className="flex gap-3 md:gap-5">
-          {[1, 2, 3, 4, 5].map(n => (
-            <button key={n} onClick={() => setAnswer(n)}
-              className={`w-16 h-16 md:w-20 md:h-20 rounded-2xl text-3xl md:text-4xl font-extrabold border-2 transition-all duration-150 select-none
-                ${answer === n ? "border-[color:var(--cyan)] bg-[color:var(--cyan)]/20 text-[color:var(--cyan)] scale-110" : "border-border text-muted-foreground hover:border-[color:var(--cyan)]/50"}`}>
-              {n}
-            </button>
-          ))}
-        </div>
-        <div className="flex justify-between w-full max-w-xs text-xs text-muted-foreground uppercase tracking-widest">
-          <span>Disagree</span><span>Agree</span>
-        </div>
-        {lc.optional_qualitative && (
-          <div className="w-full max-w-lg space-y-3">
-            <div className="text-sm text-muted-foreground uppercase tracking-widest">Add a thought (optional)</div>
-            {thoughts.map((t, i) => (
-              <div key={i} className="flex items-center gap-2 text-sm">
-                <span className="w-1.5 h-1.5 rounded-full bg-[color:var(--cyan)] shrink-0" /><span>{t}</span>
-              </div>
-            ))}
-            {thoughts.length < 5 && (
-              <div className="flex gap-2">
-                <input value={newThought} onChange={e => setNewThought(e.target.value)}
-                  onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); addThought(); } }}
-                  placeholder="Type a thought…"
-                  className="flex-1 bg-background/60 border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[color:var(--cyan)]" />
-                <button onClick={addThought} className="px-4 py-3 border border-border rounded-xl text-sm hover:border-[color:var(--cyan)]">+</button>
-              </div>
-            )}
-          </div>
-        )}
-        <Button onClick={handleSubmit} disabled={answer === null || submitting}
-          className="h-14 px-12 text-lg uppercase tracking-widest font-extrabold disabled:opacity-30">
-          {submitting ? "Submitting…" : "Submit"}
-        </Button>
-      </div>
-    );
-  }
-
-  // Multiple choice / poll
+  // Multiple choice
   const opts = (content as { options?: string[] }).options ?? [];
   return (
     <div className="min-h-screen w-full bg-immersive bg-grid flex flex-col items-center justify-center p-8 gap-6 animate-slot-in">
@@ -836,16 +724,18 @@ function QuestionRendererHost({ content, sessionId }: { content: QuestionContent
           setResponseCount(c => c + 1);
       }).subscribe();
 
-    const revealCh = supabase.channel(`qh-rev:${sessionId}`);
-    revealCh.on("broadcast", { event: "reveal_results" }, async () => {
-      const { data } = await supabase.from("responses").select("response_data")
-        .eq("session_id", sessionId).eq("response_type", "question");
-      setResponses((data ?? []) as ResponseRow[]);
-      setRevealed(true);
-    }).subscribe();
-
-    return () => { supabase.removeChannel(respCh); supabase.removeChannel(revealCh); };
+    return () => { supabase.removeChannel(respCh); };
   }, [sessionId]);
+
+  // Reveal is controlled here on the Host screen.
+  const handleReveal = async () => {
+    if (!sessionId) return;
+    const { data } = await supabase.from("responses").select("response_data")
+      .eq("session_id", sessionId).eq("response_type", "question");
+    setResponses((data ?? []) as ResponseRow[]);
+    sounds.questionReveal();
+    setRevealed(true);
+  };
 
   if (!revealed) {
     const text = (content as { text?: string }).text;
@@ -862,6 +752,10 @@ function QuestionRendererHost({ content, sessionId }: { content: QuestionContent
           <span className="w-2 h-2 rounded-full bg-[color:var(--cyan)] animate-pulse [animation-delay:200ms]" />
           <span className="w-2 h-2 rounded-full bg-[color:var(--cyan)] animate-pulse [animation-delay:400ms]" />
         </div>
+        <Button onClick={handleReveal} disabled={responseCount === 0}
+          className="h-16 px-12 text-xl uppercase tracking-widest font-extrabold disabled:opacity-30">
+          Reveal Results
+        </Button>
       </div>
     );
   }
@@ -903,33 +797,7 @@ function QuestionResults({ content, responses }: { content: QuestionContent; res
     );
   }
 
-  if (content.type === "likert") {
-    const scores = responses.map(r => Number(r.response_data.answer)).filter(n => n >= 1 && n <= 5);
-    const avg = scores.length > 0 ? (scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(1) : "—";
-    const counts = [1, 2, 3, 4, 5].map(n => scores.filter(s => s === n).length);
-    const maxCount = Math.max(...counts, 1);
-    return (
-      <div className="min-h-screen w-full bg-immersive bg-grid flex flex-col items-center justify-center p-12 gap-8 animate-slot-in">
-        <div className="text-xs uppercase tracking-[0.4em] text-[color:var(--cyan)]">Results</div>
-        <div className="text-2xl font-bold text-center max-w-2xl">{content.text}</div>
-        <div className="text-8xl font-extrabold text-[color:var(--cyan)] text-glow">{avg}</div>
-        <div className="flex items-end gap-4 h-24">
-          {[1, 2, 3, 4, 5].map((n, i) => {
-            const h = counts[i] === 0 ? 4 : Math.max(8, (counts[i] / maxCount) * 88);
-            return (
-              <div key={n} className="flex flex-col items-center gap-1">
-                <div className="w-10 rounded-t transition-all duration-700" style={{ height: animating ? "4px" : `${h}px`, background: "var(--cyan)", transitionDelay: `${i * 80}ms` }} />
-                <span className="text-sm font-bold">{n}</span>
-              </div>
-            );
-          })}
-        </div>
-        <div className="text-sm text-muted-foreground">{scores.length} response{scores.length !== 1 ? "s" : ""} · Average {avg}</div>
-      </div>
-    );
-  }
-
-  // Multiple choice / poll
+  // Multiple choice
   const opts = (content as { options?: string[] }).options ?? [];
   const counts = opts.map((_, i) => responses.filter(r => r.response_data.answer === i).length);
   const maxCount = Math.max(...counts, 1);

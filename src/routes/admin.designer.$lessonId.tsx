@@ -57,7 +57,6 @@ const CONTENT_TYPES_HOST = [
   { value: "text_slide", label: "Text Slide" },
   { value: "image", label: "Image" },
   { value: "youtube", label: "YouTube" },
-  { value: "video_upload", label: "Video Upload" },
   { value: "embed", label: "Embed (iframe)" },
   { value: "confidence_checker", label: "Confidence Checker" },
   { value: "voting", label: "Voting" },
@@ -71,7 +70,6 @@ const CONTENT_TYPES_SCREEN1 = [
   { value: "text_slide", label: "Text Slide" },
   { value: "image", label: "Image" },
   { value: "youtube", label: "YouTube" },
-  { value: "video_upload", label: "Video Upload" },
   { value: "embed", label: "Embed (iframe)" },
   { value: "confidence_checker", label: "Confidence Checker" },
   { value: "voting", label: "Voting" },
@@ -80,13 +78,12 @@ const CONTENT_TYPES_SCREEN1 = [
   { value: "countdown_timer", label: "Countdown Timer" },
 ];
 // Interactive question types. Authored via the question modal; on insert they
-// populate Host (live results) + TS2 (student answering) and turn TS1 into a
-// teacher note with the Reveal button — so they belong in the Host/TS2 dropdowns.
+// populate Host (live results, with a Reveal button) + TS2 (student answering).
+// Poll and Likert are intentionally excluded — Voting and the Confidence Checker
+// cover those. So these belong in the Host/TS2 dropdowns.
 const QUESTION_TYPES = [
   { value: "multiple_choice", label: "Question: Multiple Choice" },
   { value: "true_or_false", label: "Question: True / False" },
-  { value: "poll", label: "Question: Poll" },
-  { value: "likert", label: "Question: Likert Scale" },
 ];
 CONTENT_TYPES_HOST.push(...QUESTION_TYPES);
 const CONTENT_TYPES_SCREEN2 = [...CONTENT_TYPES_SCREEN1, ...QUESTION_TYPES];
@@ -103,12 +100,11 @@ type ContentDef = { type: string; [k: string]: unknown };
 
 type QuestionDef = {
   id: string;
-  type: "multiple_choice" | "true_or_false" | "poll" | "likert";
+  type: "multiple_choice" | "true_or_false";
   text: string;
   options?: string[];
   correct?: number;
   correct_tf?: boolean;
-  optional_qualitative?: boolean;
 };
 
 type SlotDef = {
@@ -180,7 +176,7 @@ function makeFeedbackSlot(lessonId: string, orderIndex: number): SlotDef {
   return {
     ...makeSlot(lessonId, orderIndex),
     end_behaviour: "screen2_submit",
-    screen1_content: { type: "teacher_note", text: "Awaiting student responses…" },
+    screen1_content: { type: "waiting" },
     screen2_content: { type: "confidence_checker", prompt: "How confident are you?" },
   };
 }
@@ -198,19 +194,6 @@ async function uploadToStorage(
   }
   const { data } = supabase.storage.from("lesson-media").getPublicUrl(path);
   return { url: data.publicUrl, file_name: file.name };
-}
-
-async function getVideoDurationMins(file: File): Promise<number> {
-  return new Promise((resolve) => {
-    const video = document.createElement("video");
-    video.preload = "metadata";
-    video.onloadedmetadata = () => {
-      URL.revokeObjectURL(video.src);
-      resolve(Math.ceil(video.duration / 60));
-    };
-    video.onerror = () => resolve(10);
-    video.src = URL.createObjectURL(file);
-  });
 }
 
 // ─────────────────────────────────────────────
@@ -434,16 +417,12 @@ function DesignerPage() {
 
       for (const file of files) {
         let durationMins = 10;
-        let contentType = "image";
+        const contentType = "image";
 
-        if (file.type.startsWith("video/")) {
-          contentType = "video_upload";
-          durationMins = await getVideoDurationMins(file);
-        } else if (file.type.startsWith("image/")) {
-          contentType = "image";
+        if (file.type.startsWith("image/")) {
           durationMins = 10 / 60; // 10 seconds
         } else {
-          continue; // ignore non-image/video
+          continue; // ignore non-image files (video upload removed)
         }
 
         const s = makeSlot(lessonId, slotsRef.current.length);
@@ -1119,11 +1098,19 @@ function blankQuestion(type: QuestionDef["type"]): QuestionDef {
     id: crypto.randomUUID(),
     type,
     text: "",
-    options: type === "multiple_choice" || type === "poll" ? ["", ""] : undefined,
+    options: type === "multiple_choice" ? ["", ""] : undefined,
     correct: type === "multiple_choice" ? 0 : undefined,
     correct_tf: type === "true_or_false" ? true : undefined,
-    optional_qualitative: type === "likert" ? false : undefined,
   };
+}
+
+// Merge a (possibly partial or legacy) question / slot-content into a complete
+// QuestionDef so the editor never reads undefined fields (the cause of the
+// "Configure" crash). Legacy poll/likert collapse to multiple_choice.
+function normalizeQuestion(initial: QuestionDef | null): QuestionDef {
+  const type: QuestionDef["type"] =
+    initial?.type === "true_or_false" ? "true_or_false" : "multiple_choice";
+  return { ...blankQuestion(type), ...(initial ?? {}), type, text: initial?.text ?? "" };
 }
 
 function QuestionModal({
@@ -1139,11 +1126,11 @@ function QuestionModal({
   onInsert: (q: QuestionDef) => void;
   onSave: (q: QuestionDef) => Promise<void>;
 }) {
-  const [q, setQ] = useState<QuestionDef>(() => initial ?? blankQuestion("multiple_choice"));
+  const [q, setQ] = useState<QuestionDef>(() => normalizeQuestion(initial));
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    if (open) setQ(initial ?? blankQuestion("multiple_choice"));
+    if (open) setQ(normalizeQuestion(initial));
   }, [open, initial]);
 
   const setType = (type: QuestionDef["type"]) => setQ(blankQuestion(type));
@@ -1165,9 +1152,9 @@ function QuestionModal({
   };
 
   const isValid =
-    q.text.trim().length > 0 &&
-    (q.type === "multiple_choice" || q.type === "poll"
-      ? (q.options?.length ?? 0) >= 2 && q.options!.every((o) => o.trim().length > 0)
+    (q.text ?? "").trim().length > 0 &&
+    (q.type === "multiple_choice"
+      ? (q.options?.length ?? 0) >= 2 && (q.options ?? []).every((o) => o.trim().length > 0)
       : true);
 
   const handleSave = async () => {
@@ -1179,8 +1166,6 @@ function QuestionModal({
   const QUESTION_TYPES: { value: QuestionDef["type"]; label: string }[] = [
     { value: "multiple_choice", label: "Multiple Choice" },
     { value: "true_or_false", label: "True / False" },
-    { value: "poll", label: "Poll" },
-    { value: "likert", label: "Likert Scale" },
   ];
 
   return (
@@ -1225,11 +1210,11 @@ function QuestionModal({
             />
           </div>
 
-          {/* multiple_choice / poll options */}
-          {(q.type === "multiple_choice" || q.type === "poll") && (
+          {/* multiple_choice options */}
+          {q.type === "multiple_choice" && (
             <div className="space-y-2">
               <Label className="text-[10px] uppercase tracking-widest text-muted-foreground">
-                Options{q.type === "multiple_choice" ? " — click circle to mark correct" : ""}
+                Options — click circle to mark correct
               </Label>
               <div className="space-y-2">
                 {(q.options ?? []).map((opt, i) => (
@@ -1300,24 +1285,6 @@ function QuestionModal({
             </div>
           )}
 
-          {/* likert */}
-          {q.type === "likert" && (
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <Label className="text-[10px] uppercase tracking-widest text-muted-foreground cursor-pointer">
-                  Optional qualitative input
-                </Label>
-                <Switch
-                  checked={Boolean(q.optional_qualitative)}
-                  onCheckedChange={(v) => setQ({ ...q, optional_qualitative: v })}
-                />
-              </div>
-              <p className="text-[10px] text-muted-foreground">
-                Touch Screen 2 shows a 1–5 scale. Enable to allow students to add a short text response.
-              </p>
-            </div>
-          )}
-
           {/* Actions */}
           <div className="flex gap-2 pt-2 border-t border-border/40">
             <Button
@@ -1371,12 +1338,7 @@ function SlotEditorPanel({
     onUpdate({
       screen2_content: { ...q } as ContentDef,
       host_content: { ...q } as ContentDef,
-      screen1_content: {
-        type: "teacher_note",
-        text: `Question: ${q.text}\n\nWhen students are ready, click 'Reveal Results'.`,
-        has_reveal_button: true,
-        question_id: q.id,
-      } as ContentDef,
+      screen1_content: { type: "waiting" } as ContentDef,
       end_behaviour: "screen2_submit",
     });
     setQuestionModalOpen(false);
@@ -1645,29 +1607,6 @@ function ContentTypeForm({
         </div>
       );
 
-    case "teacher_note":
-      if (screen !== "host") {
-        return (
-          <div className="py-3 text-center text-[10px] uppercase tracking-widest text-[color:var(--orange)]">
-            Teacher note only renders on the Host display
-          </div>
-        );
-      }
-      return (
-        <div className="space-y-1.5">
-          <Label className="text-[10px] uppercase tracking-widest text-muted-foreground">
-            Note text
-          </Label>
-          <Textarea
-            value={String(content.text ?? "")}
-            onChange={(e) => onChange({ text: e.target.value })}
-            placeholder="Teacher note — visible only on the Host display…"
-            rows={5}
-            className="bg-background/60 border-border focus-visible:border-[color:var(--cyan)] resize-none"
-          />
-        </div>
-      );
-
     case "youtube":
       return (
         <div className="space-y-1.5">
@@ -1683,29 +1622,6 @@ function ContentTypeForm({
           <p className="text-[10px] text-muted-foreground">
             Host plays with audio. Other screens auto-muted.
           </p>
-        </div>
-      );
-
-    case "video_upload":
-      return (
-        <div className="space-y-3">
-          <FileUploadField
-            label="Video file"
-            accept="video/mp4,video/webm"
-            currentFileName={content.file_name ? String(content.file_name) : undefined}
-            lessonId={lessonId}
-            maxSizeMb={500}
-            onUpload={(url, file_name) => onChange({ url, file_name })}
-          />
-          <div className="flex items-center justify-between">
-            <Label className="text-[10px] uppercase tracking-widest text-muted-foreground cursor-pointer">
-              Loop video
-            </Label>
-            <Switch
-              checked={content.loop !== false}
-              onCheckedChange={(v) => onChange({ loop: v })}
-            />
-          </div>
         </div>
       );
 
@@ -2107,8 +2023,6 @@ function ContentTypeForm({
 
     case "multiple_choice":
     case "true_or_false":
-    case "poll":
-    case "likert":
       return (
         <div className="py-2 space-y-2">
           {content.text ? (

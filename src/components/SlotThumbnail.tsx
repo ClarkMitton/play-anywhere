@@ -110,9 +110,6 @@ function ThumbContent({
       );
     }
 
-    case "video_upload":
-      return <Label icon="🎬" label={String(c.file_name ?? "Video")} />;
-
     case "youtube":
       return <Label icon="▶" label="YouTube" tint="oklch(0.4 0.2 25)" />;
 
@@ -273,8 +270,7 @@ function ThumbContent({
       );
     }
 
-    case "multiple_choice":
-    case "poll": {
+    case "multiple_choice": {
       const opts = (c.options as string[]) || [];
       return (
         <div className="absolute inset-0 bg-[oklch(0.16_0.04_240)] flex flex-col p-1.5 gap-1">
@@ -309,9 +305,6 @@ function ThumbContent({
           </div>
         </div>
       );
-
-    case "likert":
-      return <Label icon="📊" label="Likert" tint="oklch(0.3 0.12 260)" />;
 
     default:
       return <Label icon="●" label={c.type} />;
