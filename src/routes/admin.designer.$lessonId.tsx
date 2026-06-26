@@ -79,10 +79,20 @@ const CONTENT_TYPES_SCREEN1 = [
   { value: "wheel_spinner", label: "Wheel Spinner" },
   { value: "countdown_timer", label: "Countdown Timer" },
 ];
-const CONTENT_TYPES_SCREEN2 = CONTENT_TYPES_SCREEN1;
+// Interactive question types. Authored via the question modal; on insert they
+// populate Host (live results) + TS2 (student answering) and turn TS1 into a
+// teacher note with the Reveal button — so they belong in the Host/TS2 dropdowns.
+const QUESTION_TYPES = [
+  { value: "multiple_choice", label: "Question: Multiple Choice" },
+  { value: "true_or_false", label: "Question: True / False" },
+  { value: "poll", label: "Question: Poll" },
+  { value: "likert", label: "Question: Likert Scale" },
+];
+CONTENT_TYPES_HOST.push(...QUESTION_TYPES);
+const CONTENT_TYPES_SCREEN2 = [...CONTENT_TYPES_SCREEN1, ...QUESTION_TYPES];
 // Lookup map for display labels
 const ALL_TYPE_LABELS = Object.fromEntries(
-  [...CONTENT_TYPES_HOST, ...CONTENT_TYPES_SCREEN1].map((t) => [t.value, t.label]),
+  [...CONTENT_TYPES_HOST, ...CONTENT_TYPES_SCREEN2].map((t) => [t.value, t.label]),
 );
 
 // ─────────────────────────────────────────────

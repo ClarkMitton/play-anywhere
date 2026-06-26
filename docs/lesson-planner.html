@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Lesson Planner — Three Screen Sketch</title>
+<style>
+  :root {
+    --cyan: #06b6d4;
+    --orange: #f97316;
+    --ink: #1a1a1a;
+    --line: #c8c8c8;
+    --muted: #6b7280;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    padding: 0;
+    font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+    color: var(--ink);
+    background: #f4f4f5;
+  }
+
+  /* Screen view: centre the page with a little breathing room */
+  .page {
+    width: 297mm;
+    min-height: 210mm;
+    margin: 16px auto;
+    padding: 12mm 12mm 10mm;
+    background: #fff;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.12);
+  }
+
+  /* ── Header ─────────────────────────────── */
+  header { border-bottom: 2px solid var(--ink); padding-bottom: 8px; margin-bottom: 12px; }
+  .eyebrow {
+    font-size: 10px; letter-spacing: 4px; text-transform: uppercase;
+    color: var(--cyan); font-weight: 700;
+  }
+  h1 { font-size: 22px; margin: 2px 0 8px; font-weight: 800; }
+  .meta { display: flex; gap: 18px; flex-wrap: wrap; font-size: 12px; }
+  .meta .field { display: flex; align-items: baseline; gap: 6px; flex: 1; min-width: 140px; }
+  .meta label { color: var(--muted); text-transform: uppercase; letter-spacing: 1px; font-size: 9px; font-weight: 700; white-space: nowrap; }
+  .meta .blank { flex: 1; border-bottom: 1px solid var(--line); height: 16px; }
+
+  /* ── Column headings (the 3 screens) ──────── */
+  .col-heads { display: grid; grid-template-columns: 70px 1fr 1fr 1fr; gap: 8px; margin: 14px 0 6px; }
+  .col-heads .spacer {}
+  .col-heads .head {
+    text-align: center; font-weight: 800; font-size: 11px;
+    text-transform: uppercase; letter-spacing: 2px; padding: 4px;
+    border-radius: 6px 6px 0 0;
+  }
+  .head.host   { background: #fff4e6; color: #b45309; border: 1px solid #fed7aa; border-bottom: none; }
+  .head.s1     { background: #ecfeff; color: #0e7490; border: 1px solid #a5f3fc; border-bottom: none; }
+  .head.s2     { background: #ecfeff; color: #0e7490; border: 1px solid #a5f3fc; border-bottom: none; }
+  .head small  { display: block; font-size: 8px; letter-spacing: 1px; font-weight: 600; opacity: .7; }
+
+  /* ── Slot rows ─────────────────────────────── */
+  .slot { display: grid; grid-template-columns: 70px 1fr 1fr 1fr; gap: 8px; margin-bottom: 10px; }
+  .slot .tab {
+    display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
+    padding-top: 6px; gap: 6px;
+  }
+  .slot .num {
+    width: 30px; height: 30px; border-radius: 50%; border: 2px solid var(--ink);
+    display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 14px;
+  }
+  .slot .tabline { width: 100%; border-bottom: 1px solid var(--line); height: 14px; }
+  .slot .tablabel { font-size: 7px; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); text-align: center; }
+  .box {
+    border: 1px solid var(--line); border-radius: 0 0 6px 6px; min-height: 92px;
+    padding: 6px 8px; position: relative;
+  }
+  .box.host { border-color: #fed7aa; background: #fffdf9; }
+  .box.s1, .box.s2 { border-color: #a5f3fc; background: #fbffff; }
+  .box .hint { font-size: 8px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+
+  /* ── Reference strip ───────────────────────── */
+  .ref { margin-top: 14px; border-top: 1px dashed var(--line); padding-top: 8px; }
+  .ref h2 { font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); margin: 0 0 6px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 5px; }
+  .chip {
+    font-size: 9.5px; padding: 2px 8px; border-radius: 99px; border: 1px solid var(--line);
+    background: #fafafa;
+  }
+  .chip b { color: var(--cyan); }
+  .footnote { margin-top: 8px; font-size: 9px; color: var(--muted); line-height: 1.5; }
+  .footnote b { color: var(--ink); }
+
+  /* ── Print ─────────────────────────────────── */
+  @media print {
+    html, body { background: #fff; }
+    .page { width: auto; min-height: auto; margin: 0; padding: 8mm; box-shadow: none; }
+    @page { size: A4 landscape; margin: 6mm; }
+    .slot { break-inside: avoid; }
+    .toolbar { display: none; }
+  }
+  .toolbar { text-align: center; margin: 12px; }
+  .toolbar button {
+    font: inherit; font-size: 13px; padding: 8px 20px; border-radius: 8px; border: none;
+    background: var(--ink); color: #fff; cursor: pointer; letter-spacing: 1px;
+  }
+</style>
+</head>
+<body>
+<div class="toolbar"><button onclick="window.print()">Print / Save as PDF</button></div>
+
+<div class="page">
+  <header>
+    <div class="eyebrow">Immersive Learning · Lesson Sketch</div>
+    <h1>Three-Screen Lesson Planner</h1>
+    <div class="meta">
+      <div class="field"><label>Lesson</label><span class="blank"></span></div>
+      <div class="field"><label>Designer</label><span class="blank"></span></div>
+      <div class="field"><label>Total mins</label><span class="blank"></span></div>
+      <div class="field"><label>Date</label><span class="blank"></span></div>
+    </div>
+  </header>
+
+  <!-- Column headings: the three real screens -->
+  <div class="col-heads">
+    <div class="spacer"></div>
+    <div class="head host">Host · Teacher <small>What YOU show / control</small></div>
+    <div class="head s1">Touch Screen 1 <small>What learners see / do</small></div>
+    <div class="head s2">Touch Screen 2 <small>What learners see / do</small></div>
+  </div>
+
+  <!-- Slot rows. Print 5 per page; duplicate for longer lessons. -->
+  <div class="slot">
+    <div class="tab">
+      <div class="num">1</div>
+      <div class="tabline"></div><div class="tablabel">name</div>
+      <div class="tabline"></div><div class="tablabel">mins</div>
+    </div>
+    <div class="box host"><span class="hint">host</span></div>
+    <div class="box s1"><span class="hint">screen 1</span></div>
+    <div class="box s2"><span class="hint">screen 2</span></div>
+  </div>
+
+  <div class="slot">
+    <div class="tab">
+      <div class="num">2</div>
+      <div class="tabline"></div><div class="tablabel">name</div>
+      <div class="tabline"></div><div class="tablabel">mins</div>
+    </div>
+    <div class="box host"><span class="hint">host</span></div>
+    <div class="box s1"><span class="hint">screen 1</span></div>
+    <div class="box s2"><span class="hint">screen 2</span></div>
+  </div>
+
+  <div class="slot">
+    <div class="tab">
+      <div class="num">3</div>
+      <div class="tabline"></div><div class="tablabel">name</div>
+      <div class="tabline"></div><div class="tablabel">mins</div>
+    </div>
+    <div class="box host"><span class="hint">host</span></div>
+    <div class="box s1"><span class="hint">screen 1</span></div>
+    <div class="box s2"><span class="hint">screen 2</span></div>
+  </div>
+
+  <div class="slot">
+    <div class="tab">
+      <div class="num">4</div>
+      <div class="tabline"></div><div class="tablabel">name</div>
+      <div class="tabline"></div><div class="tablabel">mins</div>
+    </div>
+    <div class="box host"><span class="hint">host</span></div>
+    <div class="box s1"><span class="hint">screen 1</span></div>
+    <div class="box s2"><span class="hint">screen 2</span></div>
+  </div>
+
+  <!-- Reference strip: what authors can drop into any box -->
+  <div class="ref">
+    <h2>What can go in a box?</h2>
+    <div class="chips">
+      <span class="chip">Text slide</span>
+      <span class="chip">Image</span>
+      <span class="chip">YouTube</span>
+      <span class="chip">Video</span>
+      <span class="chip">Embed / website</span>
+      <span class="chip"><b>Confidence checker</b> (1–10 or emoji)</span>
+      <span class="chip"><b>Question</b> (multiple choice · true/false · poll · scale)</span>
+      <span class="chip"><b>Voting</b></span>
+      <span class="chip"><b>Quiz buzzer</b> (2 teams)</span>
+      <span class="chip">Wheel spinner</span>
+      <span class="chip">Countdown timer</span>
+      <span class="chip">Standby</span>
+    </div>
+    <p class="footnote">
+      <b>Tip:</b> a slot can mirror the same thing on all 3 screens (e.g. a video), or split roles —
+      Host shows the question, Touch Screens collect the answers.
+      <b>How does a slot end?</b> tick one per slot → ⏱ timed · 👆 Touch Screen 2 submits · ▶ Touch Screen 1 presses continue.
+    </p>
+  </div>
+</div>
+</body>
+</html>
