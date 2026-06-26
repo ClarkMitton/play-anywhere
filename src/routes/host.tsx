@@ -654,8 +654,13 @@ function CodeCard({
         <div className="text-xs uppercase tracking-[0.4em] text-muted-foreground mb-3">
           Enter this code
         </div>
-        <div className="code-display text-7xl text-[color:var(--cyan)] text-glow">
-          {code ?? "······"}
+        <div
+          className="flex justify-center items-center gap-2 md:gap-3 text-5xl md:text-6xl font-extrabold text-[color:var(--cyan)] text-glow"
+          style={{ fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace', letterSpacing: 0 }}
+        >
+          {(code ?? "······").split("").map((ch, i) => (
+            <span key={i} className="inline-block">{ch}</span>
+          ))}
         </div>
       </div>
       <div className="text-sm text-muted-foreground break-all">{url}</div>
