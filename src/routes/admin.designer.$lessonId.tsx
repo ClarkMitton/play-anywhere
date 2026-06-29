@@ -1718,11 +1718,12 @@ function ContentTypeForm({
             <Label className="text-[10px] uppercase tracking-widest text-muted-foreground">
               Title (optional)
             </Label>
-            <Input
+            <Textarea
               value={String(content.title ?? "")}
               onChange={(e) => onChange({ title: e.target.value })}
-              placeholder="e.g. Activity 1 — Sort the cards"
-              className="bg-background/60 border-border focus-visible:border-[color:var(--cyan)]"
+              placeholder="e.g. Activity 1 — Sort the cards (press Enter for a new line)"
+              rows={2}
+              className="min-h-[60px] resize-y bg-background/60 border-border focus-visible:border-[color:var(--cyan)]"
             />
           </div>
           <FileUploadField
