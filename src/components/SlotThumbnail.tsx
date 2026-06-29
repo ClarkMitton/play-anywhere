@@ -83,13 +83,13 @@ function ThumbContent({
       return (
         <div className="absolute inset-0 bg-[oklch(0.16_0.04_240)] flex flex-col items-center justify-center p-2 text-center">
           <div
-            className={`font-bold leading-tight line-clamp-3 ${big}`}
+            className={`font-bold leading-tight line-clamp-3 whitespace-pre-line ${big}`}
             style={{ color }}
           >
             {text || "Text"}
           </div>
           {subtitle && lg && (
-            <div className="text-[10px] text-foreground/60 mt-1 line-clamp-2">
+            <div className="text-[10px] text-foreground/60 mt-1 line-clamp-2 whitespace-pre-line">
               {subtitle}
             </div>
           )}
