@@ -425,7 +425,7 @@ function ConfidenceCheckerInput({ content, screen, sessionId, slotId }: {
   return (
     <div className="min-h-screen w-full bg-immersive bg-grid flex flex-col items-center justify-center p-8 gap-7 animate-slot-in">
       <div className="text-xs uppercase tracking-[0.5em] text-[color:var(--cyan)]">Person {personNum}</div>
-      <div className="text-2xl md:text-3xl font-bold text-center max-w-lg leading-snug">
+      <div className="text-2xl md:text-3xl font-bold text-center max-w-lg leading-snug whitespace-pre-line">
         {content.prompt || "How confident are you?"}
       </div>
 
@@ -1361,7 +1361,7 @@ function CountdownTimerRenderer({ content, screen, sessionId }: {
   return (
     <div className="min-h-screen w-full bg-immersive bg-grid flex flex-col items-center justify-center gap-8 animate-slot-in">
       {content.label && (
-        <div className="text-2xl md:text-4xl font-bold text-center max-w-2xl px-8">{content.label}</div>
+        <div className="text-2xl md:text-4xl font-bold text-center max-w-2xl px-8 whitespace-pre-line">{content.label}</div>
       )}
       <div
         className={`text-[22vw] font-extrabold font-mono leading-none tabular-nums transition-colors duration-500
@@ -1468,7 +1468,7 @@ function HostTimerRenderer({ content }: {
   return (
     <div className="min-h-screen w-full bg-immersive bg-grid flex flex-col items-center justify-center gap-8 animate-slot-in">
       {content.label && (
-        <div className="text-2xl md:text-4xl font-bold text-center max-w-2xl px-8">{content.label}</div>
+        <div className="text-2xl md:text-4xl font-bold text-center max-w-2xl px-8 whitespace-pre-line">{content.label}</div>
       )}
       <div
         className={`text-[22vw] font-extrabold font-mono leading-none tabular-nums transition-colors duration-500
@@ -1572,7 +1572,7 @@ function VotingInput({ question, options, screen, sessionId, slotId }: {
   return (
     <div className="min-h-screen w-full bg-immersive bg-grid flex flex-col items-center justify-center p-8 gap-8 animate-slot-in">
       <div className="text-xs uppercase tracking-[0.5em] text-[color:var(--cyan)]">Person {personNum}</div>
-      <div className="text-2xl md:text-4xl font-bold text-center max-w-2xl">{question || "Cast your vote"}</div>
+      <div className="text-2xl md:text-4xl font-bold text-center max-w-2xl whitespace-pre-line">{question || "Cast your vote"}</div>
       <div className={`grid gap-4 w-full max-w-3xl ${options.length <= 2 ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-2"}`}>
         {options.map((opt, i) => (
           <button key={i} onClick={() => submit(i)} disabled={submitting}
@@ -1618,7 +1618,7 @@ function VotingHost({ question, options, sessionId, slotId }: {
   return (
     <div className="min-h-screen w-full bg-immersive bg-grid flex flex-col items-center justify-center p-12 gap-8 animate-slot-in">
       <div className="text-xs uppercase tracking-[0.4em] text-[color:var(--cyan)]">Voting · Live</div>
-      <div className="text-3xl md:text-5xl font-bold text-center max-w-3xl">{question || "Voting"}</div>
+      <div className="text-3xl md:text-5xl font-bold text-center max-w-3xl whitespace-pre-line">{question || "Voting"}</div>
       <div className="w-full max-w-4xl space-y-5">
         {options.map((opt, i) => {
           const c = counts[i];

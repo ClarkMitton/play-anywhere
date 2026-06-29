@@ -1718,11 +1718,12 @@ function ContentTypeForm({
             <Label className="text-[10px] uppercase tracking-widest text-muted-foreground">
               Title (optional)
             </Label>
-            <Input
+            <Textarea
               value={String(content.title ?? "")}
               onChange={(e) => onChange({ title: e.target.value })}
-              placeholder="e.g. Activity 1 — Sort the cards"
-              className="bg-background/60 border-border focus-visible:border-[color:var(--cyan)]"
+              placeholder="e.g. Activity 1 — Sort the cards (press Enter for a new line)"
+              rows={2}
+              className="min-h-[60px] resize-y bg-background/60 border-border focus-visible:border-[color:var(--cyan)]"
             />
           </div>
           <FileUploadField
@@ -1811,11 +1812,12 @@ function ContentTypeForm({
             <Label className="text-[10px] uppercase tracking-widest text-muted-foreground">
               Prompt
             </Label>
-            <Input
+            <Textarea
               value={String(content.prompt ?? "")}
               onChange={(e) => onChange({ prompt: e.target.value })}
-              placeholder="How confident are you?"
-              className="bg-background/60 border-border focus-visible:border-[color:var(--cyan)]"
+              placeholder="How confident are you? (press Enter for a new line)"
+              rows={2}
+              className="min-h-[60px] resize-y bg-background/60 border-border focus-visible:border-[color:var(--cyan)]"
             />
           </div>
           <div className="space-y-1.5">
@@ -1907,11 +1909,12 @@ function ContentTypeForm({
         <div className="space-y-3">
           <div className="space-y-1.5">
             <Label className="text-[10px] uppercase tracking-widest text-muted-foreground">Question</Label>
-            <Input
+            <Textarea
               value={String(content.question ?? "")}
               onChange={(e) => onChange({ question: e.target.value })}
-              placeholder="What should we do next?"
-              className="bg-background/60 border-border focus-visible:border-[color:var(--cyan)]"
+              placeholder="What should we do next? (press Enter for a new line)"
+              rows={2}
+              className="min-h-[60px] resize-y bg-background/60 border-border focus-visible:border-[color:var(--cyan)]"
             />
           </div>
           <div className="space-y-1.5">
@@ -2015,11 +2018,12 @@ function ContentTypeForm({
             <Label className="text-[10px] uppercase tracking-widest text-muted-foreground">
               Label (optional)
             </Label>
-            <Input
+            <Textarea
               value={String(content.label ?? "")}
               onChange={(e) => onChange({ label: e.target.value })}
-              placeholder="e.g. You have 2 minutes to complete this task…"
-              className="bg-background/60 border-border focus-visible:border-[color:var(--cyan)]"
+              placeholder="e.g. You have 2 minutes to complete this task… (press Enter for a new line)"
+              rows={2}
+              className="min-h-[60px] resize-y bg-background/60 border-border focus-visible:border-[color:var(--cyan)]"
             />
           </div>
           <div className="space-y-1.5">
@@ -2081,11 +2085,12 @@ function ContentTypeForm({
             <Label className="text-[10px] uppercase tracking-widest text-muted-foreground">
               Text above timer (optional)
             </Label>
-            <Input
+            <Textarea
               value={String(content.label ?? "")}
               onChange={(e) => onChange({ label: e.target.value })}
-              placeholder="e.g. Complete the task in…"
-              className="bg-background/60 border-border focus-visible:border-[color:var(--cyan)]"
+              placeholder="e.g. Complete the task in… (press Enter for a new line)"
+              rows={2}
+              className="min-h-[60px] resize-y bg-background/60 border-border focus-visible:border-[color:var(--cyan)]"
             />
           </div>
           <div className="space-y-1.5">
