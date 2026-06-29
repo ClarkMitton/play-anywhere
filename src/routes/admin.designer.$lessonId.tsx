@@ -1812,11 +1812,12 @@ function ContentTypeForm({
             <Label className="text-[10px] uppercase tracking-widest text-muted-foreground">
               Prompt
             </Label>
-            <Input
+            <Textarea
               value={String(content.prompt ?? "")}
               onChange={(e) => onChange({ prompt: e.target.value })}
-              placeholder="How confident are you?"
-              className="bg-background/60 border-border focus-visible:border-[color:var(--cyan)]"
+              placeholder="How confident are you? (press Enter for a new line)"
+              rows={2}
+              className="min-h-[60px] resize-y bg-background/60 border-border focus-visible:border-[color:var(--cyan)]"
             />
           </div>
           <div className="space-y-1.5">
