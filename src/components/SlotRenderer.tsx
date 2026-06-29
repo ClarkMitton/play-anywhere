@@ -1618,7 +1618,7 @@ function VotingHost({ question, options, sessionId, slotId }: {
   return (
     <div className="min-h-screen w-full bg-immersive bg-grid flex flex-col items-center justify-center p-12 gap-8 animate-slot-in">
       <div className="text-xs uppercase tracking-[0.4em] text-[color:var(--cyan)]">Voting · Live</div>
-      <div className="text-3xl md:text-5xl font-bold text-center max-w-3xl">{question || "Voting"}</div>
+      <div className="text-3xl md:text-5xl font-bold text-center max-w-3xl whitespace-pre-line">{question || "Voting"}</div>
       <div className="w-full max-w-4xl space-y-5">
         {options.map((opt, i) => {
           const c = counts[i];
