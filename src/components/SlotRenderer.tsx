@@ -425,7 +425,7 @@ function ConfidenceCheckerInput({ content, screen, sessionId, slotId }: {
   return (
     <div className="min-h-screen w-full bg-immersive bg-grid flex flex-col items-center justify-center p-8 gap-7 animate-slot-in">
       <div className="text-xs uppercase tracking-[0.5em] text-[color:var(--cyan)]">Person {personNum}</div>
-      <div className="text-2xl md:text-3xl font-bold text-center max-w-lg leading-snug">
+      <div className="text-2xl md:text-3xl font-bold text-center max-w-lg leading-snug whitespace-pre-line">
         {content.prompt || "How confident are you?"}
       </div>
 
