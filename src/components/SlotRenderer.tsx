@@ -1468,7 +1468,7 @@ function HostTimerRenderer({ content }: {
   return (
     <div className="min-h-screen w-full bg-immersive bg-grid flex flex-col items-center justify-center gap-8 animate-slot-in">
       {content.label && (
-        <div className="text-2xl md:text-4xl font-bold text-center max-w-2xl px-8">{content.label}</div>
+        <div className="text-2xl md:text-4xl font-bold text-center max-w-2xl px-8 whitespace-pre-line">{content.label}</div>
       )}
       <div
         className={`text-[22vw] font-extrabold font-mono leading-none tabular-nums transition-colors duration-500
