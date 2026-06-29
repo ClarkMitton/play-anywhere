@@ -1628,11 +1628,12 @@ function ContentTypeForm({
             <Label className="text-[10px] uppercase tracking-widest text-muted-foreground">
               Text
             </Label>
-            <Input
+            <Textarea
               value={String(content.text ?? "")}
               onChange={(e) => onChange({ text: e.target.value })}
-              placeholder="Main text…"
-              className="bg-background/60 border-border focus-visible:border-[color:var(--cyan)]"
+              placeholder="Main text… (press Enter for a new line)"
+              rows={3}
+              className="bg-background/60 border-border focus-visible:border-[color:var(--cyan)] min-h-[80px] resize-y"
             />
           </div>
           <div className="space-y-1.5">
