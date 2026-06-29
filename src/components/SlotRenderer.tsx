@@ -1572,7 +1572,7 @@ function VotingInput({ question, options, screen, sessionId, slotId }: {
   return (
     <div className="min-h-screen w-full bg-immersive bg-grid flex flex-col items-center justify-center p-8 gap-8 animate-slot-in">
       <div className="text-xs uppercase tracking-[0.5em] text-[color:var(--cyan)]">Person {personNum}</div>
-      <div className="text-2xl md:text-4xl font-bold text-center max-w-2xl">{question || "Cast your vote"}</div>
+      <div className="text-2xl md:text-4xl font-bold text-center max-w-2xl whitespace-pre-line">{question || "Cast your vote"}</div>
       <div className={`grid gap-4 w-full max-w-3xl ${options.length <= 2 ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-2"}`}>
         {options.map((opt, i) => (
           <button key={i} onClick={() => submit(i)} disabled={submitting}
