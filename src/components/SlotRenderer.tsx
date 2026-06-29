@@ -433,11 +433,11 @@ function ConfidenceCheckerInput({ content, screen, sessionId, slotId }: {
         <div className="flex flex-wrap justify-center gap-3 md:gap-4 max-w-2xl">
           {options.map(n => (
             <button key={n} onClick={() => setScore(n)}
-              className={`flex flex-col items-center gap-1 px-4 py-3 rounded-2xl border-2 transition-all duration-150
+              aria-label={EMOJI_LABELS[n - 1]}
+              className={`flex items-center justify-center px-4 py-3 rounded-2xl border-2 transition-all duration-150
                 ${score === n ? "border-[color:var(--cyan)] bg-[color:var(--cyan)]/20"
                   : "border-border hover:border-[color:var(--cyan)]/50 active:scale-95"}`}>
               <span className="text-5xl md:text-6xl leading-none">{EMOJI_FACES[n - 1]}</span>
-              <span className="text-[10px] uppercase tracking-widest text-muted-foreground">{EMOJI_LABELS[n - 1]}</span>
             </button>
           ))}
         </div>
