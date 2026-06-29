@@ -1909,11 +1909,12 @@ function ContentTypeForm({
         <div className="space-y-3">
           <div className="space-y-1.5">
             <Label className="text-[10px] uppercase tracking-widest text-muted-foreground">Question</Label>
-            <Input
+            <Textarea
               value={String(content.question ?? "")}
               onChange={(e) => onChange({ question: e.target.value })}
-              placeholder="What should we do next?"
-              className="bg-background/60 border-border focus-visible:border-[color:var(--cyan)]"
+              placeholder="What should we do next? (press Enter for a new line)"
+              rows={2}
+              className="min-h-[60px] resize-y bg-background/60 border-border focus-visible:border-[color:var(--cyan)]"
             />
           </div>
           <div className="space-y-1.5">
