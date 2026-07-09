@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { sounds } from "@/lib/audio";
+import { checkProfanity, PROFANITY_MESSAGE } from "@/lib/profanity";
 import { Button } from "@/components/ui/button";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 
