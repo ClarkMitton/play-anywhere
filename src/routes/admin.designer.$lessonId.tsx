@@ -62,6 +62,9 @@ const CONTENT_TYPES_HOST = [
   { value: "voting", label: "Voting" },
   { value: "quiz_buzzer", label: "Quiz Buzzer" },
   { value: "wheel_spinner", label: "Wheel Spinner" },
+  { value: "word_cloud", label: "Word Cloud" },
+  { value: "padlet", label: "Padlet (answer wall)" },
+  { value: "whiteboard", label: "Whiteboard (draw)" },
   { value: "countdown_timer", label: "Countdown Timer (all screens)" },
   { value: "host_timer", label: "Host Timer (Host only)" },
 ];
@@ -75,6 +78,9 @@ const CONTENT_TYPES_SCREEN1 = [
   { value: "voting", label: "Voting" },
   { value: "quiz_buzzer", label: "Quiz Buzzer" },
   { value: "wheel_spinner", label: "Wheel Spinner" },
+  { value: "word_cloud", label: "Word Cloud" },
+  { value: "padlet", label: "Padlet (answer wall)" },
+  { value: "whiteboard", label: "Whiteboard (draw)" },
   { value: "countdown_timer", label: "Countdown Timer" },
 ];
 // Interactive question types. Authored via the question modal; on insert they
