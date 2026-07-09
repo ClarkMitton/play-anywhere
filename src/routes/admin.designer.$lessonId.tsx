@@ -62,6 +62,9 @@ const CONTENT_TYPES_HOST = [
   { value: "voting", label: "Voting" },
   { value: "quiz_buzzer", label: "Quiz Buzzer" },
   { value: "wheel_spinner", label: "Wheel Spinner" },
+  { value: "word_cloud", label: "Word Cloud" },
+  { value: "padlet", label: "Padlet (answer wall)" },
+  { value: "whiteboard", label: "Whiteboard (draw)" },
   { value: "countdown_timer", label: "Countdown Timer (all screens)" },
   { value: "host_timer", label: "Host Timer (Host only)" },
 ];
@@ -75,6 +78,9 @@ const CONTENT_TYPES_SCREEN1 = [
   { value: "voting", label: "Voting" },
   { value: "quiz_buzzer", label: "Quiz Buzzer" },
   { value: "wheel_spinner", label: "Wheel Spinner" },
+  { value: "word_cloud", label: "Word Cloud" },
+  { value: "padlet", label: "Padlet (answer wall)" },
+  { value: "whiteboard", label: "Whiteboard (draw)" },
   { value: "countdown_timer", label: "Countdown Timer" },
 ];
 // Interactive question types. Authored via the question modal; on insert they
@@ -1957,7 +1963,83 @@ function ContentTypeForm({
       );
     }
 
-    case "quiz_buzzer":
+    case "word_cloud": {
+      return (
+        <div className="space-y-3">
+          <div className="space-y-1.5">
+            <Label className="text-[10px] uppercase tracking-widest text-muted-foreground">Title (big screen)</Label>
+            <Input
+              value={String(content.title ?? "")}
+              onChange={(e) => onChange({ title: e.target.value })}
+              placeholder="e.g. Words that describe today"
+              className="h-8 text-xs bg-background/60 border-border focus-visible:border-[color:var(--cyan)]"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-[10px] uppercase tracking-widest text-muted-foreground">Prompt (shown to students)</Label>
+            <Textarea
+              value={String(content.prompt ?? "")}
+              onChange={(e) => onChange({ prompt: e.target.value })}
+              placeholder="Type one word at a time (Shift+Enter for new line)"
+              rows={2}
+              className="min-h-[52px] resize-y bg-background/60 border-border focus-visible:border-[color:var(--cyan)]"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-[10px] uppercase tracking-widest text-muted-foreground">Words per student</Label>
+            <Input
+              type="number" min={1} max={20}
+              value={Number(content.max_words ?? 3)}
+              onChange={(e) => onChange({ max_words: Math.max(1, Math.min(20, Number(e.target.value) || 1)) })}
+              className="h-8 text-xs w-24 bg-background/60 border-border focus-visible:border-[color:var(--cyan)]"
+            />
+          </div>
+          <p className="text-[10px] text-muted-foreground">
+            Put this on Host + at least one touch screen. Host shows the live cloud, touch screens show the input.
+          </p>
+        </div>
+      );
+    }
+
+    case "padlet": {
+      return (
+        <div className="space-y-3">
+          <div className="space-y-1.5">
+            <Label className="text-[10px] uppercase tracking-widest text-muted-foreground">Question (big screen)</Label>
+            <Textarea
+              value={String(content.question ?? "")}
+              onChange={(e) => onChange({ question: e.target.value })}
+              placeholder="What was the most important thing you learned today?"
+              rows={3}
+              className="min-h-[72px] resize-y bg-background/60 border-border focus-visible:border-[color:var(--cyan)]"
+            />
+          </div>
+          <p className="text-[10px] text-muted-foreground">
+            Put this on Host + at least one touch screen. Host shows the answer wall (sticky notes), touch screens show the input box.
+          </p>
+        </div>
+      );
+    }
+
+    case "whiteboard": {
+      return (
+        <div className="space-y-3">
+          <div className="space-y-1.5">
+            <Label className="text-[10px] uppercase tracking-widest text-muted-foreground">Title (optional)</Label>
+            <Input
+              value={String(content.title ?? "")}
+              onChange={(e) => onChange({ title: e.target.value })}
+              placeholder="e.g. Sketch your answer"
+              className="h-8 text-xs bg-background/60 border-border focus-visible:border-[color:var(--cyan)]"
+            />
+          </div>
+          <p className="text-[10px] text-muted-foreground">
+            Free-draw canvas on the touch screens. Colours + brush sizes + clear built in. Each screen draws independently (not synced).
+          </p>
+        </div>
+      );
+    }
+
       return (
         <div className="space-y-3">
           <QuizQuestionsEditor

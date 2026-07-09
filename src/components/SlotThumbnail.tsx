@@ -311,6 +311,69 @@ function ThumbContent({
       return <Label icon="❓" label={`Round · ${qs.length} Q${qs.length !== 1 ? "s" : ""}`} tint="oklch(0.16 0.04 240)" />;
     }
 
+    case "word_cloud": {
+      if (role === "host") {
+        return (
+          <div className="absolute inset-0 bg-[oklch(0.16_0.05_260)] flex flex-wrap items-center justify-center gap-1 p-2">
+            {["design", "learn", "team", "focus", "grow", "spark"].map((w, i) => (
+              <span key={w} className={`font-extrabold ${lg ? "" : "text-[6px]"}`}
+                style={{
+                  color: ["var(--cyan)", "var(--orange)", "var(--success)", "oklch(0.75 0.18 300)"][i % 4],
+                  fontSize: lg ? `${10 + (i % 4) * 4}px` : undefined,
+                }}>
+                {w}
+              </span>
+            ))}
+          </div>
+        );
+      }
+      return (
+        <div className="absolute inset-0 bg-[oklch(0.16_0.04_240)] flex flex-col items-center justify-center p-2 gap-1">
+          <div className={`text-foreground/70 line-clamp-1 ${lg ? "text-[10px]" : "text-[6px]"}`}>{String(c.prompt ?? "Type a word")}</div>
+          <div className={`w-full rounded border border-[color:var(--cyan)]/50 bg-[color:var(--cyan)]/10 ${lg ? "h-6" : "h-2"}`} />
+        </div>
+      );
+    }
+
+    case "padlet": {
+      if (role === "host") {
+        return (
+          <div className="absolute inset-0 bg-[oklch(0.16_0.05_200)] flex flex-col p-1.5 gap-1">
+            <div className={`text-foreground/80 font-semibold line-clamp-1 text-center ${lg ? "text-[10px]" : "text-[6px]"}`}>{String(c.question ?? "Answer wall")}</div>
+            <div className="flex-1 grid grid-cols-3 gap-[3px]">
+              {[0, 1, 2, 3, 4, 5].map((i) => (
+                <div key={i} className="rounded" style={{
+                  background: ["oklch(0.94 0.12 90)", "oklch(0.9 0.14 200)", "oklch(0.9 0.15 340)"][i % 3],
+                  transform: `rotate(${((i * 37) % 7) - 3}deg)`,
+                }} />
+              ))}
+            </div>
+          </div>
+        );
+      }
+      return (
+        <div className="absolute inset-0 bg-[oklch(0.16_0.04_240)] flex flex-col p-2 gap-1">
+          <div className={`text-foreground/70 line-clamp-2 ${lg ? "text-[10px]" : "text-[6px]"}`}>{String(c.question ?? "Post…")}</div>
+          <div className={`w-full flex-1 rounded border border-[color:var(--cyan)]/50 bg-[color:var(--cyan)]/10`} />
+        </div>
+      );
+    }
+
+    case "whiteboard": {
+      if (role === "host") {
+        return <Label icon="🎨" label={String(c.title ?? "Whiteboard")} tint="oklch(0.2 0.08 260)" />;
+      }
+      return (
+        <div className="absolute inset-0 bg-white flex items-center justify-center">
+          <svg viewBox="0 0 40 24" className="w-3/4 h-3/4">
+            <path d="M4 18 Q10 6 18 14 T34 8" stroke="oklch(0.55 0.2 250)" strokeWidth="2" fill="none" strokeLinecap="round" />
+            <path d="M6 20 Q14 16 22 20" stroke="oklch(0.65 0.2 30)" strokeWidth="1.5" fill="none" strokeLinecap="round" />
+          </svg>
+        </div>
+      );
+    }
+
+
     default:
       return <Label icon="●" label={c.type} />;
   }
