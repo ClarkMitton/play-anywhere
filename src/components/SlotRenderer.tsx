@@ -69,6 +69,9 @@ export type SlotContent =
   | { type: "question_round"; questions: RoundQ[] }
   | { type: "voting"; question: string; options: string[] }
   | { type: "quiz_buzzer"; question?: string; questions?: string[]; answers?: string[]; team1_name?: string; team2_name?: string }
+  | { type: "word_cloud"; title?: string; prompt?: string; max_words?: number }
+  | { type: "padlet"; question: string; title?: string }
+  | { type: "whiteboard"; title?: string }
   | { type: string; [k: string]: unknown };
 
 type QuestionContent = Extract<SlotContent,
