@@ -262,6 +262,21 @@ export function SlotRenderer({
       return <QuizBuzzerRenderer content={c} screen={screen} sessionId={sessionId} />;
     }
 
+    case "word_cloud": {
+      const c = content as Extract<SlotContent, { type: "word_cloud" }>;
+      return <WordCloudRenderer content={c} screen={screen} sessionId={sessionId} slotId={slotId} />;
+    }
+
+    case "padlet": {
+      const c = content as Extract<SlotContent, { type: "padlet" }>;
+      return <PadletRenderer content={c} screen={screen} sessionId={sessionId} slotId={slotId} />;
+    }
+
+    case "whiteboard": {
+      const c = content as Extract<SlotContent, { type: "whiteboard" }>;
+      return <WhiteboardRenderer content={c} screen={screen} />;
+    }
+
     default:
       return <Waiting screen={screen} />;
   }
