@@ -1836,7 +1836,6 @@ function QuizBuzzerRenderer({ content, screen, sessionId }: {
 // response_data={word:string}.
 // ─────────────────────────────────────────────
 
-import { checkProfanity, PROFANITY_MESSAGE } from "@/lib/profanity";
 
 const CLOUD_COLORS = ["var(--cyan)", "var(--orange)", "var(--success)", "oklch(0.75 0.18 300)", "oklch(0.82 0.18 80)"];
 
