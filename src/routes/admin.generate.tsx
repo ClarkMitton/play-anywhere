@@ -38,6 +38,9 @@ export const Route = createFileRoute("/admin/generate")({
 const DURATIONS = [30, 45, 60, 90, 120];
 const MAX_DOCS = 3;
 const MAX_DOC_BYTES = 25 * 1024 * 1024;
+// Must match MAX_DOC_CHARS in supabase/functions/generate-session/index.ts.
+// Used only to warn before generating; the server does the actual trimming.
+const MAX_DOC_CHARS = 120_000;
 const ACCEPT = ".pdf,.docx,.pptx,.txt";
 
 type ParsedDoc = { name: string; text: string; pages: number };
@@ -116,6 +119,12 @@ function GeneratePage() {
         if (pages > 1 && text.length / pages < 120) {
           toast.warning(`${file.name} looks like a scan. Only some text could be read.`);
         }
+        if (text.length > MAX_DOC_CHARS) {
+          toast.warning(
+            `${file.name} is very long, so only the first part will be used. Consider splitting it.`,
+            { duration: 8000 },
+          );
+        }
         added.push({ name: file.name, text, pages });
       } catch (err) {
         toast.error(err instanceof Error ? err.message : `Could not read ${file.name}.`);
@@ -175,9 +184,20 @@ function GeneratePage() {
     setSession(result.session);
     setWarnings(result.warnings);
     setStage("review");
+
     if (response.meta?.droppedVideos > 0) {
       toast.warning(
         `${response.meta.droppedVideos} suggested video(s) did not exist and became placeholders.`,
+      );
+    }
+
+    // Silent truncation is how a whole deck quietly becomes half a lesson, so
+    // say it plainly rather than leaving the tutor to notice content missing.
+    for (const doc of response.meta?.truncatedDocs ?? []) {
+      const usedPct = Math.round((doc.usedChars / doc.originalChars) * 100);
+      toast.warning(
+        `"${doc.name}" was too long, so only about ${usedPct}% of it was used. Split it into smaller files if the rest matters.`,
+        { duration: 10000 },
       );
     }
   };
@@ -520,8 +540,15 @@ function GeneratePage() {
                 >
                   <span className="truncate">
                     {d.name}
-                    <span className="text-muted-foreground ml-2 text-xs">
+                    <span
+                      className={`ml-2 text-xs ${
+                        d.text.length > MAX_DOC_CHARS
+                          ? "text-[color:var(--orange)] font-semibold"
+                          : "text-muted-foreground"
+                      }`}
+                    >
                       {(d.text.length / 1000).toFixed(1)}k characters
+                      {d.text.length > MAX_DOC_CHARS && " · too long, will be shortened"}
                     </span>
                   </span>
                   <button

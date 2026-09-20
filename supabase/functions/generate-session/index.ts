@@ -26,8 +26,12 @@ import {
 } from "../_shared/rateLimit.ts";
 import { buildSystemPrompt, buildUserPrompt, type Brief } from "./prompt.ts";
 
-const MAX_DOC_CHARS = 20_000;
-const MAX_TOTAL_INPUT_CHARS = 60_000;
+// Generous because gemini-2.5-flash has a very large context window and a whole
+// staff PowerPoint plus speaker notes routinely runs past 50k characters. The
+// previous 20k cut a normal deck roughly in half, silently and mid-sentence.
+// Whenever these do bite, the caller is told which document was shortened.
+const MAX_DOC_CHARS = 120_000;
+const MAX_TOTAL_INPUT_CHARS = 300_000;
 const MODEL = "google/gemini-2.5-flash";
 
 const LEGAL_TYPES = new Set([
@@ -227,7 +231,26 @@ async function callModel(
   return content;
 }
 
-function normaliseBrief(body: Record<string, unknown>): Brief {
+/**
+ * Cuts to a sensible boundary rather than mid-word. Prefers a slide break so
+ * the model never sees half a slide, then a paragraph break, then a hard cut.
+ */
+function truncateAtBoundary(text: string, max: number): string {
+  if (text.length <= max) return text;
+  const head = text.slice(0, max);
+  const lastSlide = head.lastIndexOf("\n--- Slide ");
+  if (lastSlide > max * 0.5) return head.slice(0, lastSlide);
+  const lastPara = head.lastIndexOf("\n\n");
+  if (lastPara > max * 0.5) return head.slice(0, lastPara);
+  return head;
+}
+
+export type TruncatedDoc = { name: string; originalChars: number; usedChars: number };
+
+function normaliseBrief(
+  body: Record<string, unknown>,
+  truncated: TruncatedDoc[],
+): Brief {
   const docs = Array.isArray(body.documents) ? body.documents : [];
   return {
     topic: String(body.topic ?? "").slice(0, 2000),
@@ -248,10 +271,15 @@ function normaliseBrief(body: Record<string, unknown>): Brief {
     documents: docs
       .slice(0, 3)
       // deno-lint-ignore no-explicit-any
-      .map((d: any) => ({
-        name: String(d?.name ?? "document"),
-        text: String(d?.text ?? "").slice(0, MAX_DOC_CHARS),
-      }))
+      .map((d: any) => {
+        const name = String(d?.name ?? "document");
+        const full = String(d?.text ?? "");
+        const text = truncateAtBoundary(full, MAX_DOC_CHARS);
+        if (text.length < full.length) {
+          truncated.push({ name, originalChars: full.length, usedChars: text.length });
+        }
+        return { name, text };
+      })
       .filter((d) => d.text.trim().length > 0),
   };
 }
@@ -294,7 +322,8 @@ serve(async (req) => {
     }
 
     const body = await req.json();
-    const brief = normaliseBrief(body ?? {});
+    const truncatedDocs: TruncatedDoc[] = [];
+    const brief = normaliseBrief(body ?? {}, truncatedDocs);
     if (brief.topic.trim().length < 3) {
       return json({ ok: false, error: "Describe the topic before generating." }, 400);
     }
@@ -302,7 +331,13 @@ serve(async (req) => {
     const system = buildSystemPrompt(brief);
     let user = buildUserPrompt(brief);
     if (user.length > MAX_TOTAL_INPUT_CHARS) {
-      user = `${user.slice(0, MAX_TOTAL_INPUT_CHARS)}\n\n[source material truncated to fit]`;
+      const originalChars = user.length;
+      user = `${truncateAtBoundary(user, MAX_TOTAL_INPUT_CHARS)}\n\n[source material truncated to fit]`;
+      truncatedDocs.push({
+        name: "all documents combined",
+        originalChars,
+        usedChars: MAX_TOTAL_INPUT_CHARS,
+      });
     }
 
     // Lower temperature when there is source material to stay faithful to it.
@@ -363,11 +398,12 @@ Return ONLY the JSON object.`,
       department: brief.department,
       duration_mins: brief.durationMins,
       had_documents: brief.documents.length > 0,
+      truncated_docs: truncatedDocs.length,
       topic: brief.topic.slice(0, 120),
     });
 
     return new Response(
-      JSON.stringify({ ok: true, data, meta: { retried, droppedVideos } }),
+      JSON.stringify({ ok: true, data, meta: { retried, droppedVideos, truncatedDocs } }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   } catch (err) {

@@ -1,10 +1,17 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Brief } from "./sessionSchema";
 
+export type TruncatedDoc = { name: string; originalChars: number; usedChars: number };
+
 export type GenerateOk = {
   ok: true;
   data: unknown;
-  meta: { retried: boolean; droppedVideos: number };
+  meta: {
+    retried: boolean;
+    droppedVideos: number;
+    /** Documents the server had to shorten. Empty when everything fitted. */
+    truncatedDocs?: TruncatedDoc[];
+  };
 };
 
 export type GenerateFail = {
