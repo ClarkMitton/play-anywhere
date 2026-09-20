@@ -220,12 +220,15 @@ const MEDIA_BLOCK = `
   followed by a precise description of what the picture must show, and add a
   matching entry to media_requests. Be specific enough that a member of staff
   could search for it in one go.
-- YOUTUBE: you MAY suggest a real video where you are genuinely confident it
-  exists, using only the youtube.com/watch?v=ID or youtu.be/ID forms. Every url
-  is checked against YouTube after you answer and silently replaced with a
-  placeholder if it does not resolve. Never pad the lesson with videos you are
-  unsure about, and add every video you suggest to media_requests so staff know
-  to watch it first.
+- YOUTUBE: you may NEVER output a video url either. Video ids cannot be
+  recalled reliably, and an invented one is simply a broken slide. YouTube is
+  searched for you after you answer, so what you provide is the SEARCH, not the
+  link. Emit a text_slide whose text is "[ADD VIDEO]" with the subtitle
+  describing the clip, and add a media_requests entry with kind "youtube" and a
+  search_phrase written the way someone would actually type it into YouTube:
+  short, concrete, no more than about eight words.
+  Good: "construction site PPE safety induction". Bad: "A video showing the
+  importance of wearing personal protective equipment on a busy site".
 - EMBED: only use an embed url if the teacher supplied one in the brief.
 ═══════════════════════════════════════════════════════════════`;
 

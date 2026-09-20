@@ -51,10 +51,10 @@ export const RECIPES: Recipe[] = [
   {
     id: "HOOK_CLIP",
     phase: "Launch",
-    label: "Open with something to look at",
+    label: "Open with a short clip",
     use:
-      "A short video or strong image to provoke a reaction before any teaching. Host carries the visual; touch screens carry the question to discuss.",
-    host: "youtube or an image placeholder, full bleed",
+      "A real video, to provoke a reaction before any teaching. This slot should be a CLIP rather than a still picture: moving footage on a 300 inch screen is the thing the room does that a projector and a worksheet cannot. Request it as a video in media_requests; it is searched for you. Only fall back to an image if the topic genuinely has no useful footage.",
+    host: 'a "[ADD VIDEO]" placeholder, with a matching media_requests entry of kind "youtube"',
     screen1: "text_slide holding the discussion question",
     screen2: "text_slide holding the same discussion question",
     typicalMins: 5,

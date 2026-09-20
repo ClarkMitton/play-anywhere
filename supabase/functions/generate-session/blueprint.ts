@@ -37,7 +37,7 @@ const ACTIVITY_POOLS: Record<BlueprintOpts["shape"], string[]> = {
 const PURPOSE: Record<string, string> = {
   TITLE_MIRROR: "Open the lesson. Title on the Host; give each touch screen something additive such as the outcomes or a short ready prompt.",
   CONFIDENCE_BASELINE: "Capture how confident learners feel before any teaching, to compare against at the end.",
-  HOOK_CLIP: "Provoke a reaction before any teaching. A strong image or a real clip on the Host, with the discussion question on the touch screens.",
+  HOOK_CLIP: "Provoke a reaction before any teaching. Ask for a VIDEO here: emit a \"[ADD VIDEO]\" placeholder on the Host plus a media_requests entry of kind \"youtube\" with a short search phrase. The discussion question goes on both touch screens.",
   TEACH: "Introduce ONE idea. The substance goes on the Host, big enough to read from the back. Not a question.",
   CHECK: "Check the idea taught in the slot immediately before this one. Nothing new.",
   SHOW_WHAT_YOU_KNOW: "Assess the stated outcomes. Harder than the Establish checks, and it must cover every outcome, including any taught late in the lesson.",
