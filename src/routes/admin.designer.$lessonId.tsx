@@ -18,13 +18,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { SlotStackThumbnail, SlotThumbnail } from "@/components/SlotThumbnail";
+import { makeSlot, makeFeedbackSlot } from "@/lib/slotDefaults";
 
 // ─────────────────────────────────────────────
 // Constants
@@ -123,7 +119,19 @@ type SlotDef = {
   screen2_content: ContentDef;
 };
 
-type LessonRow = { id: string; title: string };
+type AiNotes = {
+  rationale?: string;
+  objectives?: string[];
+  verify_before_teaching?: string[];
+  media_requests?: { slot_index: number; screen: string; search_phrase: string; why?: string }[];
+};
+
+type LessonRow = {
+  id: string;
+  title: string;
+  ai_generated?: boolean;
+  ai_notes?: AiNotes | null;
+};
 
 type ActiveScreen = "host" | "screen1" | "screen2";
 
@@ -154,31 +162,85 @@ function slotPx(_mins: number): number {
   return 140;
 }
 
-function makeSlot(lessonId: string, orderIndex: number): SlotDef {
-  return {
-    id: crypto.randomUUID(),
-    lesson_id: lessonId,
-    session_id: null,
-    order_index: orderIndex,
-    duration_mins: 10,
-    end_behaviour: "",
-    pause_before_advance: false,
-    lead_phase: null,
-    name: null,
-    screen_delay_secs: 0,
-    host_content: { type: "waiting" },
-    screen1_content: { type: "waiting" },
-    screen2_content: { type: "waiting" },
-  };
-}
+// ─────────────────────────────────────────────
+// AI draft banner
+// ─────────────────────────────────────────────
 
-function makeFeedbackSlot(lessonId: string, orderIndex: number): SlotDef {
-  return {
-    ...makeSlot(lessonId, orderIndex),
-    end_behaviour: "screen2_submit",
-    screen1_content: { type: "waiting" },
-    screen2_content: { type: "confidence_checker", prompt: "How confident are you?" },
-  };
+function AiDraftBanner({ notes }: { notes: AiNotes | null }) {
+  const [open, setOpen] = useState(false);
+  const verify = notes?.verify_before_teaching ?? [];
+  const media = notes?.media_requests ?? [];
+  const hasDetail = verify.length > 0 || media.length > 0 || Boolean(notes?.rationale);
+
+  return (
+    <div className="shrink-0 border-b border-[color:var(--orange)]/40 bg-[color:var(--orange)]/10">
+      <div className="flex flex-wrap items-center gap-3 px-6 py-2.5">
+        <span className="text-[10px] uppercase tracking-[0.3em] font-bold text-[color:var(--orange)]">
+          AI draft
+        </span>
+        <span className="text-xs text-muted-foreground">
+          Written by AI. Check the content, especially anything about safety, before teaching it.
+        </span>
+        {verify.length > 0 && (
+          <span className="text-xs font-bold text-[color:var(--orange)]">
+            {verify.length} thing{verify.length === 1 ? "" : "s"} to verify
+          </span>
+        )}
+        {media.length > 0 && (
+          <span className="text-xs font-bold text-[color:var(--cyan)]">
+            {media.length} image{media.length === 1 ? "" : "s"} to add
+          </span>
+        )}
+        {hasDetail && (
+          <button
+            onClick={() => setOpen((o) => !o)}
+            className="ml-auto text-[10px] uppercase tracking-widest font-bold text-[color:var(--orange)] hover:underline"
+          >
+            {open ? "Hide notes" : "Show notes"}
+          </button>
+        )}
+      </div>
+
+      {open && (
+        <div className="px-6 pb-4 grid gap-4 md:grid-cols-3 text-xs">
+          {verify.length > 0 && (
+            <div>
+              <div className="uppercase tracking-widest font-bold text-[color:var(--orange)] mb-1.5">
+                Verify before teaching
+              </div>
+              <ul className="space-y-1 text-muted-foreground">
+                {verify.map((v, i) => (
+                  <li key={i}>□ {v}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+          {media.length > 0 && (
+            <div>
+              <div className="uppercase tracking-widest font-bold text-[color:var(--cyan)] mb-1.5">
+                Media to add
+              </div>
+              <ul className="space-y-1 text-muted-foreground">
+                {media.map((m, i) => (
+                  <li key={i}>
+                    Slot {m.slot_index + 1} ({m.screen}): {m.search_phrase}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+          {notes?.rationale && (
+            <div>
+              <div className="uppercase tracking-widest font-bold text-muted-foreground mb-1.5">
+                Why this shape
+              </div>
+              <p className="text-muted-foreground leading-relaxed">{notes.rationale}</p>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
 }
 
 async function uploadToStorage(
@@ -218,15 +280,23 @@ function DesignerPage() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const autoSaveTimer = useRef<any>(undefined);
 
-  useEffect(() => { slotsRef.current = slots; }, [slots]);
-  useEffect(() => { deletedIdsRef.current = deletedIds; }, [deletedIds]);
+  useEffect(() => {
+    slotsRef.current = slots;
+  }, [slots]);
+  useEffect(() => {
+    deletedIdsRef.current = deletedIds;
+  }, [deletedIds]);
   useEffect(() => () => clearTimeout(autoSaveTimer.current), []);
 
   // Load lesson + design-time slots (session_id is null for designer slots)
   useEffect(() => {
     (async () => {
       const [{ data: l }, { data: s }] = await Promise.all([
-        supabase.from("lessons").select("id, title").eq("id", lessonId).single(),
+        supabase
+          .from("lessons")
+          .select("id, title, ai_generated, ai_notes")
+          .eq("id", lessonId)
+          .single(),
         supabase
           .from("slots")
           .select("*")
@@ -275,7 +345,10 @@ function DesignerPage() {
     } catch (err) {
       console.error("[Designer] Save failed:", err);
       setSaveStatus("unsaved");
-      const msg = err instanceof Error ? err.message : (err as { message?: string })?.message ?? String(err);
+      const msg =
+        err instanceof Error
+          ? err.message
+          : ((err as { message?: string })?.message ?? String(err));
       alert(`Save failed: ${msg}\n\nCheck the browser console for details.`);
     }
   }, []);
@@ -402,9 +475,7 @@ function DesignerPage() {
   const deleteSlot = useCallback(
     (id: string) => {
       setDeletedIds((prev) => [...prev, id]);
-      setSlots((prev) =>
-        prev.filter((s) => s.id !== id).map((s, i) => ({ ...s, order_index: i })),
-      );
+      setSlots((prev) => prev.filter((s) => s.id !== id).map((s, i) => ({ ...s, order_index: i })));
       if (selectedId === id) setSelectedId(null);
       markDirty();
     },
@@ -502,6 +573,9 @@ function DesignerPage() {
         onSync={handleSync}
       />
 
+      {/* AI draft notice — a label, not a gate: the lesson can still be taught */}
+      {lesson?.ai_generated && <AiDraftBanner notes={lesson.ai_notes ?? null} />}
+
       {/* Screen mockups */}
       <ScreenMockupsRow
         activeScreen={activeScreen}
@@ -550,12 +624,30 @@ function DesignerPage() {
           sub={ctxMenu.sub}
           currentSlot={slots.find((s) => s.id === ctxMenu.slotId)}
           onSetSub={(sub) => setCtxMenu((c) => (c ? { ...c, sub } : null))}
-          onDuplicate={() => { duplicateSlot(ctxMenu.slotId); closeCtx(); }}
-          onDelete={() => { deleteSlot(ctxMenu.slotId); closeCtx(); }}
-          onInsertFeedbackBefore={() => { insertFeedback(ctxMenu.slotId, "before"); closeCtx(); }}
-          onInsertFeedbackAfter={() => { insertFeedback(ctxMenu.slotId, "after"); closeCtx(); }}
-          onSetEndBehaviour={(v) => { updateSlot(ctxMenu.slotId, { end_behaviour: v }); closeCtx(); }}
-          onSetScreenDelay={(v) => { updateSlot(ctxMenu.slotId, { screen_delay_secs: v }); closeCtx(); }}
+          onDuplicate={() => {
+            duplicateSlot(ctxMenu.slotId);
+            closeCtx();
+          }}
+          onDelete={() => {
+            deleteSlot(ctxMenu.slotId);
+            closeCtx();
+          }}
+          onInsertFeedbackBefore={() => {
+            insertFeedback(ctxMenu.slotId, "before");
+            closeCtx();
+          }}
+          onInsertFeedbackAfter={() => {
+            insertFeedback(ctxMenu.slotId, "after");
+            closeCtx();
+          }}
+          onSetEndBehaviour={(v) => {
+            updateSlot(ctxMenu.slotId, { end_behaviour: v });
+            closeCtx();
+          }}
+          onSetScreenDelay={(v) => {
+            updateSlot(ctxMenu.slotId, { screen_delay_secs: v });
+            closeCtx();
+          }}
         />
       )}
     </div>
@@ -602,9 +694,7 @@ function DesignerHeader({
           <div className="text-[10px] uppercase tracking-[0.4em] text-[color:var(--cyan)]">
             Stage Designer
           </div>
-          <h1 className="text-lg font-extrabold leading-tight">
-            {lesson?.title ?? "Loading…"}
-          </h1>
+          <h1 className="text-lg font-extrabold leading-tight">{lesson?.title ?? "Loading…"}</h1>
         </div>
       </div>
 
@@ -614,9 +704,7 @@ function DesignerHeader({
             End behaviour missing
           </span>
         )}
-        <span className={`text-xs uppercase tracking-widest ${statusColour}`}>
-          {statusLabel}
-        </span>
+        <span className={`text-xs uppercase tracking-widest ${statusColour}`}>{statusLabel}</span>
         <Button
           size="sm"
           variant="outline"
@@ -625,11 +713,7 @@ function DesignerHeader({
         >
           Sync
         </Button>
-        <Button
-          size="sm"
-          onClick={onSave}
-          className="h-9 px-5 uppercase tracking-widest text-xs"
-        >
+        <Button size="sm" onClick={onSave} className="h-9 px-5 uppercase tracking-widest text-xs">
           Save
         </Button>
       </div>
@@ -705,21 +789,14 @@ function ScreenMockup({
   onClick: () => void;
 }) {
   // Host emphasised (larger), side screens slightly smaller. 16:9 aspect.
-  const dims =
-    size === "host"
-      ? "w-[340px] h-[192px]"
-      : "w-[220px] h-[124px]";
+  const dims = size === "host" ? "w-[340px] h-[192px]" : "w-[220px] h-[124px]";
 
   return (
     <button
       onClick={onClick}
       className={`relative rounded-xl border-2 transition-all duration-200 shrink-0 overflow-hidden group
         ${dims}
-        ${
-          isActive
-            ? "border-[color:var(--cyan)]"
-            : "border-border/40 opacity-70 hover:opacity-100"
-        }
+        ${isActive ? "border-[color:var(--cyan)]" : "border-border/40 opacity-70 hover:opacity-100"}
         cursor-pointer
       `}
       style={
@@ -828,9 +905,7 @@ function Timeline({
               {slots.map((slot, idx) => (
                 <div key={slot.id} className="relative flex items-center">
                   {/* Insertion indicator before this slot */}
-                  {dropIndex === idx && dragId && dragId !== slot.id && (
-                    <InsertLine />
-                  )}
+                  {dropIndex === idx && dragId && dragId !== slot.id && <InsertLine />}
 
                   <SlotBlock
                     slot={slot}
@@ -954,7 +1029,10 @@ function SlotBlock({
     >
       {/* Delete button — visible on hover */}
       <button
-        onClick={(e) => { e.stopPropagation(); onDelete(); }}
+        onClick={(e) => {
+          e.stopPropagation();
+          onDelete();
+        }}
         title="Delete slot"
         className="absolute top-1.5 right-1.5 z-10 w-5 h-5 rounded-full bg-destructive/80 hover:bg-destructive flex items-center justify-center text-[11px] text-white opacity-0 group-hover:opacity-100 transition-opacity"
       >
@@ -983,8 +1061,14 @@ function SlotBlock({
             onChange={(e) => setNameInput(e.target.value)}
             onBlur={commitName}
             onKeyDown={(e) => {
-              if (e.key === "Enter") { e.preventDefault(); commitName(); }
-              if (e.key === "Escape") { setEditingName(false); setNameInput(slot.name ?? ""); }
+              if (e.key === "Enter") {
+                e.preventDefault();
+                commitName();
+              }
+              if (e.key === "Escape") {
+                setEditingName(false);
+                setNameInput(slot.name ?? "");
+              }
               e.stopPropagation();
             }}
             onClick={(e) => e.stopPropagation()}
@@ -995,7 +1079,11 @@ function SlotBlock({
           <div
             className="text-[10px] text-muted-foreground truncate leading-tight cursor-text hover:text-foreground transition-colors px-0.5"
             title="Click to name slot"
-            onClick={(e) => { e.stopPropagation(); setNameInput(slot.name ?? ""); setEditingName(true); }}
+            onClick={(e) => {
+              e.stopPropagation();
+              setNameInput(slot.name ?? "");
+              setEditingName(true);
+            }}
           >
             {slot.name || <span className="opacity-40 italic">name…</span>}
           </div>
@@ -1121,9 +1209,7 @@ function CtxItem({
       `}
     >
       <span className={checked ? "font-bold" : ""}>{children}</span>
-      <span className="text-muted-foreground shrink-0">
-        {checked ? "✓" : arrow ? "›" : ""}
-      </span>
+      <span className="text-muted-foreground shrink-0">{checked ? "✓" : arrow ? "›" : ""}</span>
     </button>
   );
 }
@@ -1192,19 +1278,32 @@ function QuestionModal({
   const setType = (i: number, type: QuestionDef["type"]) =>
     setQuestions((qs) => qs.map((q, j) => (j === i ? blankQuestion(type) : q)));
   const setOption = (i: number, oi: number, val: string) =>
-    setQuestions((qs) => qs.map((q, j) => (j === i ? { ...q, options: (q.options ?? []).map((o, k) => (k === oi ? val : o)) } : q)));
+    setQuestions((qs) =>
+      qs.map((q, j) =>
+        j === i ? { ...q, options: (q.options ?? []).map((o, k) => (k === oi ? val : o)) } : q,
+      ),
+    );
   const addOption = (i: number) =>
-    setQuestions((qs) => qs.map((q, j) => (j === i && (q.options?.length ?? 0) < 6 ? { ...q, options: [...(q.options ?? []), ""] } : q)));
+    setQuestions((qs) =>
+      qs.map((q, j) =>
+        j === i && (q.options?.length ?? 0) < 6 ? { ...q, options: [...(q.options ?? []), ""] } : q,
+      ),
+    );
   const removeOption = (i: number, oi: number) =>
     setQuestions((qs) =>
       qs.map((q, j) => {
         if (j !== i) return q;
         const options = (q.options ?? []).filter((_, k) => k !== oi);
-        return { ...q, options, correct: Math.min(q.correct ?? 0, Math.max(0, options.length - 1)) };
+        return {
+          ...q,
+          options,
+          correct: Math.min(q.correct ?? 0, Math.max(0, options.length - 1)),
+        };
       }),
     );
   const addQuestion = () => setQuestions((qs) => [...qs, blankQuestion("multiple_choice")]);
-  const removeQuestion = (i: number) => setQuestions((qs) => (qs.length > 1 ? qs.filter((_, j) => j !== i) : qs));
+  const removeQuestion = (i: number) =>
+    setQuestions((qs) => (qs.length > 1 ? qs.filter((_, j) => j !== i) : qs));
 
   const qValid = (q: QuestionDef) =>
     (q.text ?? "").trim().length > 0 &&
@@ -1235,8 +1334,8 @@ function QuestionModal({
 
         <div className="space-y-4 pt-1">
           <p className="text-[10px] text-muted-foreground">
-            Add one or more questions. In the session the Host reveals each question's
-            results, then taps Next to move everyone to the next one.
+            Add one or more questions. In the session the Host reveals each question's results, then
+            taps Next to move everyone to the next one.
           </p>
 
           {questions.map((q, i) => (
@@ -1262,9 +1361,10 @@ function QuestionModal({
                     key={value}
                     onClick={() => setType(i, value)}
                     className={`px-3 py-2 rounded-lg border text-[10px] uppercase tracking-widest font-bold transition-colors
-                      ${q.type === value
-                        ? "border-[color:var(--cyan)] text-[color:var(--cyan)] bg-[color:var(--cyan)]/10"
-                        : "border-border text-muted-foreground hover:border-[color:var(--cyan)]/50"
+                      ${
+                        q.type === value
+                          ? "border-[color:var(--cyan)] text-[color:var(--cyan)] bg-[color:var(--cyan)]/10"
+                          : "border-border text-muted-foreground hover:border-[color:var(--cyan)]/50"
                       }`}
                   >
                     {label}
@@ -1293,9 +1393,10 @@ function QuestionModal({
                         onClick={() => updateQ(i, { correct: oi })}
                         title="Mark as correct"
                         className={`w-5 h-5 rounded-full border-2 shrink-0 transition-colors
-                          ${q.correct === oi
-                            ? "border-[color:var(--success)] bg-[color:var(--success)]"
-                            : "border-border hover:border-[color:var(--success)]/60"
+                          ${
+                            q.correct === oi
+                              ? "border-[color:var(--success)] bg-[color:var(--success)]"
+                              : "border-border hover:border-[color:var(--success)]/60"
                           }`}
                       />
                       <span className="text-[10px] font-bold text-muted-foreground w-4 shrink-0 text-center">
@@ -1331,18 +1432,21 @@ function QuestionModal({
               {/* true_or_false */}
               {q.type === "true_or_false" && (
                 <div className="space-y-2">
-                  <Label className="text-[10px] uppercase tracking-widest text-muted-foreground">Correct answer</Label>
+                  <Label className="text-[10px] uppercase tracking-widest text-muted-foreground">
+                    Correct answer
+                  </Label>
                   <div className="flex gap-3">
                     {([true, false] as const).map((v) => (
                       <button
                         key={String(v)}
                         onClick={() => updateQ(i, { correct_tf: v })}
                         className={`flex-1 py-3 rounded-xl border-2 text-sm font-extrabold uppercase tracking-widest transition-colors
-                          ${q.correct_tf === v
-                            ? v
-                              ? "border-[color:var(--success)] text-[color:var(--success)] bg-[color:var(--success)]/10"
-                              : "border-destructive text-destructive bg-destructive/10"
-                            : "border-border text-muted-foreground hover:border-border/80"
+                          ${
+                            q.correct_tf === v
+                              ? v
+                                ? "border-[color:var(--success)] text-[color:var(--success)] bg-[color:var(--success)]/10"
+                                : "border-destructive text-destructive bg-destructive/10"
+                              : "border-border text-muted-foreground hover:border-border/80"
                           }`}
                       >
                         {v ? "True" : "False"}
@@ -1444,7 +1548,6 @@ function SlotEditorPanel({
 
   // Timings removed — duration controls disabled.
 
-
   // The content object + updater for the active screen
   const screenContent =
     activeScreen === "host"
@@ -1455,14 +1558,12 @@ function SlotEditorPanel({
 
   const setContentType = (type: string) => {
     if (activeScreen === "host") onUpdate({ host_content: { ...screenContent, type } });
-    else if (activeScreen === "screen1")
-      onUpdate({ screen1_content: { ...screenContent, type } });
+    else if (activeScreen === "screen1") onUpdate({ screen1_content: { ...screenContent, type } });
     else onUpdate({ screen2_content: { ...screenContent, type } });
   };
 
   const onContentUpdate = (patch: Record<string, unknown>) => {
-    if (activeScreen === "host")
-      onUpdate({ host_content: { ...screenContent, ...patch } });
+    if (activeScreen === "host") onUpdate({ host_content: { ...screenContent, ...patch } });
     else if (activeScreen === "screen1")
       onUpdate({ screen1_content: { ...screenContent, ...patch } });
     else onUpdate({ screen2_content: { ...screenContent, ...patch } });
@@ -1583,7 +1684,6 @@ function SlotEditorPanel({
         )}
 
         <div className="border-t border-border/40" />
-
 
         <p className="text-[10px] text-muted-foreground">
           Click a slot in the timeline to rename it. Right-click to set side screen delay.
@@ -1781,8 +1881,8 @@ function ContentTypeForm({
             className="bg-background/60 border-border focus-visible:border-[color:var(--cyan)]"
           />
           <p className="text-[10px] text-muted-foreground">
-            Loaded through a server proxy so sites that block iframes still render.
-            Logins, OAuth, and anti-bot pages won't work.
+            Loaded through a server proxy so sites that block iframes still render. Logins, OAuth,
+            and anti-bot pages won't work.
           </p>
         </div>
       );
@@ -1801,8 +1901,11 @@ function ContentTypeForm({
 
     case "confidence_checker": {
       const ccMode =
-        content.scale_mode === "emoji" ? "emoji" :
-        content.scale_mode === "likert" ? "likert" : "numbers";
+        content.scale_mode === "emoji"
+          ? "emoji"
+          : content.scale_mode === "likert"
+            ? "likert"
+            : "numbers";
       const ccMax = Math.min(10, Math.max(2, Math.round(Number(content.max ?? 5))));
       return (
         <div className="space-y-3">
@@ -1821,10 +1924,7 @@ function ContentTypeForm({
             <Label className="text-[10px] uppercase tracking-widest text-muted-foreground">
               Scale type
             </Label>
-            <Select
-              value={ccMode}
-              onValueChange={(v) => onChange({ scale_mode: v })}
-            >
+            <Select value={ccMode} onValueChange={(v) => onChange({ scale_mode: v })}>
               <SelectTrigger className="bg-background/60 border-border focus:border-[color:var(--cyan)]">
                 <SelectValue />
               </SelectTrigger>
@@ -1850,9 +1950,7 @@ function ContentTypeForm({
                 }
                 className="w-24 bg-background/60 border-border focus-visible:border-[color:var(--cyan)] text-center"
               />
-              <p className="text-[10px] text-muted-foreground">
-                Students pick from 1 to {ccMax}.
-              </p>
+              <p className="text-[10px] text-muted-foreground">Students pick from 1 to {ccMax}.</p>
             </div>
           )}
           <div className="flex items-center justify-between">
@@ -1865,15 +1963,16 @@ function ContentTypeForm({
             />
           </div>
           <p className="text-[10px] text-muted-foreground">
-            Each touch screen labels responders “Person 1, 2, 3…” — submit, take the next
-            person, then tap “That's everyone” to finish. Host shows a live bar chart.
+            Each touch screen labels responders “Person 1, 2, 3…” — submit, take the next person,
+            then tap “That's everyone” to finish. Host shows a live bar chart.
           </p>
 
           {/* Start → Final comparison */}
           <div className="pt-2 border-t border-border/40">
             {content.checkpoint === "final" ? (
               <p className="text-[10px] text-[color:var(--cyan)] uppercase tracking-widest font-bold">
-                Final check ✓ — the Host compares this against the start and celebrates any improvement.
+                Final check ✓ — the Host compares this against the start and celebrates any
+                improvement.
               </p>
             ) : (
               <>
@@ -1886,7 +1985,8 @@ function ContentTypeForm({
                   Replicate for final slide ›
                 </Button>
                 <p className="text-[10px] text-muted-foreground mt-1.5">
-                  Adds a matching check at the end so you can measure where they started vs finished.
+                  Adds a matching check at the end so you can measure where they started vs
+                  finished.
                 </p>
               </>
             )}
@@ -1905,7 +2005,9 @@ function ContentTypeForm({
       return (
         <div className="space-y-3">
           <div className="space-y-1.5">
-            <Label className="text-[10px] uppercase tracking-widest text-muted-foreground">Question</Label>
+            <Label className="text-[10px] uppercase tracking-widest text-muted-foreground">
+              Question
+            </Label>
             <Input
               value={String(content.question ?? "")}
               onChange={(e) => onChange({ question: e.target.value })}
@@ -1914,7 +2016,9 @@ function ContentTypeForm({
             />
           </div>
           <div className="space-y-1.5">
-            <Label className="text-[10px] uppercase tracking-widest text-muted-foreground">Options (2–4)</Label>
+            <Label className="text-[10px] uppercase tracking-widest text-muted-foreground">
+              Options (2–4)
+            </Label>
             <div className="space-y-1.5">
               {opts.map((o, i) => (
                 <div key={i} className="flex items-center gap-2">
@@ -1928,26 +2032,45 @@ function ContentTypeForm({
                     <button
                       onClick={() => onChange({ options: opts.filter((_, j) => j !== i) })}
                       className="text-muted-foreground hover:text-destructive text-lg px-1"
-                    >×</button>
+                    >
+                      ×
+                    </button>
                   )}
                 </div>
               ))}
             </div>
             {opts.length < 4 && (
-              <Button size="sm" variant="outline" className="h-8 text-[10px] uppercase tracking-widest w-full"
-                onClick={() => onChange({ options: [...opts, ""] })}>
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-8 text-[10px] uppercase tracking-widest w-full"
+                onClick={() => onChange({ options: [...opts, ""] })}
+              >
                 + Add option
               </Button>
             )}
             <div className="flex gap-2">
-              <Button size="sm" variant="outline" className="flex-1 h-7 text-[10px]"
-                onClick={() => onChange({ options: ["Yes", "No"] })}>Yes / No</Button>
-              <Button size="sm" variant="outline" className="flex-1 h-7 text-[10px]"
-                onClick={() => onChange({ options: ["A", "B", "C", "D"] })}>A / B / C / D</Button>
+              <Button
+                size="sm"
+                variant="outline"
+                className="flex-1 h-7 text-[10px]"
+                onClick={() => onChange({ options: ["Yes", "No"] })}
+              >
+                Yes / No
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                className="flex-1 h-7 text-[10px]"
+                onClick={() => onChange({ options: ["A", "B", "C", "D"] })}
+              >
+                A / B / C / D
+              </Button>
             </div>
           </div>
           <p className="text-[10px] text-muted-foreground">
-            Place on all 3 screens (use Mirror) — Host shows live bars, touch screens show vote buttons.
+            Place on all 3 screens (use Mirror) — Host shows live bars, touch screens show vote
+            buttons.
           </p>
         </div>
       );
@@ -1972,7 +2095,9 @@ function ContentTypeForm({
 
           <div className="grid grid-cols-2 gap-2">
             <div className="space-y-1.5">
-              <Label className="text-[10px] uppercase tracking-widest text-muted-foreground">Team 1 name</Label>
+              <Label className="text-[10px] uppercase tracking-widest text-muted-foreground">
+                Team 1 name
+              </Label>
               <Input
                 value={String(content.team1_name ?? "")}
                 onChange={(e) => onChange({ team1_name: e.target.value })}
@@ -1981,7 +2106,9 @@ function ContentTypeForm({
               />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-[10px] uppercase tracking-widest text-muted-foreground">Team 2 name</Label>
+              <Label className="text-[10px] uppercase tracking-widest text-muted-foreground">
+                Team 2 name
+              </Label>
               <Input
                 value={String(content.team2_name ?? "")}
                 onChange={(e) => onChange({ team2_name: e.target.value })}
@@ -1991,7 +2118,8 @@ function ContentTypeForm({
             </div>
           </div>
           <p className="text-[10px] text-muted-foreground">
-            Place on all 3 screens (use Mirror). TS1 = Team 1 buzzer, TS2 = Team 2 buzzer. Host shows scores + controls and a "Next Question" button.
+            Place on all 3 screens (use Mirror). TS1 = Team 1 buzzer, TS2 = Team 2 buzzer. Host
+            shows scores + controls and a "Next Question" button.
           </p>
         </div>
       );
@@ -2038,7 +2166,9 @@ function ContentTypeForm({
                   }}
                   className="w-16 bg-background/60 border-border focus-visible:border-[color:var(--cyan)] text-center"
                 />
-                <span className="text-[10px] text-muted-foreground uppercase tracking-widest">min</span>
+                <span className="text-[10px] text-muted-foreground uppercase tracking-widest">
+                  min
+                </span>
               </div>
               <div className="flex items-center gap-1.5">
                 <Input
@@ -2052,7 +2182,9 @@ function ContentTypeForm({
                   }}
                   className="w-16 bg-background/60 border-border focus-visible:border-[color:var(--cyan)] text-center"
                 />
-                <span className="text-[10px] text-muted-foreground uppercase tracking-widest">sec</span>
+                <span className="text-[10px] text-muted-foreground uppercase tracking-widest">
+                  sec
+                </span>
               </div>
             </div>
             <p className="text-[10px] text-muted-foreground">
@@ -2104,7 +2236,9 @@ function ContentTypeForm({
                   }}
                   className="w-16 bg-background/60 border-border focus-visible:border-[color:var(--cyan)] text-center"
                 />
-                <span className="text-[10px] text-muted-foreground uppercase tracking-widest">min</span>
+                <span className="text-[10px] text-muted-foreground uppercase tracking-widest">
+                  min
+                </span>
               </div>
               <div className="flex items-center gap-1.5">
                 <Input
@@ -2118,7 +2252,9 @@ function ContentTypeForm({
                   }}
                   className="w-16 bg-background/60 border-border focus-visible:border-[color:var(--cyan)] text-center"
                 />
-                <span className="text-[10px] text-muted-foreground uppercase tracking-widest">sec</span>
+                <span className="text-[10px] text-muted-foreground uppercase tracking-widest">
+                  sec
+                </span>
               </div>
             </div>
             <p className="text-[10px] text-muted-foreground">
@@ -2207,9 +2343,7 @@ function FileUploadField({
 
   return (
     <div className="space-y-2">
-      <Label className="text-[10px] uppercase tracking-widest text-muted-foreground">
-        {label}
-      </Label>
+      <Label className="text-[10px] uppercase tracking-widest text-muted-foreground">{label}</Label>
       {currentFileName && (
         <div className="flex items-center gap-2 text-xs text-[color:var(--success)] bg-[color:var(--success)]/10 rounded-lg px-3 py-2">
           <span className="shrink-0">✓</span>
@@ -2218,9 +2352,10 @@ function FileUploadField({
       )}
       <label
         className={`flex items-center justify-center h-10 px-4 rounded-lg border border-dashed cursor-pointer text-[10px] uppercase tracking-widest transition-colors
-          ${uploading
-            ? "border-[color:var(--cyan)] text-[color:var(--cyan)] animate-pulse"
-            : "border-border text-muted-foreground hover:border-[color:var(--cyan)]/50"
+          ${
+            uploading
+              ? "border-[color:var(--cyan)] text-[color:var(--cyan)] animate-pulse"
+              : "border-border text-muted-foreground hover:border-[color:var(--cyan)]/50"
           }`}
       >
         {uploading ? "Uploading…" : currentFileName ? "Replace file" : "Choose file"}
@@ -2232,9 +2367,7 @@ function FileUploadField({
           disabled={uploading}
         />
       </label>
-      {uploadError && (
-        <p className="text-[10px] text-destructive">{uploadError}</p>
-      )}
+      {uploadError && <p className="text-[10px] text-destructive">{uploadError}</p>}
       <p className="text-[10px] text-muted-foreground">Max {maxSizeMb} MB</p>
     </div>
   );
@@ -2345,8 +2478,13 @@ function QuizQuestionsEditor({
       </Label>
       <div className="space-y-2 max-h-72 overflow-y-auto">
         {questions.map((q, i) => (
-          <div key={i} className="flex items-start gap-2 rounded-md border border-border/60 p-1.5 bg-background/30">
-            <span className="text-[10px] font-bold text-muted-foreground mt-2 w-5 text-right shrink-0">{i + 1}.</span>
+          <div
+            key={i}
+            className="flex items-start gap-2 rounded-md border border-border/60 p-1.5 bg-background/30"
+          >
+            <span className="text-[10px] font-bold text-muted-foreground mt-2 w-5 text-right shrink-0">
+              {i + 1}.
+            </span>
             <div className="flex-1 space-y-1">
               <Textarea
                 value={q}
@@ -2415,4 +2553,3 @@ function QuizQuestionsEditor({
     </div>
   );
 }
-

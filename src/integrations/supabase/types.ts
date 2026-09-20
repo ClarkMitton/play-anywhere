@@ -16,10 +16,13 @@ export type Database = {
     Tables: {
       lessons: {
         Row: {
+          ai_generated: boolean
+          ai_notes: Json | null
           created_at: string
           description: string | null
           estimated_duration_mins: number
           featured: boolean
+          generated_at: string | null
           id: string
           ms_form_title: string | null
           ms_form_url: string | null
@@ -29,10 +32,13 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          ai_generated?: boolean
+          ai_notes?: Json | null
           created_at?: string
           description?: string | null
           estimated_duration_mins?: number
           featured?: boolean
+          generated_at?: string | null
           id?: string
           ms_form_title?: string | null
           ms_form_url?: string | null
@@ -42,10 +48,13 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          ai_generated?: boolean
+          ai_notes?: Json | null
           created_at?: string
           description?: string | null
           estimated_duration_mins?: number
           featured?: boolean
+          generated_at?: string | null
           id?: string
           ms_form_title?: string | null
           ms_form_url?: string | null

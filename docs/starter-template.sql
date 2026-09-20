@@ -46,7 +46,7 @@ from new_lesson nl, (values
   -- 4 · Check understanding — multiple choice (Host shows, Screen 2 answers, Screen 1 reveals)
   (3, 'Check understanding', 'Apply', 6, 'screen2_submit',
     '{"type":"multiple_choice","id":"11111111-1111-1111-1111-111111111111","text":"Your question goes here?","options":["Option A","Option B","Option C"],"correct":0}',
-    '{"type":"teacher_note","text":"Question: Your question goes here?\n\nWhen students are ready, click ''Reveal Results''.","has_reveal_button":true,"question_id":"11111111-1111-1111-1111-111111111111"}',
+    '{"type":"text_slide","text":"Question on the big screen","subtitle":"Learners answer on Touch Screen 2. When everyone has answered, press Reveal Results on the Host screen.","size":"md"}',
     '{"type":"multiple_choice","id":"11111111-1111-1111-1111-111111111111","text":"Your question goes here?","options":["Option A","Option B","Option C"],"correct":0}'),
 
   -- 5 · Discuss / decide — voting

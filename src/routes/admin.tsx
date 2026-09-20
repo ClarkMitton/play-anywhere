@@ -2,7 +2,7 @@
 // PIN-protected (4158). Three tabs: Lessons, Data, Settings.
 // Stage designer navigation wires to /admin/designer/$lessonId (created in Step 8).
 
-import { createFileRoute, Outlet, useMatchRoute } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, useMatchRoute } from "@tanstack/react-router";
 import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -352,20 +352,28 @@ function LessonsTab() {
         <h2 className="text-xl font-extrabold uppercase tracking-widest">
           Lessons ({lessons.length})
         </h2>
-        <Button
-          onClick={() => setCreateOpen(true)}
-          className="h-11 px-6 uppercase tracking-widest"
-        >
-          + New Lesson
-        </Button>
+        <div className="flex gap-2">
+          <Link to="/admin/generate">
+            <Button
+              variant="outline"
+              className="h-11 px-6 uppercase tracking-widest border-[color:var(--cyan)] text-[color:var(--cyan)] hover:bg-[color:var(--cyan)]/10"
+            >
+              Generate with AI
+            </Button>
+          </Link>
+          <Button
+            onClick={() => setCreateOpen(true)}
+            className="h-11 px-6 uppercase tracking-widest"
+          >
+            + New Lesson
+          </Button>
+        </div>
       </div>
 
       {lessons.length === 0 ? (
         <div className="text-center py-24 animate-slot-in">
           <div className="text-4xl font-extrabold mb-3">No lessons yet</div>
-          <div className="text-muted-foreground mb-8">
-            Create your first lesson to get started.
-          </div>
+          <div className="text-muted-foreground mb-8">Create your first lesson to get started.</div>
           <Button
             onClick={() => setCreateOpen(true)}
             className="h-14 px-8 text-lg uppercase tracking-widest"
@@ -403,10 +411,7 @@ function LessonsTab() {
         }}
       />
 
-      <AlertDialog
-        open={!!deleteTarget}
-        onOpenChange={(o) => !o && setDeleteTarget(null)}
-      >
+      <AlertDialog open={!!deleteTarget} onOpenChange={(o) => !o && setDeleteTarget(null)}>
         <AlertDialogContent className="bg-card border-border">
           <AlertDialogHeader>
             <AlertDialogTitle>Delete "{deleteTarget?.title}"?</AlertDialogTitle>
@@ -456,17 +461,23 @@ function LessonCard({
 
   const saveForm = async () => {
     setFormSaving(true);
-    await supabase.from("lessons").update({
-      ms_form_url: formUrl.trim() || null,
-      ms_form_title: formTitle.trim() || null,
-    }).eq("id", lesson.id);
+    await supabase
+      .from("lessons")
+      .update({
+        ms_form_url: formUrl.trim() || null,
+        ms_form_title: formTitle.trim() || null,
+      })
+      .eq("id", lesson.id);
     setFormSaving(false);
     setFormEditOpen(false);
     onReload();
   };
 
   const unlinkForm = async () => {
-    await supabase.from("lessons").update({ ms_form_url: null, ms_form_title: null }).eq("id", lesson.id);
+    await supabase
+      .from("lessons")
+      .update({ ms_form_url: null, ms_form_title: null })
+      .eq("id", lesson.id);
     onReload();
   };
 
@@ -499,7 +510,11 @@ function LessonCard({
                   {lesson.ms_form_title ? lesson.ms_form_title : "Form linked"}
                 </span>
                 <button
-                  onClick={() => { setFormUrl(lesson.ms_form_url ?? ""); setFormTitle(lesson.ms_form_title ?? ""); setFormEditOpen(true); }}
+                  onClick={() => {
+                    setFormUrl(lesson.ms_form_url ?? "");
+                    setFormTitle(lesson.ms_form_title ?? "");
+                    setFormEditOpen(true);
+                  }}
                   className="text-muted-foreground hover:text-foreground transition-colors text-[10px]"
                   title="Edit form link"
                 >
@@ -516,7 +531,11 @@ function LessonCard({
             )}
             {!lesson.ms_form_url && (
               <button
-                onClick={() => { setFormUrl(""); setFormTitle(""); setFormEditOpen(true); }}
+                onClick={() => {
+                  setFormUrl("");
+                  setFormTitle("");
+                  setFormEditOpen(true);
+                }}
                 className="text-muted-foreground hover:text-[color:var(--cyan)] transition-colors"
                 title="Link MS Form"
               >
@@ -589,7 +608,9 @@ function LessonCard({
           </DialogHeader>
           <div className="space-y-4 py-2">
             <div className="space-y-2">
-              <Label className="uppercase tracking-widest text-xs text-muted-foreground">Form title</Label>
+              <Label className="uppercase tracking-widest text-xs text-muted-foreground">
+                Form title
+              </Label>
               <Input
                 value={formTitle}
                 onChange={(e) => setFormTitle(e.target.value)}
@@ -598,7 +619,9 @@ function LessonCard({
               />
             </div>
             <div className="space-y-2">
-              <Label className="uppercase tracking-widest text-xs text-muted-foreground">Form URL</Label>
+              <Label className="uppercase tracking-widest text-xs text-muted-foreground">
+                Form URL
+              </Label>
               <Input
                 value={formUrl}
                 onChange={(e) => setFormUrl(e.target.value)}
@@ -608,7 +631,9 @@ function LessonCard({
             </div>
           </div>
           <DialogFooter className="gap-2">
-            <Button variant="outline" onClick={() => setFormEditOpen(false)} disabled={formSaving}>Cancel</Button>
+            <Button variant="outline" onClick={() => setFormEditOpen(false)} disabled={formSaving}>
+              Cancel
+            </Button>
             <Button onClick={saveForm} disabled={formSaving} className="uppercase tracking-widest">
               {formSaving ? "Saving…" : "Save"}
             </Button>
@@ -781,10 +806,7 @@ function DataTab() {
           .from("sessions")
           .select("id, lesson_id, created_at, ended_at, status")
           .order("created_at", { ascending: false }),
-        supabase
-          .from("responses")
-          .select("*")
-          .order("created_at", { ascending: false }),
+        supabase.from("responses").select("*").order("created_at", { ascending: false }),
         supabase.from("lessons").select("id, title"),
       ]);
 
@@ -804,9 +826,7 @@ function DataTab() {
   }, []);
 
   if (loading) {
-    return (
-      <div className="text-muted-foreground text-center py-24 text-xl">Loading data…</div>
-    );
+    return <div className="text-muted-foreground text-center py-24 text-xl">Loading data…</div>;
   }
 
   if (sessions.length === 0) {
@@ -877,12 +897,10 @@ function DataTab() {
             </thead>
             <tbody>
               {sessions.map((s) => {
-                const durationMs =
-                  s.ended_at
-                    ? new Date(s.ended_at).getTime() - new Date(s.created_at).getTime()
-                    : null;
-                const durationMins =
-                  durationMs !== null ? Math.round(durationMs / 60000) : null;
+                const durationMs = s.ended_at
+                  ? new Date(s.ended_at).getTime() - new Date(s.created_at).getTime()
+                  : null;
+                const durationMins = durationMs !== null ? Math.round(durationMs / 60000) : null;
                 const respCount = responses.filter((r) => r.session_id === s.id).length;
                 return (
                   <tr
@@ -970,8 +988,8 @@ function DataTab() {
             Poll &amp; Likert Responses
           </h2>
           <div className="bg-card/60 rounded-xl border border-border p-6 text-muted-foreground">
-            {pollLikertCount} response{pollLikertCount !== 1 ? "s" : ""} collected. Full
-            breakdown available once the question system (Step 10) is live.
+            {pollLikertCount} response{pollLikertCount !== 1 ? "s" : ""} collected. Full breakdown
+            available once the question system (Step 10) is live.
           </div>
         </section>
       )}

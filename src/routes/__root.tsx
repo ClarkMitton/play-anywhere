@@ -8,6 +8,8 @@ import {
   Scripts,
 } from "@tanstack/react-router";
 
+import { Toaster } from "@/components/ui/sonner";
+
 import appCss from "../styles.css?url";
 
 function NotFoundComponent() {
@@ -73,17 +75,37 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "Lovable App" },
-      { name: "description", content: "Play Anywhere is a web application enabling users to log in from multiple devices and access interactive learning content." },
+      {
+        name: "description",
+        content:
+          "Play Anywhere is a web application enabling users to log in from multiple devices and access interactive learning content.",
+      },
       { name: "author", content: "Lovable" },
       { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Play Anywhere is a web application enabling users to log in from multiple devices and access interactive learning content." },
+      {
+        property: "og:description",
+        content:
+          "Play Anywhere is a web application enabling users to log in from multiple devices and access interactive learning content.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:site", content: "@Lovable" },
       { name: "twitter:title", content: "Lovable App" },
-      { name: "twitter:description", content: "Play Anywhere is a web application enabling users to log in from multiple devices and access interactive learning content." },
-      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/26fc11fb-5026-4337-97f3-0354546b09ff/id-preview-3b68b998--9d03923c-8536-417c-b491-52851e57128a.lovable.app-1778827408496.png" },
-      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/26fc11fb-5026-4337-97f3-0354546b09ff/id-preview-3b68b998--9d03923c-8536-417c-b491-52851e57128a.lovable.app-1778827408496.png" },
+      {
+        name: "twitter:description",
+        content:
+          "Play Anywhere is a web application enabling users to log in from multiple devices and access interactive learning content.",
+      },
+      {
+        property: "og:image",
+        content:
+          "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/26fc11fb-5026-4337-97f3-0354546b09ff/id-preview-3b68b998--9d03923c-8536-417c-b491-52851e57128a.lovable.app-1778827408496.png",
+      },
+      {
+        name: "twitter:image",
+        content:
+          "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/26fc11fb-5026-4337-97f3-0354546b09ff/id-preview-3b68b998--9d03923c-8536-417c-b491-52851e57128a.lovable.app-1778827408496.png",
+      },
     ],
     links: [
       {
@@ -118,6 +140,7 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <Outlet />
+      <Toaster richColors position="top-center" />
     </QueryClientProvider>
   );
 }
