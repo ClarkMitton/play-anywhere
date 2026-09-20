@@ -174,6 +174,22 @@ function repairSlot(
       continue;
     }
 
+    // A timer that disagrees with its own slot length is a live failure: the
+    // room runs the timer, the plan says something else, and the teacher script
+    // often says a third number. The slot length is the source of truth.
+    if (c.type === "countdown_timer" || c.type === "host_timer") {
+      const expected = Math.round(Number(slot.duration_mins) || 0) * 60;
+      if (expected > 0 && Number(c.duration_secs) !== expected) {
+        const was = Number(c.duration_secs);
+        c.duration_secs = expected;
+        if (screen === "host") {
+          warn(
+            `set the timer to ${expected / 60} minutes to match the slot length (it said ${Math.round((was || 0) / 60)})`,
+          );
+        }
+      }
+    }
+
     if (c.type === "wheel_spinner" && Array.isArray(c.items)) {
       const before = c.items.join("|");
       c.items = c.items
@@ -345,6 +361,22 @@ export function repairAndValidate(raw: unknown, brief: Brief): RepairResult {
     });
   }
   session.lesson.estimated_duration_mins = brief.durationMins;
+
+  // Re-sync timers LAST. reconcileDurations rescales duration_mins, which would
+  // otherwise leave a countdown showing the pre-rescale length: exactly the
+  // mismatch this is meant to prevent.
+  for (const slot of session.slots) {
+    const expected = slot.duration_mins * 60;
+    for (const screen of SCREENS) {
+      const content = slot[screen];
+      if (
+        (content.type === "countdown_timer" || content.type === "host_timer") &&
+        content.duration_secs !== expected
+      ) {
+        content.duration_secs = expected;
+      }
+    }
+  }
 
   return { ok: true, session, warnings };
 }

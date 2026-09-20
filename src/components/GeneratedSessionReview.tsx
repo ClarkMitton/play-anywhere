@@ -27,6 +27,11 @@ export function GeneratedSessionReview({
   session,
   warnings,
   saving,
+  imageSource,
+  busyImages,
+  filledImages,
+  onFetchImage,
+  onFetchAllImages,
   onCreate,
   onDiscard,
   onRegenerate,
@@ -34,6 +39,13 @@ export function GeneratedSessionReview({
   session: GeneratedSession;
   warnings: RepairWarning[];
   saving: boolean;
+  imageSource: "none" | "stock" | "ai";
+  /** slot_index:screen keys currently being fetched. */
+  busyImages: Set<string>;
+  /** slot_index:screen keys already filled. */
+  filledImages: Set<string>;
+  onFetchImage: (index: number) => void;
+  onFetchAllImages: () => void;
   onCreate: () => void;
   onDiscard: () => void;
   onRegenerate: () => void;
@@ -154,25 +166,71 @@ export function GeneratedSessionReview({
         {/* ── Media still to source ── */}
         {session.media_requests.length > 0 && (
           <section className="rounded-2xl border border-border bg-card/60 p-5">
-            <h2 className="text-sm uppercase tracking-[0.3em] text-muted-foreground font-bold mb-3">
-              Media to add ({session.media_requests.length})
-            </h2>
+            <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
+              <h2 className="text-sm uppercase tracking-[0.3em] text-muted-foreground font-bold">
+                Media to add ({session.media_requests.length})
+              </h2>
+              {imageSource !== "none" && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={onFetchAllImages}
+                  disabled={busyImages.size > 0}
+                  className="uppercase tracking-widest text-xs"
+                >
+                  {busyImages.size > 0
+                    ? `Working… (${busyImages.size} left)`
+                    : imageSource === "ai"
+                      ? "Generate all images"
+                      : "Find all images"}
+                </Button>
+              )}
+            </div>
+
             <ul className="space-y-3">
-              {session.media_requests.map((m, i) => (
-                <li key={i} className="flex flex-wrap items-start gap-3 text-sm">
-                  <span className="text-xs font-mono text-muted-foreground shrink-0 mt-0.5">
-                    Slot {m.slot_index + 1} · {m.screen} · {m.kind}
-                  </span>
-                  <span className="flex-1 min-w-[12rem]">{m.why || m.search_phrase}</span>
-                  <button
-                    onClick={() => navigator.clipboard?.writeText(m.search_phrase)}
-                    className="text-xs uppercase tracking-widest text-[color:var(--cyan)] hover:underline shrink-0"
-                  >
-                    Copy search
-                  </button>
-                </li>
-              ))}
+              {session.media_requests.map((m, i) => {
+                const key = `${m.slot_index}:${m.screen}`;
+                const busy = busyImages.has(key);
+                const filled = filledImages.has(key);
+                return (
+                  <li key={i} className="flex flex-wrap items-start gap-3 text-sm">
+                    <span className="text-xs font-mono text-muted-foreground shrink-0 mt-0.5">
+                      Slot {m.slot_index + 1} · {m.screen} · {m.kind}
+                    </span>
+                    <span className="flex-1 min-w-[12rem]">{m.why || m.search_phrase}</span>
+
+                    {filled ? (
+                      <span className="text-xs uppercase tracking-widest text-[color:var(--success)] shrink-0">
+                        ✓ added
+                      </span>
+                    ) : imageSource !== "none" && m.kind === "image" ? (
+                      <button
+                        onClick={() => onFetchImage(i)}
+                        disabled={busy}
+                        className="text-xs uppercase tracking-widest text-[color:var(--cyan)] hover:underline shrink-0 disabled:opacity-40"
+                      >
+                        {busy ? "Working…" : imageSource === "ai" ? "Generate" : "Find photo"}
+                      </button>
+                    ) : null}
+
+                    <button
+                      onClick={() => navigator.clipboard?.writeText(m.search_phrase)}
+                      className="text-xs uppercase tracking-widest text-muted-foreground hover:underline shrink-0"
+                    >
+                      Copy search
+                    </button>
+                  </li>
+                );
+              })}
             </ul>
+
+            {imageSource === "ai" && (
+              <p className="text-[11px] text-muted-foreground mt-3">
+                Generated images are invented, not photographs. Check anything showing correct
+                practice before teaching it: a hard hat worn wrongly in a picture teaches the wrong
+                thing.
+              </p>
+            )}
           </section>
         )}
 

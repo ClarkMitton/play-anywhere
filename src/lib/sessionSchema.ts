@@ -343,6 +343,11 @@ export const briefSchema = z.object({
   groupSize: z.number().int().min(1).max(60),
   threeScreens: z.boolean().default(true),
   shape: z.enum(["quiz-heavy", "discussion-heavy", "balanced"]).default("balanced"),
+  /**
+   * How image placeholders get filled on the review screen.
+   * "none" leaves described placeholders for staff to source themselves.
+   */
+  imageSource: z.enum(["none", "stock", "ai"]).default("stock"),
   includeConfidenceArc: z.boolean().default(true),
   objectives: z.array(z.string()).default([]),
   notes: z.string().default(""),

@@ -325,11 +325,54 @@ function pacingBlock(brief: Brief): string {
     ? "All three screens are available."
     : "IMPORTANT: only the Host and Touch Screen 1 are available today. Never use quiz_buzzer (it needs both touch screens as teams) and never use a single multiple_choice or true_or_false (those collect answers on Touch Screen 2 only). Use question_round instead, which accepts answers on Touch Screen 1.";
 
+  const imageBeats = Math.max(2, Math.round(brief.durationMins / 20));
+
   return `
 ═══ PACING FOR THIS LESSON ═══
 - Total length: ${brief.durationMins} minutes. The slot durations you emit must add up to it.
 - Aim for one interactive slot per 10 minutes at minimum.
 - Never more than two passive slides in a row.
+
+═══ TEACH BEFORE YOU TEST ═══
+This is the rule most often broken, and it ruins a lesson.
+- Never open a topic with a question. Every CHECK must follow a TEACH on the
+  same idea, in an earlier slot.
+- The teaching content goes on the HOST, which is the only screen the whole
+  class can read. Never put the substance in a touch screen subtitle: that text
+  is small, portrait, and nobody can see it from their seat.
+- If the Host is showing a question, the answer must already have been taught.
+
+═══ USE THE ROOM ═══
+This is a 300 inch immersive screen, not a projector.
+- Include at least one youtube clip where a real one genuinely exists, and at
+  least ${imageBeats} image beats across the lesson.
+- A lesson made only of text slides and multiple choice questions has failed to
+  use the room, however well structured it is. Rewrite it if that is what you
+  have produced.
+- A strong image can carry more than one slot: show the scene, then question it,
+  then have learners judge or justify.
+
+═══ COVER EVERY OUTCOME ═══
+- Each learning outcome must be served by at least one Apply or Demonstrate
+  beat. Do not cover one outcome three times and another once.
+- Do not repeat the same cognitive move back to back. Two recognition questions
+  in a row is one beat too many: follow recognition with applying, judging,
+  ordering or explaining.
+
+═══ TIMERS AND GROUP TASKS ═══
+- countdown_timer duration_secs MUST equal the slot's duration_mins times 60,
+  and the teacher script must state the same number of minutes. Three different
+  numbers for one activity is a real failure in the room.
+- A TIMED_TASK must be followed by SHAREBACK, or the work the groups do is
+  never seen and never assessed.
+
+═══ GIVE THE TOUCH SCREENS A JOB ═══
+- Mirroring the identical payload to all three screens is correct for tools
+  learners tap (confidence_checker, voting, quiz_buzzer, question_round,
+  word_cloud, whiteboard) and for a synced countdown_timer.
+- For a title or closing slide, prefer giving the touch screens something
+  additive, such as the lesson outcomes or a short "tap when you are ready"
+  prompt, rather than an identical copy of the Host.
 - Between 6 and 20 slots. Fewer than 6 in an hour means the room is idling.
 - Apply should get more minutes than any other phase.
 - ${shapeLine}

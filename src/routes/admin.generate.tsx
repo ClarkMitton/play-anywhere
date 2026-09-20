@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/select";
 import { GeneratedSessionReview } from "@/components/GeneratedSessionReview";
 import { extractDocumentRich } from "@/lib/documentParser";
+import { applyImageToSession, fetchImage, type ImageSource } from "@/lib/fetchImage";
 import { generateSession } from "@/lib/generateSession";
 import { repairAndValidate, type RepairWarning } from "@/lib/sessionRepair";
 import { writeGeneratedSession } from "@/lib/sessionWriter";
@@ -87,6 +88,9 @@ function GeneratePage() {
   const [session, setSession] = useState<GeneratedSession | null>(null);
   const [warnings, setWarnings] = useState<RepairWarning[]>([]);
   const [failure, setFailure] = useState<{ error: string; issues?: string[] } | null>(null);
+  const [imageSource, setImageSource] = useState<ImageSource>("stock");
+  const [busyImages, setBusyImages] = useState<Set<string>>(new Set());
+  const [filledImages, setFilledImages] = useState<Set<string>>(new Set());
   const fileInput = useRef<HTMLInputElement>(null);
   const lastBrief = useRef<Brief | null>(null);
 
@@ -146,6 +150,7 @@ function GeneratePage() {
     threeScreens,
     shape,
     includeConfidenceArc,
+    imageSource,
     objectives: objectives.map((o) => o.trim()).filter(Boolean),
     notes: notes.trim(),
     msFormUrl: msFormUrl.trim(),
@@ -210,6 +215,58 @@ function GeneratePage() {
     void run(buildBrief());
   };
 
+  // ── Images, filled one at a time on the review screen ──
+  const fetchOne = async (requestIndex: number, current: GeneratedSession) => {
+    if (imageSource === "none") return current;
+    const request = current.media_requests[requestIndex];
+    if (!request || request.kind !== "image") return current;
+
+    const key = `${request.slot_index}:${request.screen}`;
+    if (filledImages.has(key)) return current;
+
+    setBusyImages((prev) => new Set(prev).add(key));
+    try {
+      const result = await fetchImage(imageSource, request.search_phrase, request.why);
+      if (!result.ok) {
+        toast.error(`Slot ${request.slot_index + 1}: ${result.error}`);
+        return current;
+      }
+      const next = applyImageToSession(
+        current,
+        request.slot_index,
+        request.screen,
+        result.url,
+        request.search_phrase,
+      );
+      setFilledImages((prev) => new Set(prev).add(key));
+      return next;
+    } finally {
+      setBusyImages((prev) => {
+        const copy = new Set(prev);
+        copy.delete(key);
+        return copy;
+      });
+    }
+  };
+
+  const handleFetchImage = async (requestIndex: number) => {
+    if (!session) return;
+    const next = await fetchOne(requestIndex, session);
+    setSession(next);
+  };
+
+  const handleFetchAllImages = async () => {
+    if (!session) return;
+    // Sequential on purpose: generation is slow and expensive, and a burst of
+    // parallel calls would trip the function's own rate limit.
+    let working = session;
+    for (let i = 0; i < working.media_requests.length; i++) {
+      working = await fetchOne(i, working);
+      setSession(working);
+    }
+    toast.success("Images added where they could be found.");
+  };
+
   const handleCreate = async () => {
     if (!session || !lastBrief.current) return;
     setSaving(true);
@@ -230,6 +287,11 @@ function GeneratePage() {
         session={session}
         warnings={warnings}
         saving={saving}
+        imageSource={imageSource}
+        busyImages={busyImages}
+        filledImages={filledImages}
+        onFetchImage={(i) => void handleFetchImage(i)}
+        onFetchAllImages={() => void handleFetchAllImages()}
         onCreate={handleCreate}
         onDiscard={() => {
           setSession(null);
@@ -428,6 +490,40 @@ function GeneratePage() {
               checked={includeConfidenceArc}
               onCheckedChange={setIncludeConfidenceArc}
             />
+          </div>
+
+          <div className="space-y-2">
+            <Label>Pictures</Label>
+            <div className="grid grid-cols-3 gap-2">
+              {(
+                [
+                  ["stock", "Find photos"],
+                  ["ai", "Generate"],
+                  ["none", "I'll add them"],
+                ] as const
+              ).map(([value, label]) => (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => setImageSource(value)}
+                  className={`h-11 rounded-xl border-2 text-xs uppercase tracking-widest font-bold transition-colors ${
+                    imageSource === value
+                      ? "border-[color:var(--cyan)] bg-[color:var(--cyan)]/15 text-[color:var(--cyan)]"
+                      : "border-border text-muted-foreground hover:border-[color:var(--cyan)]/50"
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+            <p className="text-[11px] text-muted-foreground">
+              {imageSource === "stock"
+                ? "Real photographs from a stock library. Best when the picture needs to look like a real workplace."
+                : imageSource === "ai"
+                  ? "Invented images. Good for staged scenes stock does not have, but check anything showing correct practice."
+                  : "Leaves a written description of each picture for you to source yourself."}{" "}
+              You choose each one on the next screen; nothing is fetched automatically.
+            </p>
           </div>
 
           <div className="space-y-2">

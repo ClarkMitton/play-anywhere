@@ -60,17 +60,39 @@ export const RECIPES: Recipe[] = [
     typicalMins: 5,
   },
   {
-    id: "TEACH_AND_CHECK",
+    id: "TEACH",
     phase: "Establish",
-    label: "Teach, then check immediately",
+    label: "Show the content on the big screen",
     use:
-      "The workhorse for new content. Host presents, Touch Screen 2 collects an answer, Touch Screen 1 carries the teacher script and the reveal cue.",
+      "Introduces an idea. ALWAYS comes before the CHECK on that idea: never ask learners a question about something they have not been shown. The Host carries the actual substance, large enough to read from the back of the room. Do not hide the teaching in a subtitle on a touch screen, because nobody can read it from their seat.",
     host:
-      "the teaching content (text_slide, image placeholder or youtube), or the question itself with its live response count",
+      "the content itself: an image placeholder showing the thing, a youtube clip, or a text_slide listing the key points",
+    screen1: "text_slide with the discussion prompt or the key words",
+    screen2: "text_slide with the same prompt, or a supporting detail",
+    typicalMins: 5,
+  },
+  {
+    id: "CHECK",
+    phase: "Establish",
+    label: "Check they got it",
+    use:
+      "Follows a TEACH beat on the same idea. The Host shows the question with a live response count and the Reveal button; Touch Screen 2 collects the answers; Touch Screen 1 carries the teacher script. Never use this to introduce something new.",
+    host: "multiple_choice or true_or_false, showing the live count then the result",
     screen1:
       "text_slide scripting what the teacher says and when to press Reveal Results. Never waiting.",
-    screen2: "multiple_choice or true_or_false so learners answer",
-    typicalMins: 8,
+    screen2: "the same multiple_choice or true_or_false so learners answer",
+    typicalMins: 4,
+  },
+  {
+    id: "SHAREBACK",
+    phase: "Apply",
+    label: "Capture what the groups came up with",
+    use:
+      "Follows TIMED_TASK. Without it a group task produces nothing the room can see and the work evaporates. Learners type their answers on the touch screens and the Host builds the shared picture live.",
+    host: "word_cloud collecting the groups' answers",
+    screen1: "the same word_cloud payload",
+    screen2: "the same word_cloud payload",
+    typicalMins: 4,
   },
   {
     id: "VOTE_AND_DISCUSS",
