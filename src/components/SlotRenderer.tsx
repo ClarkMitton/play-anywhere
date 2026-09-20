@@ -341,8 +341,8 @@ function SubmittedState() {
 // ─────────────────────────────────────────────
 
 // Emoji scale (low → high). Stored as 1–5.
-const EMOJI_LABELS = ["Really angry", "Slightly angry", "Neutral", "Happy", "Really happy"];
-const EMOJI_FACES = ["😡", "😠", "😐", "🙂", "😄"];
+const EMOJI_LABELS = ["Really sad", "Slightly sad", "Neutral", "Happy", "Really happy"];
+const EMOJI_FACES = ["😢", "😟", "😐", "🙂", "😄"];
 
 // Likert scale (low → high). Stored as 1–5.
 const LIKERT_LABELS = ["Strongly disagree", "Disagree", "Neutral", "Agree", "Strongly agree"];
@@ -483,9 +483,6 @@ function ConfidenceCheckerInput({ content, screen, sessionId, slotId }: {
               </button>
             ))}
           </div>
-          <div className="flex justify-between w-full max-w-xs text-xs text-muted-foreground uppercase tracking-widest">
-            <span>Not at all</span><span>Very confident</span>
-          </div>
         </>
       )}
 
@@ -568,10 +565,12 @@ function ConfidenceCheckerHost({ content, sessionId, slotId }: {
           </div>
         ))}
       </div>
-      <div className="flex justify-between w-full max-w-md text-xs text-muted-foreground uppercase tracking-widest">
-        <span>{mode === "emoji" ? `${EMOJI_FACES[0]} ${EMOJI_LABELS[0]}` : mode === "likert" ? LIKERT_LABELS[0] : "Not at all"}</span>
-        <span>{mode === "emoji" ? `${EMOJI_FACES[EMOJI_FACES.length - 1]} ${EMOJI_LABELS[EMOJI_LABELS.length - 1]}` : mode === "likert" ? LIKERT_LABELS[LIKERT_LABELS.length - 1] : "Very confident"}</span>
-      </div>
+      {(mode === "emoji" || mode === "likert") && (
+        <div className="flex justify-between w-full max-w-md text-xs text-muted-foreground uppercase tracking-widest">
+          <span>{mode === "emoji" ? EMOJI_FACES[0] : LIKERT_LABELS[0]}</span>
+          <span>{mode === "emoji" ? EMOJI_FACES[EMOJI_FACES.length - 1] : LIKERT_LABELS[LIKERT_LABELS.length - 1]}</span>
+        </div>
+      )}
       <div className="flex gap-16 text-center">
         <div>
           <div className="text-xs uppercase tracking-widest text-muted-foreground mb-1">Responses</div>
@@ -894,6 +893,8 @@ function QuestionRendererHost({ content, sessionId }: { content: QuestionContent
   const [revealed, setRevealed] = useState(false);
   const [responseCount, setResponseCount] = useState(0);
   const [responses, setResponses] = useState<ResponseRow[]>([]);
+  const revealedRef = useRef(revealed);
+  useEffect(() => { revealedRef.current = revealed; }, [revealed]);
 
   useEffect(() => {
     if (!sessionId) return;
@@ -911,6 +912,21 @@ function QuestionRendererHost({ content, sessionId }: { content: QuestionContent
       }).subscribe();
 
     return () => { supabase.removeChannel(respCh); };
+  }, [sessionId]);
+
+  // Listen for reveal trigger from phone remote.
+  useEffect(() => {
+    if (!sessionId) return;
+    const revCh = supabase.channel(`qh-rev:${sessionId}`, { config: { broadcast: { self: true } } });
+    revCh.on("broadcast", { event: "reveal" }, async () => {
+      if (revealedRef.current) return;
+      const { data } = await supabase.from("responses").select("response_data")
+        .eq("session_id", sessionId).eq("response_type", "question");
+      setResponses((data ?? []) as ResponseRow[]);
+      sounds.questionReveal();
+      setRevealed(true);
+    }).subscribe();
+    return () => { supabase.removeChannel(revCh); };
   }, [sessionId]);
 
   // Reveal is controlled here on the Host screen.

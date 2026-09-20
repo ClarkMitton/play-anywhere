@@ -463,6 +463,31 @@ function RemotePage() {
         );
       })()}
 
+      {/* Single question controls (multiple_choice / true_or_false) */}
+      {(() => {
+        const idx = currentIndex("host");
+        const hc = slots[idx]?.host_content as
+          | { type?: string; text?: string; options?: string[]; correct?: number; correct_tf?: boolean }
+          | undefined;
+        if (!hc || (hc.type !== "multiple_choice" && hc.type !== "true_or_false")) return null;
+        let correctAnswer = "";
+        if (hc.type === "true_or_false") {
+          correctAnswer = hc.correct_tf ? "True" : "False";
+        } else if (hc.type === "multiple_choice" && hc.correct !== undefined && hc.options) {
+          correctAnswer = `${String.fromCharCode(65 + hc.correct)}. ${hc.options[hc.correct] ?? ""}`;
+        }
+        return <SingleQuestionRemote sessionId={sessionId} text={hc.text} correctAnswer={correctAnswer} />;
+      })()}
+
+      {/* Question round controls — reveal + next question within the round */}
+      {(() => {
+        const idx = currentIndex("host");
+        const hc = slots[idx]?.host_content as
+          | { type?: string; questions?: RoundQ[] }
+          | undefined;
+        if (!hc || hc.type !== "question_round") return null;
+        return <QuestionRoundRemote sessionId={sessionId} questions={hc.questions ?? []} />;
+      })()}
 
       {/* Big Previous / Next buttons that fill the screen */}
       <div className="flex-1 flex flex-col gap-3 min-h-0">
@@ -493,6 +518,136 @@ function RemotePage() {
       </div>
 
 
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────
+// Single question remote — shows correct answer + Reveal button.
+// Broadcasts to `qh-rev:${sessionId}` which QuestionRendererHost listens for.
+// ─────────────────────────────────────────────
+
+function SingleQuestionRemote({ sessionId, text, correctAnswer }: {
+  sessionId: string;
+  text?: string;
+  correctAnswer: string;
+}) {
+  const [revealed, setRevealed] = useState(false);
+  const channelRef = useRef<RealtimeChannel | null>(null);
+
+  useEffect(() => {
+    const ch = supabase.channel(`qh-rev:${sessionId}`, { config: { broadcast: { self: true } } });
+    channelRef.current = ch;
+    ch.subscribe();
+    return () => { supabase.removeChannel(ch); channelRef.current = null; };
+  }, [sessionId]);
+
+  const revealResults = () => {
+    setRevealed(true);
+    channelRef.current?.send({ type: "broadcast", event: "reveal", payload: {} });
+  };
+
+  return (
+    <div className="shrink-0 rounded-2xl border-2 border-[color:var(--cyan)]/30 bg-[color:var(--cyan)]/5 p-3 space-y-2">
+      <div className="text-[10px] uppercase tracking-[0.3em] text-[color:var(--cyan)] font-bold">Question</div>
+      {text && <div className="text-sm font-semibold leading-snug">{text}</div>}
+      {revealed && correctAnswer && (
+        <div className="text-xs text-[color:var(--success)] font-bold uppercase tracking-widest">✓ {correctAnswer}</div>
+      )}
+      {!revealed && (
+        <button
+          onClick={revealResults}
+          className="w-full h-10 rounded-xl font-bold uppercase tracking-widest text-xs active:scale-[0.98] transition-all"
+          style={{ background: "color-mix(in oklab, var(--cyan) 20%, transparent)", color: "var(--cyan)", border: "2px solid var(--cyan)" }}
+        >
+          Reveal Results
+        </button>
+      )}
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────
+// Question round remote — Reveal + Next Question controls.
+// Subscribes to same `qround:${sessionId}` channel as QuestionRoundRenderer.
+// ─────────────────────────────────────────────
+
+type RoundQ = {
+  type: "multiple_choice" | "true_or_false";
+  text?: string;
+  options?: string[];
+  correct?: number;
+  correct_tf?: boolean;
+};
+
+function QuestionRoundRemote({ sessionId, questions }: {
+  sessionId: string;
+  questions: RoundQ[];
+}) {
+  const qs = questions.filter(q => q && q.type);
+  const [state, setState] = useState<{ index: number; revealed: boolean }>({ index: 0, revealed: false });
+  const stateRef = useRef(state);
+  const channelRef = useRef<RealtimeChannel | null>(null);
+  useEffect(() => { stateRef.current = state; }, [state]);
+
+  useEffect(() => {
+    const ch = supabase.channel(`qround:${sessionId}`, { config: { broadcast: { self: true } } });
+    channelRef.current = ch;
+    ch.on("broadcast", { event: "qround_state" }, ({ payload }: { payload: { index: number; revealed: boolean } }) => {
+      setState({ index: payload.index ?? 0, revealed: Boolean(payload.revealed) });
+    });
+    ch.subscribe(() => {
+      setTimeout(() => ch.send({ type: "broadcast", event: "qround_sync_request", payload: {} }), 200);
+    });
+    return () => { supabase.removeChannel(ch); channelRef.current = null; };
+  }, [sessionId]);
+
+  const broadcast = (next: { index: number; revealed: boolean }) => {
+    setState(next);
+    channelRef.current?.send({ type: "broadcast", event: "qround_state", payload: next });
+  };
+
+  if (qs.length === 0) return null;
+  const question = qs[state.index];
+  const isLast = state.index >= qs.length - 1;
+
+  let correctAnswer = "";
+  if (question.type === "true_or_false") {
+    correctAnswer = question.correct_tf ? "True" : "False";
+  } else if (question.type === "multiple_choice" && question.correct !== undefined && question.options) {
+    correctAnswer = `${String.fromCharCode(65 + question.correct)}. ${question.options[question.correct] ?? ""}`;
+  }
+
+  return (
+    <div className="shrink-0 rounded-2xl border-2 border-[color:var(--cyan)]/30 bg-[color:var(--cyan)]/5 p-3 space-y-2">
+      <div className="text-[10px] uppercase tracking-[0.3em] text-[color:var(--cyan)] font-bold">
+        Question {state.index + 1} of {qs.length}
+      </div>
+      {question.text && <div className="text-sm font-semibold leading-snug">{question.text}</div>}
+      {state.revealed && correctAnswer && (
+        <div className="text-xs text-[color:var(--success)] font-bold uppercase tracking-widest">✓ {correctAnswer}</div>
+      )}
+      <div className="flex gap-2">
+        {!state.revealed ? (
+          <button
+            onClick={() => broadcast({ ...state, revealed: true })}
+            className="flex-1 h-10 rounded-xl font-bold uppercase tracking-widest text-xs active:scale-[0.98] transition-all"
+            style={{ background: "color-mix(in oklab, var(--cyan) 20%, transparent)", color: "var(--cyan)", border: "2px solid var(--cyan)" }}
+          >
+            Reveal Results
+          </button>
+        ) : !isLast ? (
+          <button
+            onClick={() => broadcast({ index: state.index + 1, revealed: false })}
+            className="flex-1 h-10 rounded-xl font-bold uppercase tracking-widest text-xs active:scale-[0.98] transition-all"
+            style={{ background: "color-mix(in oklab, var(--success) 20%, transparent)", color: "var(--success)", border: "2px solid var(--success)" }}
+          >
+            Next Question →
+          </button>
+        ) : (
+          <div className="flex-1 text-center text-xs text-muted-foreground py-2 uppercase tracking-widest">All questions done — use Next ↓</div>
+        )}
+      </div>
     </div>
   );
 }
