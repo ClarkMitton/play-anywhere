@@ -12,13 +12,34 @@ export type FetchImageResult =
  * lesson-media bucket and returns its public URL, which is the only image
  * source sessionRepair trusts.
  */
+/**
+ * The model writes placeholders as "[ADD IMAGE] <description>" and reuses that
+ * whole string as the search phrase, so the marker has to come off before it
+ * reaches a stock search. Stock engines also match badly on long prose, so the
+ * query is trimmed to its first few content words while the full description
+ * still goes through as context for image generation.
+ */
+function toSearchQuery(raw: string): string {
+  const cleaned = raw.replace(/^\s*\[ADD IMAGE\]\s*/i, "").trim();
+  const words = cleaned
+    .replace(/[.,;:]/g, " ")
+    .split(/\s+/)
+    .filter((w) => w.length > 2 && !/^(a|an|the|of|and|or|with|but|generally|very)$/i.test(w));
+  return words.slice(0, 8).join(" ") || cleaned;
+}
+
 export async function fetchImage(
   source: Exclude<ImageSource, "none">,
   query: string,
   context: string,
 ): Promise<FetchImageResult> {
   const { data, error } = await supabase.functions.invoke("fetch-image", {
-    body: { source, query, context },
+    // Stock matches on keywords; generation reads the full description.
+    body: {
+      source,
+      query: source === "stock" ? toSearchQuery(query) : query.replace(/^\s*\[ADD IMAGE\]\s*/i, ""),
+      context,
+    },
   });
 
   if (error) {
