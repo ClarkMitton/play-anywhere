@@ -580,6 +580,16 @@ function LessonCard({
             }}
           />
 
+          <Link to="/admin/plan/$lessonId" params={{ lessonId: lesson.id }}>
+            <Button
+              size="sm"
+              variant="outline"
+              className="uppercase tracking-widest text-xs h-9 px-3"
+            >
+              Plan
+            </Button>
+          </Link>
+
           <Button
             size="sm"
             variant="outline"

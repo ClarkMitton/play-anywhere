@@ -3,7 +3,7 @@
 // Three-screen mockup preview, horizontal slot timeline, per-slot editor panel.
 // All slot mutations auto-save after 1.5 s idle, plus an explicit Save button.
 
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -365,9 +365,11 @@ function DesignerPage() {
     autoSaveTimer.current = setTimeout(saveAll, AUTOSAVE_DELAY);
   }, [saveAll]);
 
-  const handleSave = () => {
-    saveAll();
-  };
+  // Returns the promise so callers that need the write to land before doing
+  // something else (e.g. opening the plan export, which reads from the DB) can
+  // await it. The autosave timer is cleared on unmount, so navigating away with
+  // a pending edit would otherwise lose it.
+  const handleSave = () => saveAll();
 
   // ── Sync to active session ───────────────────
 
@@ -674,9 +676,10 @@ function DesignerHeader({
   lesson: LessonRow | null;
   saveStatus: SaveStatus;
   showMissing: boolean;
-  onSave: () => void;
+  onSave: () => void | Promise<void>;
   onSync: () => void;
 }) {
+  const navigate = useNavigate();
   const statusLabel =
     saveStatus === "saving" ? "Saving…" : saveStatus === "saved" ? "Saved" : "Unsaved";
   const statusColour =
@@ -719,6 +722,20 @@ function DesignerHeader({
         >
           Sync
         </Button>
+        {lesson && (
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={async () => {
+              // Flush pending edits first: the plan export reads from the DB.
+              await onSave();
+              navigate({ to: "/admin/plan/$lessonId", params: { lessonId: lesson.id } });
+            }}
+            className="h-9 px-4 uppercase tracking-widest text-xs"
+          >
+            Plan
+          </Button>
+        )}
         <Button size="sm" onClick={onSave} className="h-9 px-5 uppercase tracking-widest text-xs">
           Save
         </Button>
@@ -2090,7 +2107,9 @@ function ContentTypeForm({
       return (
         <div className="space-y-3">
           <div className="space-y-1.5">
-            <Label className="text-[10px] uppercase tracking-widest text-muted-foreground">Title (big screen)</Label>
+            <Label className="text-[10px] uppercase tracking-widest text-muted-foreground">
+              Title (big screen)
+            </Label>
             <Input
               value={String(content.title ?? "")}
               onChange={(e) => onChange({ title: e.target.value })}
@@ -2099,7 +2118,9 @@ function ContentTypeForm({
             />
           </div>
           <div className="space-y-1.5">
-            <Label className="text-[10px] uppercase tracking-widest text-muted-foreground">Prompt (shown to students)</Label>
+            <Label className="text-[10px] uppercase tracking-widest text-muted-foreground">
+              Prompt (shown to students)
+            </Label>
             <Textarea
               value={String(content.prompt ?? "")}
               onChange={(e) => onChange({ prompt: e.target.value })}
@@ -2109,16 +2130,23 @@ function ContentTypeForm({
             />
           </div>
           <div className="space-y-1.5">
-            <Label className="text-[10px] uppercase tracking-widest text-muted-foreground">Words per student</Label>
+            <Label className="text-[10px] uppercase tracking-widest text-muted-foreground">
+              Words per student
+            </Label>
             <Input
-              type="number" min={1} max={20}
+              type="number"
+              min={1}
+              max={20}
               value={Number(content.max_words ?? 3)}
-              onChange={(e) => onChange({ max_words: Math.max(1, Math.min(20, Number(e.target.value) || 1)) })}
+              onChange={(e) =>
+                onChange({ max_words: Math.max(1, Math.min(20, Number(e.target.value) || 1)) })
+              }
               className="h-8 text-xs w-24 bg-background/60 border-border focus-visible:border-[color:var(--cyan)]"
             />
           </div>
           <p className="text-[10px] text-muted-foreground">
-            Put this on Host + at least one touch screen. Host shows the live cloud, touch screens show the input.
+            Put this on Host + at least one touch screen. Host shows the live cloud, touch screens
+            show the input.
           </p>
         </div>
       );
@@ -2128,7 +2156,9 @@ function ContentTypeForm({
       return (
         <div className="space-y-3">
           <div className="space-y-1.5">
-            <Label className="text-[10px] uppercase tracking-widest text-muted-foreground">Question (big screen)</Label>
+            <Label className="text-[10px] uppercase tracking-widest text-muted-foreground">
+              Question (big screen)
+            </Label>
             <Textarea
               value={String(content.question ?? "")}
               onChange={(e) => onChange({ question: e.target.value })}
@@ -2138,30 +2168,35 @@ function ContentTypeForm({
             />
           </div>
           <p className="text-[10px] text-muted-foreground">
-            Put this on Host + at least one touch screen. Host shows the answer wall (sticky notes), touch screens show the input box.
+            Put this on Host + at least one touch screen. Host shows the answer wall (sticky notes),
+            touch screens show the input box.
           </p>
         </div>
       );
     }
 
-    case "whiteboard": {
-      return (
-        <div className="space-y-3">
-          <div className="space-y-1.5">
-            <Label className="text-[10px] uppercase tracking-widest text-muted-foreground">Title (optional)</Label>
-            <Input
-              value={String(content.title ?? "")}
-              onChange={(e) => onChange({ title: e.target.value })}
-              placeholder="e.g. Sketch your answer"
-              className="h-8 text-xs bg-background/60 border-border focus-visible:border-[color:var(--cyan)]"
-            />
+    case "whiteboard":
+      {
+        return (
+          <div className="space-y-3">
+            <div className="space-y-1.5">
+              <Label className="text-[10px] uppercase tracking-widest text-muted-foreground">
+                Title (optional)
+              </Label>
+              <Input
+                value={String(content.title ?? "")}
+                onChange={(e) => onChange({ title: e.target.value })}
+                placeholder="e.g. Sketch your answer"
+                className="h-8 text-xs bg-background/60 border-border focus-visible:border-[color:var(--cyan)]"
+              />
+            </div>
+            <p className="text-[10px] text-muted-foreground">
+              Free-draw canvas on the touch screens. Colours + brush sizes + clear built in. Each
+              screen draws independently (not synced).
+            </p>
           </div>
-          <p className="text-[10px] text-muted-foreground">
-            Free-draw canvas on the touch screens. Colours + brush sizes + clear built in. Each screen draws independently (not synced).
-          </p>
-        </div>
-      );
-    }
+        );
+      }
 
       return (
         <div className="space-y-3">

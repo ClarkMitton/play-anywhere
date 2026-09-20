@@ -17,6 +17,7 @@ import { Route as Screen1RouteImport } from './routes/screen.1'
 import { Route as RemoteSessionIdRouteImport } from './routes/remote.$sessionId'
 import { Route as AdminTestRouteImport } from './routes/admin.test'
 import { Route as AdminGenerateRouteImport } from './routes/admin.generate'
+import { Route as AdminPlanLessonIdRouteImport } from './routes/admin.plan.$lessonId'
 import { Route as AdminDesignerLessonIdRouteImport } from './routes/admin.designer.$lessonId'
 
 const HostRoute = HostRouteImport.update({
@@ -59,6 +60,11 @@ const AdminGenerateRoute = AdminGenerateRouteImport.update({
   path: '/generate',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminPlanLessonIdRoute = AdminPlanLessonIdRouteImport.update({
+  id: '/plan/$lessonId',
+  path: '/plan/$lessonId',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminDesignerLessonIdRoute = AdminDesignerLessonIdRouteImport.update({
   id: '/designer/$lessonId',
   path: '/designer/$lessonId',
@@ -75,6 +81,7 @@ export interface FileRoutesByFullPath {
   '/screen/1': typeof Screen1Route
   '/screen/2': typeof Screen2Route
   '/admin/designer/$lessonId': typeof AdminDesignerLessonIdRoute
+  '/admin/plan/$lessonId': typeof AdminPlanLessonIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -86,6 +93,7 @@ export interface FileRoutesByTo {
   '/screen/1': typeof Screen1Route
   '/screen/2': typeof Screen2Route
   '/admin/designer/$lessonId': typeof AdminDesignerLessonIdRoute
+  '/admin/plan/$lessonId': typeof AdminPlanLessonIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -98,6 +106,7 @@ export interface FileRoutesById {
   '/screen/1': typeof Screen1Route
   '/screen/2': typeof Screen2Route
   '/admin/designer/$lessonId': typeof AdminDesignerLessonIdRoute
+  '/admin/plan/$lessonId': typeof AdminPlanLessonIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -111,6 +120,7 @@ export interface FileRouteTypes {
     | '/screen/1'
     | '/screen/2'
     | '/admin/designer/$lessonId'
+    | '/admin/plan/$lessonId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -122,6 +132,7 @@ export interface FileRouteTypes {
     | '/screen/1'
     | '/screen/2'
     | '/admin/designer/$lessonId'
+    | '/admin/plan/$lessonId'
   id:
     | '__root__'
     | '/'
@@ -133,6 +144,7 @@ export interface FileRouteTypes {
     | '/screen/1'
     | '/screen/2'
     | '/admin/designer/$lessonId'
+    | '/admin/plan/$lessonId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -202,6 +214,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminGenerateRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/plan/$lessonId': {
+      id: '/admin/plan/$lessonId'
+      path: '/plan/$lessonId'
+      fullPath: '/admin/plan/$lessonId'
+      preLoaderRoute: typeof AdminPlanLessonIdRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/designer/$lessonId': {
       id: '/admin/designer/$lessonId'
       path: '/designer/$lessonId'
@@ -216,12 +235,14 @@ interface AdminRouteChildren {
   AdminGenerateRoute: typeof AdminGenerateRoute
   AdminTestRoute: typeof AdminTestRoute
   AdminDesignerLessonIdRoute: typeof AdminDesignerLessonIdRoute
+  AdminPlanLessonIdRoute: typeof AdminPlanLessonIdRoute
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
   AdminGenerateRoute: AdminGenerateRoute,
   AdminTestRoute: AdminTestRoute,
   AdminDesignerLessonIdRoute: AdminDesignerLessonIdRoute,
+  AdminPlanLessonIdRoute: AdminPlanLessonIdRoute,
 }
 
 const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
