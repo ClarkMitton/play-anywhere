@@ -45,6 +45,8 @@ const LEGAL_TYPES = new Set([
   "multiple_choice",
   "true_or_false",
   "question_round",
+  "word_cloud",
+  "whiteboard",
 ]);
 
 // ─── JSON recovery ──────────────────────────────────────────

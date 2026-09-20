@@ -55,7 +55,7 @@ the touch screens has wasted the entire room and is a failed answer.
 
 // ─── NEW: the 14 legal content types ────────────────────────
 const TOOL_CATALOGUE = `
-═══ THE ONLY 14 CONTENT TYPES THAT EXIST ═══
+═══ THE ONLY 16 CONTENT TYPES THAT EXIST ═══
 Any other "type" value renders as a blank "Standing by" screen in front of a
 class. Never invent one. teacher_note, html_upload, webpage and host_webcam do
 NOT exist.
@@ -74,6 +74,8 @@ NOT exist.
 12. {"type":"multiple_choice","text":"...","options":["...","..."],"correct":0}
 13. {"type":"true_or_false","text":"...","correct_tf":true}
 14. {"type":"question_round","questions":[{"type":"multiple_choice","text":"...","options":["..."],"correct":0}]}
+15. {"type":"word_cloud","prompt":"...","title":"...","max_words":3}
+16. {"type":"whiteboard","title":"..."}
 
 HARD PER-SCREEN RULES, enforced by validation after you answer:
 - host_timer may ONLY appear on host. It is invisible to the touch screens.
@@ -88,6 +90,12 @@ HARD PER-SCREEN RULES, enforced by validation after you answer:
 - confidence_checker and voting collect answers one person at a time on a touch
   screen ("pass the screen along"), while host shows the live aggregate. Use
   the identical payload on all three screens.
+- word_cloud collects short words typed on the touch screens while the host
+  shows the cloud building live. Use the identical payload on all three screens.
+  Keep max_words small (2 or 3) so no one learner floods it.
+- whiteboard is a shared drawing surface. It saves nothing, so use it for
+  thinking out loud, labelling or sketching, never for assessment. Use the
+  identical payload on all three screens.
 - wheel_spinner items are TRUNCATED at 10 characters on screen. Keep them very
   short.
 - voting and multiple_choice take 2 to 6 options.

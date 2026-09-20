@@ -38,6 +38,8 @@ const MIRROR_TYPES = [
   "quiz_buzzer",
   "wheel_spinner",
   "countdown_timer",
+  "word_cloud",
+  "whiteboard",
 ];
 
 const ENTRY_TEXT_MAX = 120;

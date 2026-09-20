@@ -161,6 +161,18 @@ const questionRound = z.object({
   questions: z.array(roundQuestion).min(1).max(10),
 });
 
+const wordCloud = z.object({
+  type: z.literal("word_cloud"),
+  prompt: z.string().min(1),
+  title: z.string().optional(),
+  max_words: z.number().int().min(1).max(10).optional(),
+});
+
+const whiteboard = z.object({
+  type: z.literal("whiteboard"),
+  title: z.string().optional(),
+});
+
 export const contentSchema = z.discriminatedUnion("type", [
   waiting,
   textSlide,
@@ -176,6 +188,8 @@ export const contentSchema = z.discriminatedUnion("type", [
   multipleChoice,
   trueOrFalse,
   questionRound,
+  wordCloud,
+  whiteboard,
 ]);
 
 export type Content = z.infer<typeof contentSchema>;
@@ -184,12 +198,16 @@ export type Content = z.infer<typeof contentSchema>;
 // Slots
 // ─────────────────────────────────────────────
 
+// Tools that write to the responses table, so the slot must wait for learners
+// to submit rather than advancing on a timer. whiteboard is deliberately absent:
+// it is a shared drawing surface that persists nothing.
 const ANSWER_COLLECTING = [
   "multiple_choice",
   "true_or_false",
   "question_round",
   "confidence_checker",
   "voting",
+  "word_cloud",
 ] as const;
 
 export function isAnswerCollecting(type: string): boolean {

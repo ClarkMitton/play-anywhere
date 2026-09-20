@@ -85,6 +85,28 @@ export const RECIPES: Recipe[] = [
     maxGroupSize: 16,
   },
   {
+    id: "WORD_STORM",
+    phase: "Establish",
+    label: "Build a word cloud together",
+    use:
+      "Surfacing what learners already know, or collecting vocabulary for the topic. The cloud builds live on the Host as words come in, so the room sees the shared answer forming. Strong at Entry level because one word is a low bar to clear.",
+    host: "word_cloud showing the live cloud",
+    screen1: "the same word_cloud payload (learners type here)",
+    screen2: "the same word_cloud payload",
+    typicalMins: 5,
+  },
+  {
+    id: "SKETCH_IT",
+    phase: "Apply",
+    label: "Draw it on the whiteboard",
+    use:
+      "Labelling, sketching a layout, or working something out visually where writing a sentence would be the barrier rather than the task. Saves nothing, so never use it to assess.",
+    host: "whiteboard with a title naming the task",
+    screen1: "the same whiteboard payload (learners draw here)",
+    screen2: "the same whiteboard payload",
+    typicalMins: 6,
+  },
+  {
     id: "QUESTION_CAROUSEL",
     phase: "Apply",
     label: "Run a set of questions",
