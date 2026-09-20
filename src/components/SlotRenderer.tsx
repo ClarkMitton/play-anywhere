@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { sounds } from "@/lib/audio";
+import { checkProfanity, PROFANITY_MESSAGE } from "@/lib/profanity";
 import { Button } from "@/components/ui/button";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 
@@ -69,6 +70,9 @@ export type SlotContent =
   | { type: "question_round"; questions: RoundQ[] }
   | { type: "voting"; question: string; options: string[] }
   | { type: "quiz_buzzer"; question?: string; questions?: string[]; answers?: string[]; team1_name?: string; team2_name?: string }
+  | { type: "word_cloud"; title?: string; prompt?: string; max_words?: number }
+  | { type: "padlet"; question: string; title?: string }
+  | { type: "whiteboard"; title?: string }
   | { type: string; [k: string]: unknown };
 
 type QuestionContent = Extract<SlotContent,
@@ -259,6 +263,21 @@ export function SlotRenderer({
       return <QuizBuzzerRenderer content={c} screen={screen} sessionId={sessionId} />;
     }
 
+    case "word_cloud": {
+      const c = content as Extract<SlotContent, { type: "word_cloud" }>;
+      return <WordCloudRenderer content={c} screen={screen} sessionId={sessionId} slotId={slotId} />;
+    }
+
+    case "padlet": {
+      const c = content as Extract<SlotContent, { type: "padlet" }>;
+      return <PadletRenderer content={c} screen={screen} sessionId={sessionId} slotId={slotId} />;
+    }
+
+    case "whiteboard": {
+      const c = content as Extract<SlotContent, { type: "whiteboard" }>;
+      return <WhiteboardRenderer content={c} screen={screen} />;
+    }
+
     default:
       return <Waiting screen={screen} />;
   }
@@ -425,7 +444,7 @@ function ConfidenceCheckerInput({ content, screen, sessionId, slotId }: {
   return (
     <div className="min-h-screen w-full bg-immersive bg-grid flex flex-col items-center justify-center p-8 gap-7 animate-slot-in">
       <div className="text-xs uppercase tracking-[0.5em] text-[color:var(--cyan)]">Person {personNum}</div>
-      <div className="text-2xl md:text-3xl font-bold text-center max-w-lg leading-snug">
+      <div className="text-2xl md:text-3xl font-bold text-center max-w-lg leading-snug whitespace-pre-line">
         {content.prompt || "How confident are you?"}
       </div>
 
@@ -433,11 +452,11 @@ function ConfidenceCheckerInput({ content, screen, sessionId, slotId }: {
         <div className="flex flex-wrap justify-center gap-3 md:gap-4 max-w-2xl">
           {options.map(n => (
             <button key={n} onClick={() => setScore(n)}
-              className={`flex flex-col items-center gap-1 px-4 py-3 rounded-2xl border-2 transition-all duration-150
+              aria-label={EMOJI_LABELS[n - 1]}
+              className={`flex items-center justify-center px-4 py-3 rounded-2xl border-2 transition-all duration-150
                 ${score === n ? "border-[color:var(--cyan)] bg-[color:var(--cyan)]/20"
                   : "border-border hover:border-[color:var(--cyan)]/50 active:scale-95"}`}>
               <span className="text-5xl md:text-6xl leading-none">{EMOJI_FACES[n - 1]}</span>
-              <span className="text-[10px] uppercase tracking-widest text-muted-foreground">{EMOJI_LABELS[n - 1]}</span>
             </button>
           ))}
         </div>
@@ -1361,7 +1380,7 @@ function CountdownTimerRenderer({ content, screen, sessionId }: {
   return (
     <div className="min-h-screen w-full bg-immersive bg-grid flex flex-col items-center justify-center gap-8 animate-slot-in">
       {content.label && (
-        <div className="text-2xl md:text-4xl font-bold text-center max-w-2xl px-8">{content.label}</div>
+        <div className="text-2xl md:text-4xl font-bold text-center max-w-2xl px-8 whitespace-pre-line">{content.label}</div>
       )}
       <div
         className={`text-[22vw] font-extrabold font-mono leading-none tabular-nums transition-colors duration-500
@@ -1468,7 +1487,7 @@ function HostTimerRenderer({ content }: {
   return (
     <div className="min-h-screen w-full bg-immersive bg-grid flex flex-col items-center justify-center gap-8 animate-slot-in">
       {content.label && (
-        <div className="text-2xl md:text-4xl font-bold text-center max-w-2xl px-8">{content.label}</div>
+        <div className="text-2xl md:text-4xl font-bold text-center max-w-2xl px-8 whitespace-pre-line">{content.label}</div>
       )}
       <div
         className={`text-[22vw] font-extrabold font-mono leading-none tabular-nums transition-colors duration-500
@@ -1572,7 +1591,7 @@ function VotingInput({ question, options, screen, sessionId, slotId }: {
   return (
     <div className="min-h-screen w-full bg-immersive bg-grid flex flex-col items-center justify-center p-8 gap-8 animate-slot-in">
       <div className="text-xs uppercase tracking-[0.5em] text-[color:var(--cyan)]">Person {personNum}</div>
-      <div className="text-2xl md:text-4xl font-bold text-center max-w-2xl">{question || "Cast your vote"}</div>
+      <div className="text-2xl md:text-4xl font-bold text-center max-w-2xl whitespace-pre-line">{question || "Cast your vote"}</div>
       <div className={`grid gap-4 w-full max-w-3xl ${options.length <= 2 ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-2"}`}>
         {options.map((opt, i) => (
           <button key={i} onClick={() => submit(i)} disabled={submitting}
@@ -1618,7 +1637,7 @@ function VotingHost({ question, options, sessionId, slotId }: {
   return (
     <div className="min-h-screen w-full bg-immersive bg-grid flex flex-col items-center justify-center p-12 gap-8 animate-slot-in">
       <div className="text-xs uppercase tracking-[0.4em] text-[color:var(--cyan)]">Voting · Live</div>
-      <div className="text-3xl md:text-5xl font-bold text-center max-w-3xl">{question || "Voting"}</div>
+      <div className="text-3xl md:text-5xl font-bold text-center max-w-3xl whitespace-pre-line">{question || "Voting"}</div>
       <div className="w-full max-w-4xl space-y-5">
         {options.map((opt, i) => {
           const c = counts[i];
@@ -1806,6 +1825,426 @@ function QuizBuzzerRenderer({ content, screen, sessionId }: {
           className="h-12 px-6 text-sm uppercase tracking-widest font-bold border-destructive/40 text-destructive hover:bg-destructive/10">
           Reset Scores
         </Button>
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────
+// WORD CLOUD — students type words on side screens, host shows the cloud.
+// Stored in `responses` with response_type="word_cloud",
+// response_data={word:string}.
+// ─────────────────────────────────────────────
+
+
+const CLOUD_COLORS = ["var(--cyan)", "var(--orange)", "var(--success)", "oklch(0.75 0.18 300)", "oklch(0.82 0.18 80)"];
+
+function WordCloudRenderer({ content, screen, sessionId, slotId }: {
+  content: { title?: string; prompt?: string; max_words?: number };
+  screen: "host" | "screen1" | "screen2";
+  sessionId?: string; slotId?: string;
+}) {
+  if (screen === "host") return <WordCloudHost content={content} sessionId={sessionId} slotId={slotId} />;
+  return <WordCloudInput content={content} screen={screen} sessionId={sessionId} slotId={slotId} />;
+}
+
+function WordCloudInput({ content, screen, sessionId, slotId }: {
+  content: { title?: string; prompt?: string; max_words?: number };
+  screen: "screen1" | "screen2";
+  sessionId?: string; slotId?: string;
+}) {
+  const [word, setWord] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [submitted, setSubmitted] = useState<string[]>([]);
+  const [submitting, setSubmitting] = useState(false);
+  const maxWords = content.max_words ?? 3;
+
+  const submit = async () => {
+    const w = word.trim();
+    if (!w || !sessionId || submitting) return;
+    if (w.length > 40) { setError("Too long — 40 characters max."); return; }
+    const p = checkProfanity(w);
+    if (!p.ok) { setError(PROFANITY_MESSAGE); return; }
+    setSubmitting(true);
+    await supabase.from("responses").insert({
+      session_id: sessionId, slot_id: slotId ?? null, screen_role: screen,
+      response_type: "word_cloud", response_data: { word: w } as never,
+    });
+    setSubmitted((s) => [...s, w]);
+    setWord("");
+    setError(null);
+    setSubmitting(false);
+  };
+
+  const remaining = maxWords - submitted.length;
+  const done = remaining <= 0;
+
+  return (
+    <div className="min-h-screen w-full bg-immersive bg-grid flex flex-col items-center justify-center p-6 gap-6 animate-slot-in">
+      <div className="text-xs uppercase tracking-[0.5em] text-[color:var(--cyan)]">Word Cloud</div>
+      {content.title && <div className="text-3xl md:text-4xl font-extrabold text-glow text-center max-w-2xl">{content.title}</div>}
+      <div className="text-lg md:text-2xl text-center max-w-2xl whitespace-pre-line text-muted-foreground">{content.prompt || "Type a word"}</div>
+
+      {!done && (
+        <>
+          <input
+            autoFocus
+            value={word}
+            onChange={(e) => { setWord(e.target.value); setError(null); }}
+            onKeyDown={(e) => { if (e.key === "Enter") submit(); }}
+            maxLength={40}
+            placeholder="Your word…"
+            className="w-full max-w-lg h-20 text-3xl text-center bg-card/60 border-2 border-[color:var(--cyan)]/40 focus:border-[color:var(--cyan)] outline-none rounded-2xl px-6"
+          />
+          {error && <div className="text-destructive uppercase tracking-widest text-sm">{error}</div>}
+          <Button onClick={submit} disabled={!word.trim() || submitting}
+            className="h-14 px-10 text-lg uppercase tracking-widest font-extrabold">Send</Button>
+          <div className="text-xs uppercase tracking-widest text-muted-foreground">
+            {remaining} word{remaining === 1 ? "" : "s"} left
+          </div>
+        </>
+      )}
+      {done && (
+        <div className="text-3xl md:text-4xl font-extrabold text-[color:var(--success)]">Thanks — words in!</div>
+      )}
+
+      {submitted.length > 0 && (
+        <div className="flex flex-wrap gap-2 justify-center max-w-xl mt-4">
+          {submitted.map((w, i) => (
+            <span key={i} className="px-3 py-1.5 rounded-full bg-[color:var(--cyan)]/20 text-[color:var(--cyan)] text-sm font-bold">{w}</span>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function WordCloudHost({ content, sessionId, slotId }: {
+  content: { title?: string; prompt?: string };
+  sessionId?: string; slotId?: string;
+}) {
+  const [words, setWords] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (!sessionId) return;
+    let cancelled = false;
+    (async () => {
+      let q = supabase.from("responses").select("response_data,slot_id,response_type").eq("session_id", sessionId).eq("response_type", "word_cloud");
+      if (slotId) q = q.eq("slot_id", slotId);
+      const { data } = await q;
+      if (!cancelled && data) setWords(data.map(r => String((r.response_data as { word?: string })?.word ?? "")).filter(Boolean));
+    })();
+    const ch = supabase.channel(`cloud:${sessionId}`);
+    ch.on("postgres_changes", { event: "INSERT", schema: "public", table: "responses", filter: `session_id=eq.${sessionId}` },
+      (payload) => {
+        const r = payload.new as { response_type: string; response_data: { word?: string }; slot_id: string | null };
+        if (r.response_type !== "word_cloud") return;
+        if (slotId && r.slot_id !== slotId) return;
+        const w = String(r.response_data?.word ?? "").trim();
+        if (w) setWords(p => [...p, w]);
+      }).subscribe();
+    return () => { cancelled = true; supabase.removeChannel(ch); };
+  }, [sessionId, slotId]);
+
+  // Frequency map (case-insensitive).
+  const freq = useMemo(() => {
+    const m = new Map<string, number>();
+    for (const w of words) {
+      const key = w.toLowerCase();
+      m.set(key, (m.get(key) ?? 0) + 1);
+    }
+    return Array.from(m.entries())
+      .map(([w, n]) => ({ word: w, count: n }))
+      .sort((a, b) => b.count - a.count);
+  }, [words]);
+
+  const maxCount = Math.max(...freq.map(f => f.count), 1);
+
+  return (
+    <div className="min-h-screen w-full bg-immersive bg-grid flex flex-col items-center justify-center p-12 gap-8 animate-slot-in">
+      <div className="text-xs uppercase tracking-[0.4em] text-[color:var(--cyan)]">Word Cloud · Live</div>
+      {content.title && <div className="text-4xl md:text-6xl font-extrabold text-glow text-center max-w-4xl">{content.title}</div>}
+      {content.prompt && <div className="text-lg md:text-2xl text-muted-foreground text-center max-w-3xl whitespace-pre-line">{content.prompt}</div>}
+      <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-3 max-w-6xl">
+        {freq.length === 0 && <div className="text-2xl text-muted-foreground">Waiting for words…</div>}
+        {freq.map((f, i) => {
+          // Size scales from 1.6rem to 8rem based on frequency.
+          const scale = 0.2 + (f.count / maxCount) * 0.8;
+          const size = `clamp(1.6rem, ${(1.5 + scale * 6.5).toFixed(2)}rem, 9rem)`;
+          const color = CLOUD_COLORS[i % CLOUD_COLORS.length];
+          return (
+            <span key={f.word} className="font-extrabold leading-none transition-all duration-500 ease-out animate-slot-in"
+              style={{ fontSize: size, color, opacity: 0.55 + scale * 0.45 }}>
+              {f.word}
+            </span>
+          );
+        })}
+      </div>
+      <div className="text-sm text-muted-foreground uppercase tracking-widest">{words.length} word{words.length === 1 ? "" : "s"}</div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────
+// PADLET — question on the big screen, sticky-note wall of student answers.
+// Stored in `responses` with response_type="padlet",
+// response_data={text:string}.
+// ─────────────────────────────────────────────
+
+const PADLET_COLORS = [
+  { bg: "oklch(0.94 0.12 90)", ink: "#3b2b0a" },   // yellow
+  { bg: "oklch(0.9 0.14 200)", ink: "#062a3a" },   // cyan
+  { bg: "oklch(0.9 0.15 340)", ink: "#3a0a2a" },   // pink
+  { bg: "oklch(0.92 0.14 140)", ink: "#0a2a12" },  // green
+  { bg: "oklch(0.92 0.14 40)",  ink: "#3a1a06" },  // orange
+  { bg: "oklch(0.9 0.14 290)",  ink: "#20083a" },  // purple
+];
+
+function PadletRenderer({ content, screen, sessionId, slotId }: {
+  content: { question: string; title?: string };
+  screen: "host" | "screen1" | "screen2";
+  sessionId?: string; slotId?: string;
+}) {
+  if (screen === "host") return <PadletHost content={content} sessionId={sessionId} slotId={slotId} />;
+  return <PadletInput content={content} screen={screen} sessionId={sessionId} slotId={slotId} />;
+}
+
+function PadletInput({ content, screen, sessionId, slotId }: {
+  content: { question: string; title?: string };
+  screen: "screen1" | "screen2";
+  sessionId?: string; slotId?: string;
+}) {
+  const [text, setText] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [count, setCount] = useState(0);
+  const [submitting, setSubmitting] = useState(false);
+
+  const submit = async () => {
+    const t = text.trim();
+    if (!t || !sessionId || submitting) return;
+    if (t.length > 240) { setError("Too long — 240 characters max."); return; }
+    const p = checkProfanity(t);
+    if (!p.ok) { setError(PROFANITY_MESSAGE); return; }
+    setSubmitting(true);
+    await supabase.from("responses").insert({
+      session_id: sessionId, slot_id: slotId ?? null, screen_role: screen,
+      response_type: "padlet", response_data: { text: t } as never,
+    });
+    setText("");
+    setError(null);
+    setCount(c => c + 1);
+    setSubmitting(false);
+  };
+
+  return (
+    <div className="min-h-screen w-full bg-immersive bg-grid flex flex-col items-center justify-center p-6 gap-5 animate-slot-in">
+      <div className="text-xs uppercase tracking-[0.5em] text-[color:var(--cyan)]">Post Your Answer</div>
+      <div className="text-2xl md:text-3xl font-bold text-center max-w-2xl whitespace-pre-line">{content.question || "Answer"}</div>
+      <textarea
+        autoFocus
+        value={text}
+        onChange={(e) => { setText(e.target.value); setError(null); }}
+        onKeyDown={(e) => { if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) submit(); }}
+        maxLength={240}
+        placeholder="Type your answer… (Ctrl/⌘+Enter to send)"
+        rows={4}
+        className="w-full max-w-lg text-xl bg-card/60 border-2 border-[color:var(--cyan)]/40 focus:border-[color:var(--cyan)] outline-none rounded-2xl p-4 resize-none"
+      />
+      {error && <div className="text-destructive uppercase tracking-widest text-sm">{error}</div>}
+      <div className="flex items-center gap-4">
+        <div className="text-xs uppercase tracking-widest text-muted-foreground">{text.length}/240</div>
+        <Button onClick={submit} disabled={!text.trim() || submitting}
+          className="h-14 px-10 text-lg uppercase tracking-widest font-extrabold">Post</Button>
+      </div>
+      {count > 0 && <div className="text-sm text-[color:var(--success)] uppercase tracking-widest">✓ {count} posted — send more if you like</div>}
+    </div>
+  );
+}
+
+function PadletHost({ content, sessionId, slotId }: {
+  content: { question: string; title?: string };
+  sessionId?: string; slotId?: string;
+}) {
+  const [notes, setNotes] = useState<{ id: string; text: string }[]>([]);
+
+  useEffect(() => {
+    if (!sessionId) return;
+    let cancelled = false;
+    (async () => {
+      let q = supabase.from("responses").select("id,response_data,slot_id,response_type").eq("session_id", sessionId).eq("response_type", "padlet");
+      if (slotId) q = q.eq("slot_id", slotId);
+      const { data } = await q;
+      if (!cancelled && data) setNotes(data.map(r => ({ id: r.id as string, text: String((r.response_data as { text?: string })?.text ?? "") })).filter(n => n.text));
+    })();
+    const ch = supabase.channel(`padlet:${sessionId}`);
+    ch.on("postgres_changes", { event: "INSERT", schema: "public", table: "responses", filter: `session_id=eq.${sessionId}` },
+      (payload) => {
+        const r = payload.new as { id: string; response_type: string; response_data: { text?: string }; slot_id: string | null };
+        if (r.response_type !== "padlet") return;
+        if (slotId && r.slot_id !== slotId) return;
+        const t = String(r.response_data?.text ?? "").trim();
+        if (t) setNotes(p => [...p, { id: r.id, text: t }]);
+      }).subscribe();
+    return () => { cancelled = true; supabase.removeChannel(ch); };
+  }, [sessionId, slotId]);
+
+  return (
+    <div className="min-h-screen w-full bg-immersive bg-grid flex flex-col p-8 gap-6 animate-slot-in">
+      <div className="text-center shrink-0">
+        <div className="text-xs uppercase tracking-[0.4em] text-[color:var(--cyan)] mb-2">Padlet · Live</div>
+        <div className="text-3xl md:text-5xl font-extrabold text-glow max-w-5xl mx-auto whitespace-pre-line">{content.question || "Answer wall"}</div>
+        <div className="text-sm text-muted-foreground uppercase tracking-widest mt-3">{notes.length} response{notes.length === 1 ? "" : "s"}</div>
+      </div>
+      <div className="flex-1 min-h-0 overflow-auto">
+        {notes.length === 0 && (
+          <div className="h-full flex items-center justify-center text-2xl text-muted-foreground">Waiting for responses…</div>
+        )}
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 max-w-7xl mx-auto">
+          {notes.map((n, i) => {
+            const c = PADLET_COLORS[i % PADLET_COLORS.length];
+            const rot = ((i * 37) % 7) - 3; // -3° … +3°
+            return (
+              <div key={n.id} className="rounded-2xl p-5 shadow-xl animate-slot-in break-words"
+                style={{ background: c.bg, color: c.ink, transform: `rotate(${rot}deg)`, minHeight: 120 }}>
+                <div className="text-base md:text-lg font-semibold whitespace-pre-wrap leading-snug">{n.text}</div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────
+// WHITEBOARD — side-screen free-draw canvas (touch/mouse). No sync.
+// Host doesn't render it; the big screen just shows a title/waiting screen.
+// ─────────────────────────────────────────────
+
+function WhiteboardRenderer({ content, screen }: {
+  content: { title?: string };
+  screen: "host" | "screen1" | "screen2";
+}) {
+  if (screen === "host") {
+    return (
+      <div className="min-h-screen w-full bg-immersive bg-grid flex flex-col items-center justify-center p-10 gap-6 animate-slot-in">
+        <div className="text-xs uppercase tracking-[0.5em] text-[color:var(--cyan)]">Whiteboard Active</div>
+        <div className="text-5xl md:text-7xl font-extrabold text-glow text-center max-w-4xl">{content.title || "Draw on the touch screens"}</div>
+      </div>
+    );
+  }
+  return <WhiteboardCanvas title={content.title} />;
+}
+
+const WB_COLORS = ["#0b0b0b", "var(--cyan)", "var(--orange)", "var(--success)", "oklch(0.7 0.2 30)", "oklch(0.65 0.2 300)"];
+
+function WhiteboardCanvas({ title }: { title?: string }) {
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const drawingRef = useRef(false);
+  const lastRef = useRef<{ x: number; y: number } | null>(null);
+  const [color, setColor] = useState(WB_COLORS[0]);
+  const [size, setSize] = useState(6);
+
+  // Set up the canvas at device resolution and clear to white.
+  useEffect(() => {
+    const cvs = canvasRef.current;
+    if (!cvs) return;
+    const resize = () => {
+      const rect = cvs.getBoundingClientRect();
+      const dpr = window.devicePixelRatio || 1;
+      // Preserve current pixels if we can, else fill white.
+      const prev = document.createElement("canvas");
+      prev.width = cvs.width; prev.height = cvs.height;
+      const pctx = prev.getContext("2d");
+      if (pctx && cvs.width && cvs.height) pctx.drawImage(cvs, 0, 0);
+      cvs.width = Math.floor(rect.width * dpr);
+      cvs.height = Math.floor(rect.height * dpr);
+      const ctx = cvs.getContext("2d");
+      if (!ctx) return;
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, cvs.width, cvs.height);
+      if (prev.width && prev.height) ctx.drawImage(prev, 0, 0, cvs.width, cvs.height);
+    };
+    resize();
+    window.addEventListener("resize", resize);
+    return () => window.removeEventListener("resize", resize);
+  }, []);
+
+  const getPos = (e: React.PointerEvent<HTMLCanvasElement>) => {
+    const cvs = canvasRef.current!;
+    const rect = cvs.getBoundingClientRect();
+    const scaleX = cvs.width / rect.width;
+    const scaleY = cvs.height / rect.height;
+    return { x: (e.clientX - rect.left) * scaleX, y: (e.clientY - rect.top) * scaleY };
+  };
+
+  const draw = (from: { x: number; y: number }, to: { x: number; y: number }) => {
+    const cvs = canvasRef.current!;
+    const ctx = cvs.getContext("2d");
+    if (!ctx) return;
+    const dpr = window.devicePixelRatio || 1;
+    ctx.strokeStyle = color;
+    ctx.lineWidth = size * dpr;
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+    ctx.beginPath();
+    ctx.moveTo(from.x, from.y);
+    ctx.lineTo(to.x, to.y);
+    ctx.stroke();
+  };
+
+  const clear = () => {
+    const cvs = canvasRef.current;
+    if (!cvs) return;
+    const ctx = cvs.getContext("2d");
+    if (!ctx) return;
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, cvs.width, cvs.height);
+  };
+
+  return (
+    <div className="min-h-screen w-full bg-immersive flex flex-col p-3 gap-3 animate-slot-in">
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <div>
+          <div className="text-[10px] uppercase tracking-[0.4em] text-[color:var(--cyan)]">Whiteboard</div>
+          {title && <div className="text-xl font-bold text-glow">{title}</div>}
+        </div>
+        <div className="flex items-center gap-2 flex-wrap">
+          {WB_COLORS.map(col => (
+            <button key={col} aria-label="colour" onClick={() => setColor(col)}
+              className="w-8 h-8 rounded-full border-2"
+              style={{ background: col, borderColor: col === color ? "var(--cyan)" : "transparent", boxShadow: col === color ? "0 0 0 2px #0b0b0b" : undefined }} />
+          ))}
+          <div className="flex items-center gap-2 ml-2">
+            {[3, 6, 12, 24].map(s => (
+              <button key={s} onClick={() => setSize(s)}
+                className={`w-9 h-9 rounded-full border-2 flex items-center justify-center ${size === s ? "border-[color:var(--cyan)]" : "border-border"}`}
+                aria-label={`brush ${s}`}>
+                <span className="rounded-full bg-foreground" style={{ width: s, height: s }} />
+              </button>
+            ))}
+          </div>
+          <Button onClick={clear} variant="outline" className="h-9 text-xs uppercase tracking-widest">Clear</Button>
+        </div>
+      </div>
+      <div className="flex-1 min-h-0 rounded-2xl overflow-hidden border-4 border-[color:var(--cyan)]/40 bg-white touch-none">
+        <canvas
+          ref={canvasRef}
+          className="w-full h-full block touch-none cursor-crosshair"
+          onPointerDown={(e) => {
+            (e.target as Element).setPointerCapture?.(e.pointerId);
+            drawingRef.current = true;
+            lastRef.current = getPos(e);
+          }}
+          onPointerMove={(e) => {
+            if (!drawingRef.current || !lastRef.current) return;
+            const p = getPos(e);
+            draw(lastRef.current, p);
+            lastRef.current = p;
+          }}
+          onPointerUp={() => { drawingRef.current = false; lastRef.current = null; }}
+          onPointerLeave={() => { drawingRef.current = false; lastRef.current = null; }}
+        />
       </div>
     </div>
   );
