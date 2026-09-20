@@ -24,7 +24,8 @@ import {
   isRateLimited,
   recordUsage,
 } from "../_shared/rateLimit.ts";
-import { buildSystemPrompt, buildUserPrompt, type Brief } from "./prompt.ts";
+import { blueprintFor, buildSystemPrompt, buildUserPrompt, type Brief } from "./prompt.ts";
+import type { BlueprintSlot } from "./blueprint.ts";
 
 // Generous because gemini-2.5-flash has a very large context window and a whole
 // staff PowerPoint plus speaker notes routinely runs past 50k characters. The
@@ -113,15 +114,37 @@ function parseLoosely(text: string): unknown | null {
   return null;
 }
 
+// ─── Blueprint enforcement ──────────────────────────────────
+// The skeleton is decided in code, so the model's phase, recipe and duration
+// are overwritten by index rather than trusted. This is what stops the balance
+// drifting: whatever the model returns, the shape is the one we asked for.
+// deno-lint-ignore no-explicit-any
+function enforceBlueprint(data: any, blueprint: BlueprintSlot[]): void {
+  if (!Array.isArray(data?.slots)) return;
+  data.slots.forEach((slot: Record<string, unknown>, i: number) => {
+    const planned = blueprint[i];
+    if (!planned || !slot || typeof slot !== "object") return;
+    slot.lead_phase = planned.phase;
+    slot.recipe = planned.recipe;
+    slot.duration_mins = planned.minutes;
+  });
+  // Anything past the blueprint was not asked for.
+  if (data.slots.length > blueprint.length) data.slots.length = blueprint.length;
+}
+
 // ─── Shallow shape check, enough to decide on a retry ───────
-function shapeIssues(data: unknown): string[] {
+function shapeIssues(data: unknown, expectedSlots: number): string[] {
   const issues: string[] = [];
   // deno-lint-ignore no-explicit-any
   const d = data as any;
   if (!d || typeof d !== "object") return ["response was not a JSON object"];
   if (!d.lesson?.title) issues.push("lesson.title is missing");
   if (!Array.isArray(d.slots)) return [...issues, "slots is not an array"];
-  if (d.slots.length < 3) issues.push(`only ${d.slots.length} slots were returned; at least 3 are needed`);
+  if (d.slots.length !== expectedSlots) {
+    issues.push(
+      `${d.slots.length} slots were returned but the running order has exactly ${expectedSlots}; return one slot per line of the running order, in the same order`,
+    );
+  }
 
   d.slots.forEach((slot: Record<string, unknown>, i: number) => {
     for (const screen of ["host", "screen1", "screen2"]) {
@@ -132,7 +155,7 @@ function shapeIssues(data: unknown): string[] {
       }
       if (!content.type || !LEGAL_TYPES.has(content.type)) {
         issues.push(
-          `slots[${i}].${screen}.type "${content.type}" is not one of the 14 legal content types`,
+          `slots[${i}].${screen}.type "${content.type}" is not one of the legal content types`,
         );
       }
     }
@@ -328,7 +351,8 @@ serve(async (req) => {
       return json({ ok: false, error: "Describe the topic before generating." }, 400);
     }
 
-    const system = buildSystemPrompt(brief);
+    const blueprint = blueprintFor(brief);
+    const system = buildSystemPrompt(brief, blueprint);
     let user = buildUserPrompt(brief);
     if (user.length > MAX_TOTAL_INPUT_CHARS) {
       const originalChars = user.length;
@@ -346,7 +370,7 @@ serve(async (req) => {
     const started = Date.now();
     let text = await callModel(apiKey, system, user, temperature);
     let data = parseLoosely(text);
-    let issues = data ? shapeIssues(data) : ["the response could not be parsed as JSON"];
+    let issues = data ? shapeIssues(data, blueprint.length) : ["the response could not be parsed as JSON"];
     let retried = false;
 
     // One repair turn. Handing the model its own errors is far more effective
@@ -366,7 +390,7 @@ Return ONLY the JSON object.`,
         0.3,
       );
       data = parseLoosely(text);
-      issues = data ? shapeIssues(data) : ["the response could not be parsed as JSON"];
+      issues = data ? shapeIssues(data, blueprint.length) : ["the response could not be parsed as JSON"];
     }
 
     if (!data || issues.length > 0) {
@@ -386,6 +410,9 @@ Return ONLY the JSON object.`,
         422,
       );
     }
+
+    // Force the agreed skeleton on before anything else looks at the slots.
+    enforceBlueprint(data, blueprint);
 
     const droppedVideos = await validateVideos(data);
 

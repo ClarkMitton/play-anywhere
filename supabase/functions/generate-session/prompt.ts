@@ -8,7 +8,8 @@
 // physical three-screen room, which Lesson Weaver knows nothing about.
 // ─────────────────────────────────────────────────────────────
 
-import { renderRecipeCatalogue, RECIPE_IDS } from "./recipes.ts";
+import { renderRecipeCatalogue } from "./recipes.ts";
+import { buildBlueprint, renderBlueprint, type BlueprintSlot } from "./blueprint.ts";
 
 export type Brief = {
   topic: string;
@@ -102,6 +103,48 @@ HARD PER-SCREEN RULES, enforced by validation after you answer:
 - A confidence_checker with checkpoint "final" makes the host render a
   start-versus-now comparison. It only works if an earlier slot used
   checkpoint "start".
+═══════════════════════════════════════════════════════════════`;
+
+// ─── NEW: what each tool is actually for ────────────────────
+const TOOL_PURPOSE = `
+═══ CHOOSING THE RIGHT TOOL ═══
+Picking a legal tool is not the same as picking the right one. For each, what it
+is for, and what to use instead when it is the wrong fit.
+
+- text_slide — a headline or an instruction. NOT for explaining at length: it is
+  read at a distance by a whole class. If you are writing a paragraph, the point
+  belongs in the teacher script or on an image.
+- image — anything learners should look at, judge or find something in. The
+  single most underused tool. If a question refers to a picture, the picture
+  MUST stay on the Host while the question is answered on Touch Screen 2. Never
+  ask about an image in a later slot: it has gone from the screen by then.
+- youtube — a real clip you are confident exists. Unverifiable urls are dropped
+  automatically, so do not pad with guesses.
+- confidence_checker — how learners FEEL, at the start and end. NOT a knowledge
+  check: it has no right answer. Use multiple_choice for knowledge.
+- voting — opinion or judgement with no right answer ("which is the worst
+  hazard?"). NOT for facts. Use multiple_choice if there is a correct option.
+- word_cloud — open brainstorm where many answers are valid and you want
+  everyone contributing ("what PPE can you name?"). This is the tool for
+  gathering lots of short answers. NOT for one right answer: use quiz_buzzer.
+- quiz_buzzer — ONE correct answer, fast recall, first team to buzz, and the
+  other team locked out. Energising and competitive. NOT for open brainstorms
+  (use word_cloud) and NOT where learners need thinking time (use
+  question_round). Best as revision of things already taught.
+- wheel_spinner — choosing at random: who answers, which scenario, which role.
+  NOT a quiz.
+- countdown_timer — visible time pressure for work happening away from the
+  screens. Always pair with a SHAREBACK so the work is captured.
+- multiple_choice / true_or_false — one right answer, everyone answers, results
+  revealed together. Make the wrong options genuinely plausible: if two of three
+  are obviously safe, the question tests nothing.
+- question_round — several questions in a row at the teacher's pace, both touch
+  screens answering. The right tool for end-of-lesson assessment.
+- whiteboard — sketching, labelling or working out where writing a sentence
+  would be the barrier rather than the task. Saves nothing, so never assess with it.
+- padlet — collecting longer written contributions that stay on the board.
+- host_timer — pacing only the teacher sees.
+- waiting — only while the teacher is talking to the room.
 ═══════════════════════════════════════════════════════════════`;
 
 // ─── PORTED: style rules ────────────────────────────────────
@@ -329,8 +372,7 @@ function pacingBlock(brief: Brief): string {
 
   return `
 ═══ PACING FOR THIS LESSON ═══
-- Total length: ${brief.durationMins} minutes. The slot durations you emit must add up to it.
-- Aim for one interactive slot per 10 minutes at minimum.
+- Total length: ${brief.durationMins} minutes.
 - Never more than two passive slides in a row.
 
 ═══ TEACH BEFORE YOU TEST ═══
@@ -351,17 +393,6 @@ This is a 300 inch immersive screen, not a projector.
   have produced.
 - A strong image can carry more than one slot: show the scene, then question it,
   then have learners judge or justify.
-
-═══ APPLY IS WHERE THE LESSON LIVES ═══
-Establish teaches; Apply is where learners do something with it. Getting this
-wrong produces a lesson that is all exposition and no practice.
-- Apply MUST have more minutes than any other phase, and more than Establish.
-- Apply MUST contain at least two ACTIVITY slots. An activity means TEAM_BUZZER,
-  SPOT_THE_HAZARD, SPIN_AND_ANSWER, TIMED_TASK (with its SHAREBACK),
-  QUESTION_CAROUSEL or SKETCH_IT. A TEACH beat is NOT an activity, and neither
-  is a single question.
-- If you find yourself writing a third TEACH, replace it with an activity that
-  makes learners use what they already have.
 
 ═══ NAME SLOTS FOR THE TUTOR, NOT FOR ME ═══
 The slot name is printed on the lesson plan and read by a tutor and an observer.
@@ -391,24 +422,42 @@ recipe field and nowhere else.
 - For a title or closing slide, prefer giving the touch screens something
   additive, such as the lesson outcomes or a short "tap when you are ready"
   prompt, rather than an identical copy of the Host.
-- Between 6 and 20 slots. Fewer than 6 in an hour means the room is idling.
-- Apply should get more minutes than any other phase.
 - ${shapeLine}
 - ${groupLine}
 - ${screenLine}
-${brief.includeConfidenceArc ? "- The tutor asked for the confidence arc: CONFIDENCE_BASELINE second, CONFIDENCE_FINAL second to last." : "- The tutor turned the confidence arc off. Do not use CONFIDENCE_BASELINE or CONFIDENCE_FINAL."}
-- The first slot is TITLE_MIRROR and the last is EXIT_FORM.
-- Every slot must name a recipe from: ${RECIPE_IDS.join(", ")}. At most two FREEFORM.
+- The running order, phases and durations are given to you below. Do not change
+  them: fill in the content for each slot as briefed.
 ═══════════════════════════════════════════════════════════════`;
 }
 
-export function buildSystemPrompt(brief: Brief): string {
+/** The skeleton this lesson must follow. The caller forces it back on afterwards. */
+export function blueprintFor(brief: Brief): BlueprintSlot[] {
+  return buildBlueprint({
+    durationMins: brief.durationMins,
+    shape: brief.shape,
+    threeScreens: brief.threeScreens,
+    groupSize: brief.groupSize,
+    includeConfidenceArc: brief.includeConfidenceArc,
+  });
+}
+
+export function buildSystemPrompt(brief: Brief, blueprint: BlueprintSlot[]): string {
   return [
     `You are an expert lesson designer for Bradford College, working in the LEAD framework (Launch, Establish, Apply, Demonstrate). You author sessions for a physical three-screen immersive learning room.`,
     STYLE_BLOCK,
     ROOM_BLOCK,
     TOOL_CATALOGUE,
+    TOOL_PURPOSE,
     LEAD_BLOCK,
+    `═══ THE RUNNING ORDER YOU MUST FILL IN ═══
+This lesson has EXACTLY ${blueprint.length} slots. The phase, recipe and
+duration of each are already decided. Return exactly ${blueprint.length} slots,
+in this order, using these recipes. Do not add, remove, merge or reorder them.
+Your job is the content: what appears on each of the three screens, the slot
+name, and the teacher script.
+
+${renderBlueprint(blueprint)}
+═══════════════════════════════════════════════════════════════`,
     `═══ RECIPES — SELECT AND PARAMETERISE, DO NOT INVENT ═══\n${renderRecipeCatalogue({
       threeScreens: brief.threeScreens,
       groupSize: brief.groupSize,
