@@ -246,6 +246,16 @@ function repairSlot(
   }
 
   if (typeof slot.name !== "string" || !slot.name.trim()) slot.name = `Slot ${index + 1}`;
+
+  // Recipe ids are internal vocabulary. They leak into slot names, and the name
+  // is printed on the lesson plan a tutor and an observer read.
+  if (typeof slot.name === "string") {
+    const cleaned = slot.name.replace(/^\s*[A-Z][A-Z_]{3,}\s*[:\-–]\s*/, "").trim();
+    if (cleaned && cleaned !== slot.name) {
+      slot.name = cleaned;
+      warn(`removed the recipe id from the slot name, leaving "${cleaned}"`);
+    }
+  }
 }
 
 // ─────────────────────────────────────────────

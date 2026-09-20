@@ -352,6 +352,24 @@ This is a 300 inch immersive screen, not a projector.
 - A strong image can carry more than one slot: show the scene, then question it,
   then have learners judge or justify.
 
+═══ APPLY IS WHERE THE LESSON LIVES ═══
+Establish teaches; Apply is where learners do something with it. Getting this
+wrong produces a lesson that is all exposition and no practice.
+- Apply MUST have more minutes than any other phase, and more than Establish.
+- Apply MUST contain at least two ACTIVITY slots. An activity means TEAM_BUZZER,
+  SPOT_THE_HAZARD, SPIN_AND_ANSWER, TIMED_TASK (with its SHAREBACK),
+  QUESTION_CAROUSEL or SKETCH_IT. A TEACH beat is NOT an activity, and neither
+  is a single question.
+- If you find yourself writing a third TEACH, replace it with an activity that
+  makes learners use what they already have.
+
+═══ NAME SLOTS FOR THE TUTOR, NOT FOR ME ═══
+The slot name is printed on the lesson plan and read by a tutor and an observer.
+Write plain English: "What is PPE?", "Spot the hazards", "Team quiz".
+NEVER put a recipe id in the name. "TEACH: What is PPE?", "WORD_STORM: More PPE"
+and "SHOW_WHAT_YOU_KNOW: Safety Quiz" are all wrong. The recipe goes in the
+recipe field and nowhere else.
+
 ═══ COVER EVERY OUTCOME ═══
 - Each learning outcome must be served by at least one Apply or Demonstrate
   beat. Do not cover one outcome three times and another once.
