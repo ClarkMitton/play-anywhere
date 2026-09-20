@@ -107,6 +107,29 @@ HARD PER-SCREEN RULES, enforced by validation after you answer:
 
 // ─── NEW: what each tool is actually for ────────────────────
 const TOOL_PURPOSE = `
+═══ OFFER THE TUTOR A CHOICE ═══
+A sequence is one moment in the lesson: all three screens together, before the
+room moves on. For a sequence where the same learning point could genuinely be
+taught a DIFFERENT way, give up to 2 alternatives in its "alternatives" array,
+so the tutor picks what suits the group in front of them.
+
+- An alternative replaces the WHOLE sequence, all three screens, because both
+  touch screens must always match. Never offer a different activity for one
+  touch screen than the other.
+- Alternatives must teach the SAME learning point by a DIFFERENT means. A team
+  buzzer, a hazard-spotting picture and a word cloud can all cover recognising
+  hazards; those are good alternatives. The same question with easier wording
+  is not: that is not a choice worth a tutor's time.
+- Give each one a short label naming the tool ("Team buzzer", "Word cloud")
+  and a one-line "why" saying which group it suits.
+- Offer alternatives ONLY where a real choice exists. A title slide, a
+  confidence check and a closing message have one sensible version each, so
+  leave their alternatives array empty rather than padding it.
+- Where the running order says ACTIVITY, you choose the tool. Pick what fits
+  the topic: hazard spotting suits practical trades, a word cloud suits
+  vocabulary, a vote suits judgement, a buzzer suits recall. Do not reach for
+  the same one every time.
+
 ═══ BOTH TOUCH SCREENS ALWAYS SHOW THE SAME ACTIVITY ═══
 The room holds a big class and learners stand at BOTH touch screens at once.
 So whenever learners are doing something, Touch Screen 1 and Touch Screen 2 must
@@ -330,7 +353,11 @@ const OUTPUT_CONTRACT = `
       "recipe": "one of the recipe ids",
       "host": { "type": "..." },
       "screen1": { "type": "..." },
-      "screen2": { "type": "..." }
+      "screen2": { "type": "..." },
+      "alternatives": [
+        { "label": "Team buzzer", "why": "competitive and quick, good for a lively group",
+          "host": { "type": "..." }, "screen1": { "type": "..." }, "screen2": { "type": "..." } }
+      ]
     }
   ]
 }

@@ -125,8 +125,16 @@ function enforceBlueprint(data: any, blueprint: BlueprintSlot[]): void {
     const planned = blueprint[i];
     if (!planned || !slot || typeof slot !== "object") return;
     slot.lead_phase = planned.phase;
-    slot.recipe = planned.recipe;
     slot.duration_mins = planned.minutes;
+    // "ACTIVITY" is a placeholder the model fills, so keep its choice there and
+    // only fall back if it returned nothing usable.
+    if (planned.recipe === "ACTIVITY") {
+      if (typeof slot.recipe !== "string" || !slot.recipe.trim() || slot.recipe === "ACTIVITY") {
+        slot.recipe = planned.choices?.[0] ?? "QUESTION_CAROUSEL";
+      }
+    } else {
+      slot.recipe = planned.recipe;
+    }
   });
   // Anything past the blueprint was not asked for.
   if (data.slots.length > blueprint.length) data.slots.length = blueprint.length;

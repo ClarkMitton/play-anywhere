@@ -13,10 +13,13 @@
 
 export type BlueprintSlot = {
   phase: "Launch" | "Establish" | "Apply" | "Demonstrate";
+  /** A recipe id, or "ACTIVITY" when the model picks from `choices`. */
   recipe: string;
   minutes: number;
   /** What this slot is for. Goes to the model as the brief for that slot. */
   purpose: string;
+  /** Recipes the model may choose between when recipe is "ACTIVITY". */
+  choices?: string[];
 };
 
 export type BlueprintOpts = {
@@ -27,11 +30,30 @@ export type BlueprintOpts = {
   includeConfidenceArc: boolean;
 };
 
-/** Apply-phase activities, in preference order per lesson style. */
+/**
+ * Apply-phase activities the model may choose from, per lesson style.
+ *
+ * The blueprint fixes HOW MANY activities and how long each runs, because that
+ * is the arithmetic the model kept getting wrong. WHICH activity fills each
+ * slot is left to the model, because that depends on the topic and it knows
+ * the topic. Fixing both produced an identical lesson every time: hazard
+ * spotting then a buzzer then a vote, whatever the subject was.
+ */
 const ACTIVITY_POOLS: Record<BlueprintOpts["shape"], string[]> = {
-  "quiz-heavy": ["QUESTION_CAROUSEL", "TEAM_BUZZER", "SPIN_AND_ANSWER", "SPOT_THE_HAZARD"],
-  "discussion-heavy": ["SPOT_THE_HAZARD", "VOTE_AND_DISCUSS", "WORD_STORM", "SKETCH_IT"],
-  balanced: ["SPOT_THE_HAZARD", "TEAM_BUZZER", "VOTE_AND_DISCUSS", "QUESTION_CAROUSEL"],
+  "quiz-heavy": ["QUESTION_CAROUSEL", "TEAM_BUZZER", "SPIN_AND_ANSWER", "TIMED_TASK"],
+  "discussion-heavy": ["VOTE_AND_DISCUSS", "WORD_STORM", "SKETCH_IT", "TIMED_TASK"],
+  // SPOT_THE_HAZARD is deliberately absent: it only makes sense for practical
+  // and safety topics, and as the first entry here it became the default
+  // opening activity for every lesson including ESOL and employability. The
+  // model can still pick it, since it appears in the recipe catalogue.
+  balanced: [
+    "QUESTION_CAROUSEL",
+    "TEAM_BUZZER",
+    "VOTE_AND_DISCUSS",
+    "WORD_STORM",
+    "TIMED_TASK",
+    "SKETCH_IT",
+  ],
 };
 
 const PURPOSE: Record<string, string> = {
@@ -44,6 +66,8 @@ const PURPOSE: Record<string, string> = {
   CONFIDENCE_FINAL: "Close the confidence arc so the Host can show the before and after comparison.",
   EXIT_FORM: "Close the session positively and briefly.",
   SHAREBACK: "Capture what the groups produced in the task before it, so the work is seen rather than lost.",
+  ACTIVITY:
+    "Learners DO something with what has been taught. Choose the tool that fits this topic, and do not repeat one already used in this lesson. If you choose TIMED_TASK, follow it with a way to capture what the groups produced.",
 };
 
 function purposeFor(recipe: string): string {
@@ -73,7 +97,7 @@ export function buildBlueprint(opts: BlueprintOpts): BlueprintSlot[] {
 
   // 1. Decide WHICH slots exist. How long each runs is worked out afterwards,
   //    so the total always lands exactly on the requested length.
-  const plan: { phase: BlueprintSlot["phase"]; recipe: string }[] = [];
+  const plan: { phase: BlueprintSlot["phase"]; recipe: string; choices?: string[] }[] = [];
 
   plan.push({ phase: "Launch", recipe: "TITLE_MIRROR" });
   if (includeConfidenceArc) plan.push({ phase: "Launch", recipe: "CONFIDENCE_BASELINE" });
@@ -92,12 +116,11 @@ export function buildBlueprint(opts: BlueprintOpts): BlueprintSlot[] {
     if (groupSize > 16 && r === "VOTE_AND_DISCUSS") return false;
     return true;
   });
-  const activities = Math.min(pool.length, Math.min(4, Math.max(2, Math.ceil(durationMins / 20))));
+  const activities = Math.min(4, Math.max(2, Math.ceil(durationMins / 20)));
   for (let i = 0; i < activities; i++) {
-    const recipe = pool[i % pool.length];
-    plan.push({ phase: "Apply", recipe });
-    // A timed task nobody shares back loses the work the groups did.
-    if (recipe === "TIMED_TASK") plan.push({ phase: "Apply", recipe: "SHAREBACK" });
+    // ACTIVITY is a placeholder the model fills from `pool`. Naming a specific
+    // recipe here is what made every lesson identical.
+    plan.push({ phase: "Apply", recipe: "ACTIVITY", choices: pool });
   }
 
   plan.push({ phase: "Demonstrate", recipe: "SHOW_WHAT_YOU_KNOW" });
@@ -178,14 +201,18 @@ export function buildBlueprint(opts: BlueprintOpts): BlueprintSlot[] {
     recipe: p.recipe,
     minutes: minutes[i],
     purpose: purposeFor(p.recipe),
+    choices: p.choices,
   }));
 }
 
 export function renderBlueprint(slots: BlueprintSlot[]): string {
   return slots
-    .map(
-      (s, i) =>
-        `${i + 1}. [${s.phase}] recipe ${s.recipe} — about ${s.minutes} min\n   Purpose: ${s.purpose}`,
-    )
+    .map((s, i) => {
+      const what =
+        s.recipe === "ACTIVITY"
+          ? `choose ONE recipe from: ${(s.choices ?? []).join(", ")}`
+          : `recipe ${s.recipe}`;
+      return `${i + 1}. [${s.phase}] ${what} — about ${s.minutes} min\n   Purpose: ${s.purpose}`;
+    })
     .join("\n");
 }

@@ -394,6 +394,32 @@ export function repairAndValidate(raw: unknown, brief: Brief): RepairResult {
       (message) => warnings.push({ slotIndex: i, message }),
       (m) => needed.push(m),
     );
+
+    // Alternatives get the same treatment. A tutor picking one must not be
+    // able to select a version that breaks the mirroring or screen rules, and
+    // warnings from them would only be noise, so they are repaired silently.
+    if (Array.isArray(slot.alternatives)) {
+      slot.alternatives = slot.alternatives
+        .filter(isObj)
+        .slice(0, 2)
+        .map((alt: any) => {
+          const shim = {
+            name: slot.name,
+            duration_mins: slot.duration_mins,
+            host: alt.host,
+            screen1: alt.screen1,
+            screen2: alt.screen2,
+          };
+          repairSlot(
+            shim,
+            i,
+            brief,
+            () => {},
+            (m) => needed.push(m),
+          );
+          return { ...alt, host: shim.host, screen1: shim.screen1, screen2: shim.screen2 };
+        });
+    }
   });
 
   // Drop anything still unsalvageable rather than failing the whole lesson.

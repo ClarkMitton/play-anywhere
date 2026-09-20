@@ -214,6 +214,23 @@ export function isAnswerCollecting(type: string): boolean {
   return (ANSWER_COLLECTING as readonly string[]).includes(type);
 }
 
+/**
+ * An alternative way to run the same moment.
+ *
+ * A sequence is all three screens together, so an alternative replaces the
+ * whole set rather than one screen: swapping only Touch Screen 1 would break
+ * the rule that both touch screens always show the same activity.
+ */
+export const slotAlternativeSchema = z.object({
+  label: z.string().min(1),
+  why: z.string().default(""),
+  host: contentSchema,
+  screen1: contentSchema,
+  screen2: contentSchema,
+});
+
+export type SlotAlternative = z.infer<typeof slotAlternativeSchema>;
+
 export const generatedSlotSchema = z
   .object({
     name: z.string().min(1),
@@ -223,6 +240,8 @@ export const generatedSlotSchema = z
     host: contentSchema,
     screen1: contentSchema,
     screen2: contentSchema,
+    /** Other ways to run this moment. Empty where there is no real choice. */
+    alternatives: z.array(slotAlternativeSchema).max(2).default([]),
   })
   .superRefine((slot, ctx) => {
     // host_timer is invisible to the touch screens, so putting it there leaves

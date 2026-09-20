@@ -24,6 +24,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { GeneratedSessionReview } from "@/components/GeneratedSessionReview";
+import { SequenceChooser } from "@/components/SequenceChooser";
 import { extractDocumentRich } from "@/lib/documentParser";
 import { applyImageToSession, fetchImage, type ImageSource } from "@/lib/fetchImage";
 import { generateSession } from "@/lib/generateSession";
@@ -46,13 +47,14 @@ const ACCEPT = ".pdf,.docx,.pptx,.txt";
 
 type ParsedDoc = { name: string; text: string; pages: number };
 
-type Stage = "form" | "parsing" | "generating" | "validating" | "review";
+type Stage = "form" | "parsing" | "generating" | "validating" | "choosing" | "review";
 
 const STAGE_PROGRESS: Record<Stage, number> = {
   form: 0,
   parsing: 20,
   generating: 55,
   validating: 85,
+  choosing: 95,
   review: 100,
 };
 
@@ -61,6 +63,7 @@ const STAGE_LABEL: Record<Stage, string> = {
   parsing: "Reading your documents…",
   generating: "Designing the session across three screens…",
   validating: "Checking every slot is legal…",
+  choosing: "Choose how to run it",
   review: "Ready",
 };
 
@@ -188,7 +191,8 @@ function GeneratePage() {
 
     setSession(result.session);
     setWarnings(result.warnings);
-    setStage("review");
+    // Offer the choices first; the chooser skips itself when there are none.
+    setStage("choosing");
 
     if (response.meta?.droppedVideos > 0) {
       toast.warning(
@@ -285,6 +289,33 @@ function GeneratePage() {
       setSaving(false);
     }
   };
+
+  // ── Choose how each sequence runs ──
+  const applyChoices = (choices: Record<number, number>) => {
+    if (!session) return;
+    const picked = session.slots.map((slot, i) => {
+      const choice = choices[i];
+      if (!choice) return slot; // 0 or undefined means the original
+      const alt = slot.alternatives?.[choice - 1];
+      if (!alt) return slot;
+      return { ...slot, host: alt.host, screen1: alt.screen1, screen2: alt.screen2 };
+    });
+    setSession({ ...session, slots: picked } as GeneratedSession);
+    setStage("review");
+  };
+
+  if (stage === "choosing" && session) {
+    return (
+      <SequenceChooser
+        session={session}
+        onConfirm={applyChoices}
+        onBack={() => {
+          setSession(null);
+          setStage("form");
+        }}
+      />
+    );
+  }
 
   // ── Review ──
   if (stage === "review" && session) {
