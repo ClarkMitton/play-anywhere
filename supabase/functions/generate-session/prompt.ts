@@ -107,6 +107,20 @@ HARD PER-SCREEN RULES, enforced by validation after you answer:
 
 // ─── NEW: what each tool is actually for ────────────────────
 const TOOL_PURPOSE = `
+═══ BOTH TOUCH SCREENS ALWAYS SHOW THE SAME ACTIVITY ═══
+The room holds a big class and learners stand at BOTH touch screens at once.
+So whenever learners are doing something, Touch Screen 1 and Touch Screen 2 must
+carry the IDENTICAL payload. Anything else leaves half the class unable to join in.
+
+The consequence for questions: a single multiple_choice or true_or_false is
+rendered ONLY on Touch Screen 2 and shows a blank standby screen on Touch Screen
+1, so it is the wrong tool for this room. Use question_round instead, with one
+question in it if that is all you need. question_round accepts answers on both
+touch screens.
+
+Touch screens may differ ONLY when nobody is being asked to do anything, such as
+a title or closing slide where they carry the outcomes or a closing message.
+
 ═══ CHOOSING THE RIGHT TOOL ═══
 Picking a legal tool is not the same as picking the right one. For each, what it
 is for, and what to use instead when it is the wrong fit.
@@ -135,11 +149,13 @@ is for, and what to use instead when it is the wrong fit.
   NOT a quiz.
 - countdown_timer — visible time pressure for work happening away from the
   screens. Always pair with a SHAREBACK so the work is captured.
-- multiple_choice / true_or_false — one right answer, everyone answers, results
-  revealed together. Make the wrong options genuinely plausible: if two of three
-  are obviously safe, the question tests nothing.
-- question_round — several questions in a row at the teacher's pace, both touch
-  screens answering. The right tool for end-of-lesson assessment.
+- multiple_choice / true_or_false — AVOID in this room. They only render on
+  Touch Screen 2, so learners at Touch Screen 1 get a blank screen. Wrap the
+  question in a question_round instead, even a round of one.
+- question_round — the default question tool here, because BOTH touch screens
+  show it and both can answer. Several questions at the teacher's pace. Also
+  the right tool for end-of-lesson assessment. Make wrong options genuinely
+  plausible: if two of three are obviously safe, the question tests nothing.
 - whiteboard — sketching, labelling or working out where writing a sentence
   would be the barrier rather than the task. Saves nothing, so never assess with it.
 - padlet — collecting longer written contributions that stay on the board.

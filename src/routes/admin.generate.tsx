@@ -219,14 +219,19 @@ function GeneratePage() {
   const fetchOne = async (requestIndex: number, current: GeneratedSession) => {
     if (imageSource === "none") return current;
     const request = current.media_requests[requestIndex];
-    if (!request || request.kind !== "image") return current;
+    if (!request) return current;
 
     const key = `${request.slot_index}:${request.screen}`;
     if (filledImages.has(key)) return current;
 
     setBusyImages((prev) => new Set(prev).add(key));
     try {
-      const result = await fetchImage(imageSource, request.search_phrase, request.why);
+      const result = await fetchImage(
+        imageSource,
+        request.search_phrase,
+        request.why,
+        request.kind,
+      );
       if (!result.ok) {
         toast.error(`Slot ${request.slot_index + 1}: ${result.error}`);
         return current;
@@ -237,6 +242,7 @@ function GeneratePage() {
         request.screen,
         result.url,
         request.search_phrase,
+        request.kind,
       );
       setFilledImages((prev) => new Set(prev).add(key));
       return next;

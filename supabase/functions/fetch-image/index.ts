@@ -32,6 +32,52 @@ function badRequest(message: string) {
   return json({ ok: false, error: message }, 400);
 }
 
+/**
+ * Finds a real, embeddable YouTube video.
+ *
+ * Asking a language model for a video url does not work: it produces plausible
+ * ids for videos that do not exist, which is why every generated lesson so far
+ * has ended up with a placeholder instead of a clip. Searching the actual index
+ * is the only way to get a url that resolves.
+ */
+async function findVideo(query: string): Promise<{ url: string; title: string }> {
+  const key = Deno.env.get("YOUTUBE_API_KEY");
+  if (!key) {
+    throw new Error(
+      "Video search is not configured. Add YOUTUBE_API_KEY, or paste a video link into the slot yourself.",
+    );
+  }
+
+  const params = new URLSearchParams({
+    key,
+    q: query,
+    part: "snippet",
+    type: "video",
+    maxResults: "1",
+    // Only videos that can actually play inside the room's iframe.
+    videoEmbeddable: "true",
+    safeSearch: "strict",
+    relevanceLanguage: "en",
+    regionCode: "GB",
+  });
+
+  const res = await fetch(`https://www.googleapis.com/youtube/v3/search?${params}`);
+  if (!res.ok) {
+    const detail = (await res.text()).slice(0, 200);
+    throw new Error(`YouTube search failed (${res.status}). ${detail}`);
+  }
+
+  const data = await res.json();
+  const item = data?.items?.[0];
+  const id = item?.id?.videoId;
+  if (!id) throw new Error(`No embeddable video found for "${query}". Try different wording.`);
+
+  return {
+    url: `https://www.youtube.com/watch?v=${id}`,
+    title: String(item?.snippet?.title ?? query),
+  };
+}
+
 async function fromPexels(query: string): Promise<{ bytes: Uint8Array; contentType: string }> {
   const key = Deno.env.get("PEXELS_API_KEY");
   if (!key) {
@@ -130,7 +176,14 @@ serve(async (req) => {
     const query = String(body?.query ?? "").trim();
     const context = String(body?.context ?? "").trim();
 
-    if (!query) return badRequest("An image description is required.");
+    if (!query) return badRequest("A description is required.");
+
+    // Video is a link, not a stored file, so it short-circuits before upload.
+    if (String(body?.kind ?? "image") === "youtube") {
+      const video = await findVideo(query);
+      return json({ ok: true, url: video.url, title: video.title, source: "youtube" });
+    }
+
     if (source !== "stock" && source !== "ai") return badRequest("source must be stock or ai.");
 
     const prompt = source === "ai"

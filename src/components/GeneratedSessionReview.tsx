@@ -203,13 +203,19 @@ export function GeneratedSessionReview({
                       <span className="text-xs uppercase tracking-widest text-[color:var(--success)] shrink-0">
                         ✓ added
                       </span>
-                    ) : imageSource !== "none" && m.kind === "image" ? (
+                    ) : imageSource !== "none" || m.kind === "youtube" ? (
                       <button
                         onClick={() => onFetchImage(i)}
                         disabled={busy}
                         className="text-xs uppercase tracking-widest text-[color:var(--cyan)] hover:underline shrink-0 disabled:opacity-40"
                       >
-                        {busy ? "Working…" : imageSource === "ai" ? "Generate" : "Find photo"}
+                        {busy
+                          ? "Working…"
+                          : m.kind === "youtube"
+                            ? "Find video"
+                            : imageSource === "ai"
+                              ? "Generate"
+                              : "Find photo"}
                       </button>
                     ) : null}
 

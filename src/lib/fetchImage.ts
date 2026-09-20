@@ -32,12 +32,15 @@ export async function fetchImage(
   source: Exclude<ImageSource, "none">,
   query: string,
   context: string,
+  kind: "image" | "youtube" = "image",
 ): Promise<FetchImageResult> {
+  // Video always searches the real index: a model-invented id never resolves.
+  const useKeywords = kind === "youtube" || source === "stock";
   const { data, error } = await supabase.functions.invoke("fetch-image", {
-    // Stock matches on keywords; generation reads the full description.
     body: {
       source,
-      query: source === "stock" ? toSearchQuery(query) : query.replace(/^\s*\[ADD IMAGE\]\s*/i, ""),
+      kind,
+      query: useKeywords ? toSearchQuery(query) : query.replace(/^\s*\[ADD IMAGE\]\s*/i, ""),
       context,
     },
   });
@@ -71,13 +74,16 @@ export function applyImageToSession(
   screen: "host" | "screen1" | "screen2",
   url: string,
   caption: string,
+  kind: "image" | "youtube" = "image",
 ): GeneratedSession {
+  const content =
+    kind === "youtube"
+      ? { type: "youtube" as const, url }
+      : { type: "image" as const, url, title: caption };
+
   const slots = session.slots.map((slot, i) => {
     if (i !== slotIndex) return slot;
-    return {
-      ...slot,
-      [screen]: { type: "image" as const, url, title: caption },
-    };
+    return { ...slot, [screen]: content };
   });
   return { ...session, slots } as GeneratedSession;
 }

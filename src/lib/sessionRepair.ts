@@ -51,14 +51,23 @@ function isObj(v: unknown): v is Record<string, any> {
   return typeof v === "object" && v !== null && !Array.isArray(v);
 }
 
-function placeholder(brief: string): Record<string, any> {
+function placeholder(brief: string, kind: "image" | "youtube" = "image"): Record<string, any> {
   return {
     type: "text_slide",
-    text: "[ADD IMAGE]",
+    text: kind === "youtube" ? "[ADD VIDEO]" : "[ADD IMAGE]",
     subtitle: brief,
     size: "md",
   };
 }
+
+/** Media a repair removed, so the review screen can offer to fetch it. */
+export type NeededMedia = {
+  slot_index: number;
+  screen: "host" | "screen1" | "screen2";
+  kind: "image" | "youtube";
+  search_phrase: string;
+  why: string;
+};
 
 /** Only the app's own storage bucket is a trusted source of image urls. */
 function isAllowedImageUrl(url: unknown): boolean {
@@ -74,6 +83,7 @@ function repairSlot(
   index: number,
   brief: Brief,
   warn: (m: string) => void,
+  needMedia: (m: NeededMedia) => void,
 ): void {
   const entry = isEntryLevel(brief.level);
 
@@ -90,25 +100,45 @@ function repairSlot(
     }
   }
 
-  // ── a single question belongs on screen2, with the script on screen1 ──
-  const s1 = slot.screen1;
-  if (isObj(s1) && (s1.type === "multiple_choice" || s1.type === "true_or_false")) {
-    const s2 = slot.screen2;
-    if (!isObj(s2) || s2.type === "waiting") {
-      slot.screen2 = s1;
-      warn("moved the question from Touch Screen 1 to Touch Screen 2, where answers are collected");
-    } else {
-      warn(
-        "removed a duplicate question from Touch Screen 1; answers are collected on Touch Screen 2",
-      );
+  // ── a lone question only renders on Touch Screen 2 ──
+  // The room has learners standing at BOTH touch screens, and a single
+  // multiple_choice or true_or_false shows a blank standby screen on Touch
+  // Screen 1, so half the class cannot answer. question_round renders on both,
+  // so any lone question is wrapped into a round of one and mirrored.
+  const single = SCREENS.map((s) => slot[s]).find(
+    (c) => isObj(c) && (c.type === "multiple_choice" || c.type === "true_or_false"),
+  );
+  if (isObj(single)) {
+    const question =
+      single.type === "true_or_false"
+        ? { type: "true_or_false", text: single.text, correct_tf: single.correct_tf }
+        : {
+            type: "multiple_choice",
+            text: single.text,
+            options: single.options,
+            correct: single.correct,
+          };
+    const round = { type: "question_round", questions: [question] };
+    for (const screen of ["screen1", "screen2"] as const) {
+      slot[screen] = JSON.parse(JSON.stringify(round));
     }
-    slot.screen1 = {
-      type: "text_slide",
-      text: "Question on the big screen",
-      subtitle:
-        "Learners answer on Touch Screen 2. Press Reveal Results on the Host screen when everyone has answered.",
-      size: "md",
-    };
+    // Keep a picture on the Host: a question about an image needs the image
+    // still on screen while it is answered. Otherwise the Host shows the round
+    // so it can display the live count and the reveal.
+    const host = slot.host;
+    // The marker can sit in either the headline or the subtitle, so check both.
+    const hostHoldsPicture =
+      isObj(host) &&
+      (host.type === "image" ||
+        (host.type === "text_slide" &&
+          /\[ADD /i.test(`${host.text ?? ""} ${host.subtitle ?? ""}`)));
+    if (!hostHoldsPicture) slot.host = JSON.parse(JSON.stringify(round));
+
+    warn(
+      hostHoldsPicture
+        ? "put the question on both touch screens and left the picture up on the Host"
+        : "turned a single question into a question round on all three screens, so learners at both touch screens can answer",
+    );
   }
 
   // ── mirror whole-room tools the model only put on the host ──
@@ -150,11 +180,18 @@ function repairSlot(
 
     // Invented image urls are the classic failure: a bad url renders blank.
     if (c.type === "image" && !isAllowedImageUrl(c.url)) {
-      slot[screen] = placeholder(
+      const description =
         typeof c.title === "string" && c.title.trim()
           ? c.title
-          : "Describe the image needed for this slot",
-      );
+          : "Describe the image needed for this slot";
+      slot[screen] = placeholder(description, "image");
+      needMedia({
+        slot_index: index,
+        screen,
+        kind: "image",
+        search_phrase: description,
+        why: "Replaced an invented image url",
+      });
       warn(`replaced an image on ${screen} with a placeholder describing what to source`);
       continue;
     }
@@ -162,7 +199,17 @@ function repairSlot(
     // A malformed YouTube url cannot be played. (Real existence is checked
     // server-side via oEmbed before this runs.)
     if (c.type === "youtube" && !extractYouTubeId(String(c.url ?? ""))) {
-      slot[screen] = placeholder("Find a short clip for this slot");
+      // The model cannot reliably invent a real video id, so this fires often.
+      // Record it as a video to find rather than mislabelling it as an image.
+      const description = String(c.title ?? slot.name ?? brief.topic).slice(0, 120);
+      slot[screen] = placeholder(`Find a short clip: ${description}`, "youtube");
+      needMedia({
+        slot_index: index,
+        screen,
+        kind: "youtube",
+        search_phrase: description,
+        why: "The suggested video did not exist",
+      });
       warn(`replaced an unusable video url on ${screen} with a placeholder`);
       continue;
     }
@@ -337,9 +384,16 @@ export function repairAndValidate(raw: unknown, brief: Brief): RepairResult {
     return { ok: false, issues: ["the model returned no slots array"], warnings };
   }
 
+  const needed: NeededMedia[] = [];
   draft.slots.forEach((slot: any, i: number) => {
     if (!isObj(slot)) return;
-    repairSlot(slot, i, brief, (message) => warnings.push({ slotIndex: i, message }));
+    repairSlot(
+      slot,
+      i,
+      brief,
+      (message) => warnings.push({ slotIndex: i, message }),
+      (m) => needed.push(m),
+    );
   });
 
   // Drop anything still unsalvageable rather than failing the whole lesson.
@@ -371,6 +425,15 @@ export function repairAndValidate(raw: unknown, brief: Brief): RepairResult {
     });
   }
   session.lesson.estimated_duration_mins = brief.durationMins;
+
+  // Anything a repair stripped out becomes a media request, so the review
+  // screen offers a button for it instead of leaving a dead placeholder.
+  for (const m of needed) {
+    const already = session.media_requests.some(
+      (r) => r.slot_index === m.slot_index && r.screen === m.screen,
+    );
+    if (!already) session.media_requests.push(m);
+  }
 
   // Re-sync timers LAST. reconcileDurations rescales duration_mins, which would
   // otherwise leave a countdown showing the pre-rescale length: exactly the
