@@ -99,7 +99,8 @@ HARD PER-SCREEN RULES, enforced by validation after you answer:
   identical payload on all three screens.
 - wheel_spinner items are TRUNCATED at 10 characters on screen. Keep them very
   short.
-- voting and multiple_choice take 2 to 6 options.
+- voting takes 3 to 5 options; multiple_choice takes 3 to 5 options.
+- question_round and quiz_buzzer ALWAYS hold 3 to 5 questions.
 - A confidence_checker with checkpoint "final" makes the host render a
   start-versus-now comparison. It only works if an earlier slot used
   checkpoint "start".
@@ -140,9 +141,12 @@ carry the IDENTICAL payload. Anything else leaves half the class unable to join 
 
 The consequence for questions: a single multiple_choice or true_or_false is
 rendered ONLY on Touch Screen 2 and shows a blank standby screen on Touch Screen
-1, so it is the wrong tool for this room. Use question_round instead, with one
-question in it if that is all you need. question_round accepts answers on both
-touch screens.
+1, so it is the wrong tool for this room. Use question_round instead.
+question_round accepts answers on both touch screens.
+
+QUESTION COUNT RULE (the tutor insists): every question_round MUST contain 3 to
+5 questions, never fewer, and every quiz_buzzer MUST list 3 to 5 questions
+(with matching answers). Every voting slot MUST offer 3 to 5 options.
 
 Touch screens may differ ONLY when nobody is being asked to do anything, such as
 a title or closing slide where they carry the outcomes or a closing message.
