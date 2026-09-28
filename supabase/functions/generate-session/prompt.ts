@@ -255,7 +255,11 @@ const MEDIA_BLOCK = `
   short, concrete, no more than about eight words.
   Good: "construction site PPE safety induction". Bad: "A video showing the
   importance of wearing personal protective equipment on a busy site".
-- EMBED: only use an embed url if the teacher supplied one in the brief.
+- EMBED: only use an embed url if the teacher supplied one in the brief. If
+  the teacher mentions an embed (e.g. a Wordwall) WITHOUT a link, put a
+  text_slide "[ADD EMBED]" describing it and list it in
+  verify_before_teaching. NEVER add it to media_requests: media_requests kind
+  is ONLY "image" or "youtube".
 ═══════════════════════════════════════════════════════════════`;
 
 // ─── NEW: safety-critical content ───────────────────────────
