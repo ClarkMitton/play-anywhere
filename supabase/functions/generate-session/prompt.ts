@@ -109,9 +109,12 @@ HARD PER-SCREEN RULES, enforced by validation after you answer:
 const TOOL_PURPOSE = `
 ═══ OFFER THE TUTOR A CHOICE ═══
 A sequence is one moment in the lesson: all three screens together, before the
-room moves on. For a sequence where the same learning point could genuinely be
-taught a DIFFERENT way, give up to 2 alternatives in its "alternatives" array,
-so the tutor picks what suits the group in front of them.
+room moves on. The tutor gets THREE choices for every Apply-phase activity:
+EVERY slot whose running-order line says ACTIVITY MUST have EXACTLY 2 entries
+in its "alternatives" array, each using a DIFFERENT recipe/tool from the main
+version and from each other. For CHECK and SHOW_WHAT_YOU_KNOW slots, give 2
+alternatives too where a different tool genuinely fits. So the tutor picks
+what suits the group in front of them.
 
 - An alternative replaces the WHOLE sequence, all three screens, because both
   touch screens must always match. Never offer a different activity for one
@@ -252,7 +255,11 @@ const MEDIA_BLOCK = `
   short, concrete, no more than about eight words.
   Good: "construction site PPE safety induction". Bad: "A video showing the
   importance of wearing personal protective equipment on a busy site".
-- EMBED: only use an embed url if the teacher supplied one in the brief.
+- EMBED: only use an embed url if the teacher supplied one in the brief. If
+  the teacher mentions an embed (e.g. a Wordwall) WITHOUT a link, put a
+  text_slide "[ADD EMBED]" describing it and list it in
+  verify_before_teaching. NEVER add it to media_requests: media_requests kind
+  is ONLY "image" or "youtube".
 ═══════════════════════════════════════════════════════════════`;
 
 // ─── NEW: safety-critical content ───────────────────────────
