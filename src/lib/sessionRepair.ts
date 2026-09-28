@@ -432,6 +432,33 @@ export function repairAndValidate(raw: unknown, brief: Brief): RepairResult {
     });
   }
 
+  // Media requests are only for things the review screen can fetch (pictures
+  // and videos). The model sometimes files an "embed" request when the tutor
+  // mentions a Wordwall or similar; turn those into a reminder instead of
+  // failing the whole lesson.
+  if (Array.isArray(draft.media_requests)) {
+    draft.media_requests = draft.media_requests.filter((r: any) => {
+      const ok =
+        isObj(r) &&
+        (r.kind === "image" || r.kind === "youtube") &&
+        ["host", "screen1", "screen2"].includes(r.screen) &&
+        typeof r.search_phrase === "string" &&
+        r.search_phrase.trim().length > 0 &&
+        Number.isInteger(r.slot_index) &&
+        r.slot_index >= 0 &&
+        r.slot_index < draft.slots.length;
+      if (!ok && isObj(r) && typeof r.search_phrase === "string") {
+        warnings.push({
+          slotIndex: Number.isInteger(r.slot_index) ? r.slot_index : null,
+          message: `add "${r.search_phrase}" yourself in the Stage Designer (${r.kind ?? "item"})`,
+        });
+      }
+      return ok;
+    });
+  } else {
+    draft.media_requests = [];
+  }
+
   const parsed = generatedSessionSchema.safeParse(draft);
   if (!parsed.success) {
     return {
