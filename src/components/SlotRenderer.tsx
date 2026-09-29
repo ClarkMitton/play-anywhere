@@ -780,12 +780,12 @@ function WheelSpinnerRenderer({ content, screen, sessionId }: {
           {items.map((item, i) => {
             const angle = i * sectorDeg + sectorDeg / 2;
             const rad = ((angle - 90) * Math.PI) / 180;
-            const x = 50 + 35 * Math.cos(rad);
-            const y = 50 + 35 * Math.sin(rad);
+            const x = 50 + 30 * Math.cos(rad);
+            const y = 50 + 30 * Math.sin(rad);
             return (
-              <span key={i} className="absolute text-[10px] md:text-xs font-extrabold text-white leading-none text-center pointer-events-none"
-                style={{ left: `${x}%`, top: `${y}%`, maxWidth: "60px", transform: `translate(-50%, -50%) rotate(${angle}deg)`, textShadow: "0 1px 4px rgba(0,0,0,0.9)" }}>
-                {item.length > 10 ? item.slice(0, 10) + "…" : item}
+              <span key={i} className="absolute text-[10px] md:text-xs font-extrabold text-white leading-tight text-center pointer-events-none break-words"
+                style={{ left: `${x}%`, top: `${y}%`, width: "34%", transform: `translate(-50%, -50%) rotate(${angle - 90}deg)`, textShadow: "0 1px 4px rgba(0,0,0,0.9)" }}>
+                {item}
               </span>
             );
           })}
