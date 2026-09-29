@@ -90,7 +90,7 @@ function SlotNavBar({
         disabled={currentIndex <= 0 || total === 0}
         className="h-6 px-2 text-[10px] rounded-full"
       >
-        ←
+        ← Previous slide
       </Button>
       <span className="font-mono text-muted-foreground tabular-nums px-1 truncate max-w-[180px]">
         {total === 0
@@ -106,7 +106,7 @@ function SlotNavBar({
         disabled={currentIndex >= total - 1 || total === 0}
         className="h-6 px-2 text-[10px] rounded-full"
       >
-        →
+        Next slide →
       </Button>
       <Button size="sm" variant="destructive" onClick={onEnd} className="h-6 px-2 text-[10px] rounded-full">
         End
@@ -391,6 +391,28 @@ function HostScreen() {
       })
       .eq("id", session.id);
   };
+
+  // Keyboard / clicker support on the main screen: arrow keys, PageUp/PageDown, space.
+  const pushSlotRef = useRef(pushSlot);
+  pushSlotRef.current = pushSlot;
+  const currentIdx = session?.current_slot_index ?? 0;
+  const isActive = session?.status === "active";
+  useEffect(() => {
+    if (!isActive) return;
+    const onKey = (e: KeyboardEvent) => {
+      const t = e.target as HTMLElement | null;
+      if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable)) return;
+      if (["ArrowRight", "PageDown"].includes(e.key)) {
+        e.preventDefault();
+        pushSlotRef.current(currentIdx + 1);
+      } else if (["ArrowLeft", "PageUp"].includes(e.key)) {
+        e.preventDefault();
+        pushSlotRef.current(currentIdx - 1);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [isActive, currentIdx]);
 
   const keepWaiting = () => {
     setCountdownDone(false);
