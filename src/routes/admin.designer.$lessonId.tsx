@@ -2254,10 +2254,27 @@ function ContentTypeForm({
 
     case "wheel_spinner":
       return (
-        <WheelItemsEditor
-          items={(content.items as string[] | undefined) ?? []}
-          onChange={(items) => onChange({ items })}
-        />
+        <div className="space-y-3">
+          <div className="space-y-1.5">
+            <Label className="text-[10px] uppercase tracking-widest text-muted-foreground">
+              Question (optional)
+            </Label>
+            <Textarea
+              value={String(content.prompt ?? "")}
+              onChange={(e) => onChange({ prompt: e.target.value })}
+              placeholder="e.g. How can we make these hazards safe?"
+              rows={2}
+              className="min-h-[60px] resize-y bg-background/60 border-border focus-visible:border-[color:var(--cyan)]"
+            />
+            <p className="text-[10px] text-muted-foreground">
+              Stays above the wheel. With a question set, the result shows plainly (no Winner or confetti).
+            </p>
+          </div>
+          <WheelItemsEditor
+            items={(content.items as string[] | undefined) ?? []}
+            onChange={(items) => onChange({ items })}
+          />
+        </div>
       );
 
     case "countdown_timer": {
@@ -2480,14 +2497,26 @@ function RotationTimerForm({
     <div className="space-y-4">
       <div className="space-y-1.5">
         <Label className="text-[10px] uppercase tracking-widest text-muted-foreground">
-          Task (optional)
+          Activity / question
         </Label>
         <Textarea
           value={String(content.label ?? "")}
           onChange={(e) => onChange({ label: e.target.value })}
-          placeholder="e.g. Add a salon example for the law on your table"
+          placeholder="e.g. How can we make this hazard safe?"
           rows={2}
           className="min-h-[60px] resize-y bg-background/60 border-border focus-visible:border-[color:var(--cyan)]"
+        />
+      </div>
+      <div className="space-y-1.5">
+        <Label className="text-[10px] uppercase tracking-widest text-muted-foreground">
+          Reference list (Host, optional)
+        </Label>
+        <Textarea
+          value={String(content.details ?? "")}
+          onChange={(e) => onChange({ details: e.target.value })}
+          placeholder={"One per line, e.g. the stations\nCOSHH: chemicals\nRIDDOR: reporting"}
+          rows={4}
+          className="min-h-[90px] resize-y bg-background/60 border-border focus-visible:border-[color:var(--cyan)]"
         />
       </div>
       {numField("Rounds", rounds, "rounds", 1, 12, "")}

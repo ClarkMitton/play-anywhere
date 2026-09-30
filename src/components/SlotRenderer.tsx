@@ -64,7 +64,7 @@ export type SlotContent =
   | { type: "image"; url: string; file_name?: string; title?: string }
   | { type: "embed"; url: string }
   | { type: "confidence_checker"; prompt: string; optional_qualitative?: boolean; scale_mode?: "numbers" | "emoji" | "likert"; max?: number; checkpoint?: "start" | "final" }
-  | { type: "wheel_spinner"; items: string[] }
+  | { type: "wheel_spinner"; items: string[]; prompt?: string }
   | { type: "countdown_timer"; label?: string; duration_secs: number }
   | { type: "host_timer"; label?: string; duration_secs: number }
   | { type: "multiple_choice"; id?: string; text: string; options: string[]; correct?: number }
@@ -711,9 +711,14 @@ function ConfidenceCompareHost({ content, sessionId }: {
 const WHEEL_COLORS = ["var(--cyan)", "var(--orange)", "var(--success)", "oklch(0.72 0.18 300)", "oklch(0.82 0.18 80)"];
 
 function WheelSpinnerRenderer({ content, screen, sessionId }: {
-  content: { items: string[] }; screen: "host" | "screen1" | "screen2"; sessionId?: string;
+  content: { items: string[]; prompt?: string }; screen: "host" | "screen1" | "screen2"; sessionId?: string;
 }) {
   const items = (content.items ?? []).filter(Boolean);
+  // With a prompt the wheel is allocating a task, not picking a winner: keep
+  // the question up, show the result plainly and leave it until the next spin.
+  const prompt = content.prompt?.trim();
+  const promptRef = useRef(prompt);
+  promptRef.current = prompt;
   const [rotation, setRotation] = useState(0);
   const [spinning, setSpinning] = useState(false);
   const [result, setResult] = useState<string | null>(null);
@@ -749,7 +754,7 @@ function WheelSpinnerRenderer({ content, screen, sessionId }: {
       setSpinning(false);
       setResult(winner);
       sounds.questionReveal();
-      setTimeout(() => setResult(null), 3000);
+      if (!promptRef.current) setTimeout(() => setResult(null), 3000);
     }, 4000);
   }, []);
 
@@ -777,6 +782,11 @@ function WheelSpinnerRenderer({ content, screen, sessionId }: {
 
   return (
     <div className="min-h-screen w-full bg-immersive bg-grid flex flex-col items-center justify-center gap-8 animate-slot-in">
+      {prompt && (
+        <div className="text-3xl md:text-5xl font-extrabold text-glow text-center max-w-[90vw] px-6 whitespace-pre-line">
+          {prompt}
+        </div>
+      )}
       <div className="relative">
         <div className="absolute left-1/2 -translate-x-1/2 z-10 text-4xl leading-none select-none"
           style={{ top: "-28px", filter: "drop-shadow(0 2px 10px color-mix(in oklab, var(--cyan) 60%, transparent))" }}>▼</div>
@@ -804,7 +814,10 @@ function WheelSpinnerRenderer({ content, screen, sessionId }: {
           </div>
         </div>
       </div>
-      {result && (
+      {result && prompt && (
+        <div className="animate-slot-in text-5xl md:text-7xl font-extrabold text-glow text-center">{result}</div>
+      )}
+      {result && !prompt && (
         <>
           <Confetti />
           <div className="animate-slot-in text-center">

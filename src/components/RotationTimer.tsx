@@ -16,7 +16,10 @@ import { Button } from "@/components/ui/button";
 
 export type RotationTimerContent = {
   type: "rotation_timer";
+  /** The task, always on screen. */
   label?: string;
+  /** Reference list shown under the task on the host, e.g. the stations. */
+  details?: string;
   rounds: number;
   round_secs: number;
   move_secs?: number;
@@ -183,97 +186,128 @@ export function RotationTimerRenderer({
   const done = phase.kind === "done";
   const secsLeft = phase.kind === "done" ? 0 : phase.secsLeft;
   const urgent = phase.kind === "work" && secsLeft <= 10;
+  const activity = content.label?.trim();
+  const details = content.details?.trim();
+  // On the host the activity always stays up beside the clock, so the room can
+  // see what it is doing through every round and break.
+  const split = screen === "host" && !!(activity || details);
+
+  const pips = (
+    <div className="flex items-center gap-2">
+      {Array.from({ length: rounds }, (_, i) => {
+        const r = i + 1;
+        const current = !done && phase.round === r;
+        const past = done || (!done && r < phase.round) || (isMove && r === phase.round);
+        return (
+          <span
+            key={i}
+            className={`h-3 rounded-full transition-all ${current && !isMove ? "w-10 bg-[color:var(--cyan)]" : past ? "w-3 bg-[color:var(--success)]" : "w-3 bg-foreground/20"}`}
+          />
+        );
+      })}
+    </div>
+  );
+
+  const clock = isMove ? (
+    <>
+      <div
+        className={`${split ? "text-[9vw]" : "text-[16vw]"} font-extrabold leading-none text-[color:var(--orange)] text-glow animate-pulse`}
+      >
+        ROTATE!
+      </div>
+      <div className="text-3xl md:text-5xl font-bold text-center">{moveText}</div>
+      <div className="text-2xl uppercase tracking-[0.3em] text-muted-foreground">
+        Round {phase.round + 1} starts in {secsLeft}
+      </div>
+    </>
+  ) : (
+    <>
+      <div className="text-2xl md:text-3xl uppercase tracking-[0.4em] text-[color:var(--cyan)] font-bold">
+        Round {done ? rounds : phase.round} of {rounds}
+      </div>
+      <div
+        className={`${split ? "text-[11vw]" : "text-[20vw]"} font-extrabold font-mono leading-none tabular-nums transition-colors
+          ${done ? "text-muted-foreground" : urgent ? "text-[color:var(--orange)] text-glow" : "text-foreground"}`}
+      >
+        {fmt(secsLeft)}
+      </div>
+    </>
+  );
+
+  const controls = screen === "host" && (
+    <div className="flex flex-wrap justify-center gap-4">
+      {!done &&
+        (running ? (
+          <Button
+            onClick={handlePause}
+            variant="outline"
+            className="h-14 px-10 text-lg uppercase tracking-widest"
+          >
+            Pause
+          </Button>
+        ) : (
+          <Button
+            onClick={handleResume}
+            className="h-14 px-10 text-lg uppercase tracking-widest font-extrabold"
+          >
+            Resume
+          </Button>
+        ))}
+      {!done && (
+        <Button
+          onClick={handleNext}
+          variant="outline"
+          className="h-14 px-10 text-lg uppercase tracking-widest"
+        >
+          Next round
+        </Button>
+      )}
+      <Button
+        onClick={handleReset}
+        variant="outline"
+        className="h-14 px-10 text-lg uppercase tracking-widest"
+      >
+        Restart
+      </Button>
+    </div>
+  );
 
   return (
     <div className="relative isolate min-h-screen w-full bg-immersive bg-grid flex flex-col items-center justify-center gap-6 p-8 animate-slot-in">
       {isMove && (
         <div className="absolute inset-0 -z-10 pointer-events-none bg-[color:var(--orange)]/20 animate-pulse" />
       )}
-      {content.label && !isMove && (
-        <div className="text-2xl md:text-4xl font-bold text-center max-w-3xl whitespace-pre-line">
-          {content.label}
-        </div>
-      )}
-
-      {/* Round pips */}
-      <div className="flex items-center gap-2">
-        {Array.from({ length: rounds }, (_, i) => {
-          const r = i + 1;
-          const current = !done && phase.round === r;
-          const past = done || (!done && r < phase.round) || (isMove && r === phase.round);
-          return (
-            <span
-              key={i}
-              className={`h-3 rounded-full transition-all ${current && !isMove ? "w-10 bg-[color:var(--cyan)]" : past ? "w-3 bg-[color:var(--success)]" : "w-3 bg-foreground/20"}`}
-            />
-          );
-        })}
-      </div>
-
-      {done ? (
-        <div className="text-[12vw] font-extrabold text-glow leading-none text-center">
-          Finished!
-        </div>
-      ) : isMove ? (
-        <>
-          <div className="text-[16vw] font-extrabold leading-none text-[color:var(--orange)] text-glow animate-pulse">
-            ROTATE!
+      {split ? (
+        <div className="w-full max-w-[96vw] grid grid-cols-[1.15fr_1fr] gap-12 items-center">
+          <div className="min-w-0">
+            {activity && (
+              <div className="font-extrabold text-glow leading-tight whitespace-pre-line text-[clamp(1.5rem,3.4vw,5rem)]">
+                {activity}
+              </div>
+            )}
+            {details && (
+              <div className="mt-6 font-semibold leading-snug whitespace-pre-line text-foreground/85 text-[clamp(1rem,1.9vw,3rem)]">
+                {details}
+              </div>
+            )}
           </div>
-          <div className="text-3xl md:text-5xl font-bold text-center">{moveText}</div>
-          <div className="text-2xl uppercase tracking-[0.3em] text-muted-foreground">
-            Round {phase.round + 1} starts in {secsLeft}
+          <div className="flex flex-col items-center gap-6">
+            {pips}
+            {clock}
+            {controls}
           </div>
-        </>
+        </div>
       ) : (
         <>
-          <div className="text-2xl md:text-3xl uppercase tracking-[0.4em] text-[color:var(--cyan)] font-bold">
-            Round {phase.round} of {rounds}
-          </div>
-          <div
-            className={`text-[20vw] font-extrabold font-mono leading-none tabular-nums transition-colors
-              ${urgent ? "text-[color:var(--orange)] text-glow" : "text-foreground"}`}
-          >
-            {fmt(secsLeft)}
-          </div>
-        </>
-      )}
-
-      {screen === "host" && (
-        <div className="flex gap-4">
-          {!done &&
-            (running ? (
-              <Button
-                onClick={handlePause}
-                variant="outline"
-                className="h-14 px-10 text-lg uppercase tracking-widest"
-              >
-                Pause
-              </Button>
-            ) : (
-              <Button
-                onClick={handleResume}
-                className="h-14 px-10 text-lg uppercase tracking-widest font-extrabold"
-              >
-                Resume
-              </Button>
-            ))}
-          {!done && (
-            <Button
-              onClick={handleNext}
-              variant="outline"
-              className="h-14 px-10 text-lg uppercase tracking-widest"
-            >
-              Next round
-            </Button>
+          {activity && (
+            <div className="text-2xl md:text-4xl font-bold text-center max-w-3xl whitespace-pre-line">
+              {activity}
+            </div>
           )}
-          <Button
-            onClick={handleReset}
-            variant="outline"
-            className="h-14 px-10 text-lg uppercase tracking-widest"
-          >
-            Restart
-          </Button>
-        </div>
+          {pips}
+          {clock}
+          {controls}
+        </>
       )}
     </div>
   );

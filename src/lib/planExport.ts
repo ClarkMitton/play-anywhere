@@ -180,7 +180,10 @@ export function describeContent(content: ContentDef | null | undefined): {
       const items = arr(c.items);
       return {
         label: "Wheel spinner",
-        detail: [items.length ? `Segments: ${items.join(" · ")}` : "No segments set"],
+        detail: [
+          ...(str(c.prompt) ? [`“${str(c.prompt)}”`] : []),
+          items.length ? `Segments: ${items.join(" · ")}` : "No segments set",
+        ],
       };
     }
 
@@ -260,6 +263,7 @@ export function describeContent(content: ContentDef | null | undefined): {
         detail: [
           str(c.label) ? `“${str(c.label)}”` : "No label",
           `${Number(c.rounds ?? 4)} rounds of ${secs(c.round_secs)}, ${secs(c.move_secs ?? 15)} to move between`,
+          ...(str(c.details) ? [`Reference: ${str(c.details).split("\n").join(" · ")}`] : []),
         ],
       };
 

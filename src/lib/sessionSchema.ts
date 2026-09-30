@@ -110,6 +110,8 @@ const quizBuzzer = z.object({
 
 const wheelSpinner = z.object({
   type: z.literal("wheel_spinner"),
+  /** The task the spin feeds. When set, the result is shown plainly, not as a win. */
+  prompt: z.string().optional(),
   items: z.array(z.string().min(1)).min(2).max(12),
 });
 
@@ -171,6 +173,7 @@ const wordCloud = z.object({
 const rotationTimer = z.object({
   type: z.literal("rotation_timer"),
   label: z.string().optional(),
+  details: z.string().optional(),
   rounds: z.number().int().min(1).max(12),
   round_secs: z.number().int().min(5),
   move_secs: z.number().int().min(0).max(120).optional(),
