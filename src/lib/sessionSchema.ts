@@ -52,7 +52,7 @@ export function isEntryLevel(level: string): boolean {
 }
 
 // ─────────────────────────────────────────────
-// The 14 legal content types. Anything outside this union is rejected, which
+// The legal content types. Anything outside this union is rejected, which
 // is what keeps the phantom teacher_note / html_upload / webpage / host_webcam
 // types out of generated lessons.
 // ─────────────────────────────────────────────
@@ -168,6 +168,34 @@ const wordCloud = z.object({
   max_words: z.number().int().min(1).max(10).optional(),
 });
 
+const rotationTimer = z.object({
+  type: z.literal("rotation_timer"),
+  label: z.string().optional(),
+  rounds: z.number().int().min(1).max(12),
+  round_secs: z.number().int().min(5),
+  move_secs: z.number().int().min(0).max(120).optional(),
+  move_text: z.string().optional(),
+});
+
+// Authored in the designer only: the model cannot place coordinates on an
+// image it has not seen, so this is deliberately absent from LEGAL_TYPES.
+const hazardHotspots = z.object({
+  type: z.literal("hazard_hotspots"),
+  url: z.string().min(1),
+  title: z.string().optional(),
+  hotspots: z
+    .array(
+      z.object({
+        id: z.string().min(1),
+        x: z.number().min(0).max(100),
+        y: z.number().min(0).max(100),
+        r: z.number().min(1).max(50).optional(),
+        label: z.string().min(1),
+      }),
+    )
+    .min(1),
+});
+
 const whiteboard = z.object({
   type: z.literal("whiteboard"),
   title: z.string().optional(),
@@ -190,6 +218,8 @@ export const contentSchema = z.discriminatedUnion("type", [
   questionRound,
   wordCloud,
   whiteboard,
+  rotationTimer,
+  hazardHotspots,
 ]);
 
 export type Content = z.infer<typeof contentSchema>;

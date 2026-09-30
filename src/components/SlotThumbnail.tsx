@@ -116,6 +116,40 @@ function ThumbContent({
     case "embed":
       return <Label icon="⚞" label="Embed" tint="oklch(0.3 0.1 280)" />;
 
+    case "rotation_timer":
+      return (
+        <div className="absolute inset-0 bg-[oklch(0.2_0.1_30)] flex flex-col items-center justify-center">
+          <div className={`font-bold text-[color:var(--orange)] ${lg ? "text-2xl" : "text-[10px]"}`}>
+            ⟳ {Number(c.rounds ?? 4)} × {fmtTime(Number(c.round_secs ?? 90))}
+          </div>
+          {lg && (
+            <div className="text-[10px] uppercase tracking-widest text-foreground/50 mt-1">
+              {String(c.label ?? "Rotation")}
+            </div>
+          )}
+        </div>
+      );
+
+    case "hazard_hotspots": {
+      const url = c.url as string | undefined;
+      const spots = Array.isArray(c.hotspots) ? (c.hotspots as { x: number; y: number }[]) : [];
+      if (!url) return <Label icon="⚠" label="Hotspots" />;
+      return (
+        <div className="absolute inset-0 bg-black flex items-center justify-center">
+          <div className="relative max-w-full max-h-full">
+            <img src={url} alt="" className="block max-w-full max-h-full object-contain" loading="lazy" />
+            {spots.map((s, i) => (
+              <span
+                key={i}
+                className="absolute w-1.5 h-1.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[color:var(--orange)] ring-1 ring-black"
+                style={{ left: `${s.x}%`, top: `${s.y}%` }}
+              />
+            ))}
+          </div>
+        </div>
+      );
+    }
+
     case "host_timer":
     case "countdown_timer":
       return (

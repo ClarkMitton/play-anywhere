@@ -21,6 +21,9 @@ import {
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { SlotStackThumbnail, SlotThumbnail } from "@/components/SlotThumbnail";
 import { makeSlot, makeFeedbackSlot } from "@/lib/slotDefaults";
+import { rotationTotalSecs } from "@/components/RotationTimer";
+import type { Hotspot } from "@/components/HazardHotspots";
+import { HotspotEditorDialog } from "@/components/HotspotEditor";
 
 // ─────────────────────────────────────────────
 // Constants
@@ -62,6 +65,8 @@ const CONTENT_TYPES_HOST = [
   { value: "padlet", label: "Padlet (answer wall)" },
   { value: "whiteboard", label: "Whiteboard (draw)" },
   { value: "countdown_timer", label: "Countdown Timer (all screens)" },
+  { value: "rotation_timer", label: "Rotation Timer (carousel)" },
+  { value: "hazard_hotspots", label: "Spot the Hazard (tap image)" },
   { value: "host_timer", label: "Host Timer (Host only)" },
 ];
 const CONTENT_TYPES_SCREEN1 = [
@@ -78,6 +83,8 @@ const CONTENT_TYPES_SCREEN1 = [
   { value: "padlet", label: "Padlet (answer wall)" },
   { value: "whiteboard", label: "Whiteboard (draw)" },
   { value: "countdown_timer", label: "Countdown Timer" },
+  { value: "rotation_timer", label: "Rotation Timer (carousel)" },
+  { value: "hazard_hotspots", label: "Spot the Hazard (tap image)" },
 ];
 // Interactive question types. Authored via the question modal; on insert they
 // populate Host (live results, with a Reveal button) + TS2 (student answering).
@@ -2418,9 +2425,166 @@ function ContentTypeForm({
       );
     }
 
+    case "rotation_timer":
+      return <RotationTimerForm content={content} onChange={onChange} />;
+
+    case "hazard_hotspots":
+      return <HazardHotspotsForm content={content} lessonId={lessonId} onChange={onChange} />;
+
     default:
       return null;
   }
+}
+
+// ─────────────────────────────────────────────
+// ROTATION TIMER FORM
+// ─────────────────────────────────────────────
+
+function RotationTimerForm({
+  content,
+  onChange,
+}: {
+  content: ContentDef;
+  onChange: (patch: Record<string, unknown>) => void;
+}) {
+  const rounds = Number(content.rounds ?? 4);
+  const roundSecs = Number(content.round_secs ?? 90);
+  const moveSecs = Number(content.move_secs ?? 15);
+  const total = rotationTotalSecs({ rounds, round_secs: roundSecs, move_secs: moveSecs });
+  const numField = (
+    label: string,
+    value: number,
+    key: string,
+    min: number,
+    max: number,
+    suffix: string,
+  ) => (
+    <div className="flex items-center justify-between gap-2">
+      <Label className="text-[10px] uppercase tracking-widest text-muted-foreground">{label}</Label>
+      <div className="flex items-center gap-1.5">
+        <Input
+          type="number"
+          min={min}
+          max={max}
+          value={value}
+          onChange={(e) =>
+            onChange({ [key]: Math.max(min, Math.min(max, Number(e.target.value) || min)) })
+          }
+          className="w-20 bg-background/60 border-border focus-visible:border-[color:var(--cyan)] text-center"
+        />
+        <span className="text-[10px] text-muted-foreground uppercase tracking-widest w-8">{suffix}</span>
+      </div>
+    </div>
+  );
+  return (
+    <div className="space-y-4">
+      <div className="space-y-1.5">
+        <Label className="text-[10px] uppercase tracking-widest text-muted-foreground">
+          Task (optional)
+        </Label>
+        <Textarea
+          value={String(content.label ?? "")}
+          onChange={(e) => onChange({ label: e.target.value })}
+          placeholder="e.g. Add a salon example for the law on your table"
+          rows={2}
+          className="min-h-[60px] resize-y bg-background/60 border-border focus-visible:border-[color:var(--cyan)]"
+        />
+      </div>
+      {numField("Rounds", rounds, "rounds", 1, 12, "")}
+      {numField("Each round", roundSecs, "round_secs", 5, 1800, "secs")}
+      {numField("Time to move", moveSecs, "move_secs", 0, 120, "secs")}
+      <div className="space-y-1.5">
+        <Label className="text-[10px] uppercase tracking-widest text-muted-foreground">
+          Move instruction
+        </Label>
+        <Input
+          value={String(content.move_text ?? "")}
+          onChange={(e) => onChange({ move_text: e.target.value })}
+          placeholder="Move to the next table"
+          className="bg-background/60 border-border focus-visible:border-[color:var(--cyan)]"
+        />
+      </div>
+      <p className="text-[10px] text-muted-foreground">
+        Total {Math.floor(total / 60)}m {total % 60}s. Chimes and flashes ROTATE! between rounds on all
+        screens. Put it on all 3 screens.
+      </p>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────
+// HAZARD HOTSPOTS FORM
+// ─────────────────────────────────────────────
+
+function HazardHotspotsForm({
+  content,
+  lessonId,
+  onChange,
+}: {
+  content: ContentDef;
+  lessonId: string;
+  onChange: (patch: Record<string, unknown>) => void;
+}) {
+  const [editorOpen, setEditorOpen] = useState(false);
+  const url = String(content.url ?? "");
+  const hotspots = Array.isArray(content.hotspots) ? (content.hotspots as Hotspot[]) : [];
+  return (
+    <div className="space-y-3">
+      <div className="space-y-1.5">
+        <Label className="text-[10px] uppercase tracking-widest text-muted-foreground">
+          Title (optional)
+        </Label>
+        <Input
+          value={String(content.title ?? "")}
+          onChange={(e) => onChange({ title: e.target.value })}
+          placeholder="Tap on every hazard you can see"
+          className="bg-background/60 border-border focus-visible:border-[color:var(--cyan)]"
+        />
+      </div>
+      <FileUploadField
+        label="Image file"
+        accept="image/png,image/jpeg,image/webp"
+        currentFileName={content.file_name ? String(content.file_name) : undefined}
+        lessonId={lessonId}
+        maxSizeMb={50}
+        onUpload={(u, file_name) => onChange({ url: u, file_name })}
+      />
+      <div className="space-y-1.5">
+        <Label className="text-[10px] uppercase tracking-widest text-muted-foreground">
+          …or image URL
+        </Label>
+        <Input
+          value={url}
+          onChange={(e) => onChange({ url: e.target.value.trim() })}
+          placeholder="https://…"
+          className="bg-background/60 border-border focus-visible:border-[color:var(--cyan)]"
+        />
+      </div>
+      <Button
+        type="button"
+        variant="outline"
+        disabled={!url}
+        onClick={() => setEditorOpen(true)}
+        className="w-full uppercase tracking-widest text-xs"
+      >
+        {hotspots.length ? `Edit hazards (${hotspots.length})` : "Mark the hazards"}
+      </Button>
+      <p className="text-[10px] text-muted-foreground">
+        Touch screens: learners tap to find hazards. Host: shows what has been found, with Reveal all.
+        Use the same content on all 3 screens.
+      </p>
+      <HotspotEditorDialog
+        open={editorOpen}
+        url={url}
+        hotspots={hotspots}
+        onClose={() => setEditorOpen(false)}
+        onSave={(next) => {
+          onChange({ hotspots: next });
+          setEditorOpen(false);
+        }}
+      />
+    </div>
+  );
 }
 
 // ─────────────────────────────────────────────

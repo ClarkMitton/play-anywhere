@@ -56,7 +56,7 @@ the touch screens has wasted the entire room and is a failed answer.
 
 // ─── NEW: the 14 legal content types ────────────────────────
 const TOOL_CATALOGUE = `
-═══ THE ONLY 16 CONTENT TYPES THAT EXIST ═══
+═══ THE ONLY 17 CONTENT TYPES THAT EXIST ═══
 Any other "type" value renders as a blank "Standing by" screen in front of a
 class. Never invent one. teacher_note, html_upload, webpage and host_webcam do
 NOT exist.
@@ -77,6 +77,7 @@ NOT exist.
 14. {"type":"question_round","questions":[{"type":"multiple_choice","text":"...","options":["..."],"correct":0}]}
 15. {"type":"word_cloud","prompt":"...","title":"...","max_words":3}
 16. {"type":"whiteboard","title":"..."}
+17. {"type":"rotation_timer","label":"...","rounds":4,"round_secs":90,"move_secs":15,"move_text":"Move to the next table"}
 
 HARD PER-SCREEN RULES, enforced by validation after you answer:
 - host_timer may ONLY appear on host. It is invisible to the touch screens.
@@ -179,6 +180,10 @@ is for, and what to use instead when it is the wrong fit.
   NOT a quiz.
 - countdown_timer — visible time pressure for work happening away from the
   screens. Always pair with a SHAREBACK so the work is captured.
+- rotation_timer — a carousel: groups work at one table or station, then
+  rotate. Runs `rounds` rounds of `round_secs`, with a chime and ROTATE! screen
+  of `move_secs` between them. Use the identical payload on all three screens.
+  rounds × round_secs + (rounds − 1) × move_secs must fit inside the slot.
 - multiple_choice / true_or_false — AVOID in this room. They only render on
   Touch Screen 2, so learners at Touch Screen 1 get a blank screen. Wrap the
   question in a question_round instead, even a round of one.
@@ -475,7 +480,7 @@ recipe field and nowhere else.
 ═══ GIVE THE TOUCH SCREENS A JOB ═══
 - Mirroring the identical payload to all three screens is correct for tools
   learners tap (confidence_checker, voting, quiz_buzzer, question_round,
-  word_cloud, whiteboard) and for a synced countdown_timer.
+  word_cloud, whiteboard) and for a synced countdown_timer or rotation_timer.
 - For a title or closing slide, prefer giving the touch screens something
   additive, such as the lesson outcomes or a short "tap when you are ready"
   prompt, rather than an identical copy of the Host.

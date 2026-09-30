@@ -46,6 +46,7 @@ const LEGAL_TYPES = new Set([
   "quiz_buzzer",
   "wheel_spinner",
   "countdown_timer",
+  "rotation_timer",
   "host_timer",
   "multiple_choice",
   "true_or_false",

@@ -38,6 +38,8 @@ const MIRROR_TYPES = [
   "quiz_buzzer",
   "wheel_spinner",
   "countdown_timer",
+  "rotation_timer",
+  "hazard_hotspots",
   "word_cloud",
   "whiteboard",
 ];

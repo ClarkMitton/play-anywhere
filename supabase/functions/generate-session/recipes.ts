@@ -185,6 +185,17 @@ export const RECIPES: Recipe[] = [
     typicalMins: 8,
   },
   {
+    id: "TABLE_CAROUSEL",
+    phase: "Apply",
+    label: "Rotate round the tables",
+    use:
+      "Each table or station holds a different sub-topic, question or source; groups spend a round at each, adding to what the last group wrote, then rotate. Gets the room moving and every group touches every idea. Name the stations in the teacher script.",
+    host: "rotation_timer with a label naming the task",
+    screen1: "the same rotation_timer payload",
+    screen2: "the same rotation_timer payload",
+    typicalMins: 8,
+  },
+  {
     id: "SHOW_WHAT_YOU_KNOW",
     phase: "Demonstrate",
     label: "Prove the learning",

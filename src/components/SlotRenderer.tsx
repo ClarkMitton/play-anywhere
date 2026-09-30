@@ -4,6 +4,8 @@ import { sounds } from "@/lib/audio";
 import { checkProfanity, PROFANITY_MESSAGE } from "@/lib/profanity";
 import { Button } from "@/components/ui/button";
 import type { RealtimeChannel } from "@supabase/supabase-js";
+import { RotationTimerRenderer, type RotationTimerContent } from "@/components/RotationTimer";
+import { HazardHotspotsRenderer, type HazardHotspotsContent } from "@/components/HazardHotspots";
 
 // ─────────────────────────────────────────────
 // CONFETTI — celebratory burst (wheel result, confidence improvement)
@@ -73,6 +75,8 @@ export type SlotContent =
   | { type: "word_cloud"; title?: string; prompt?: string; max_words?: number }
   | { type: "padlet"; question: string; title?: string }
   | { type: "whiteboard"; title?: string }
+  | RotationTimerContent
+  | HazardHotspotsContent
   | { type: string; [k: string]: unknown };
 
 type QuestionContent = Extract<SlotContent,
@@ -231,6 +235,12 @@ export function SlotRenderer({
       const c = content as Extract<SlotContent, { type: "countdown_timer" }>;
       return <CountdownTimerRenderer content={c} screen={screen} sessionId={sessionId} />;
     }
+
+    case "rotation_timer":
+      return <RotationTimerRenderer content={content as RotationTimerContent} screen={screen} sessionId={sessionId} />;
+
+    case "hazard_hotspots":
+      return <HazardHotspotsRenderer content={content as HazardHotspotsContent} screen={screen} sessionId={sessionId} />;
 
     case "host_timer": {
       if (screen !== "host") return <Waiting screen={screen} />;

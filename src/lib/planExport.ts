@@ -254,6 +254,25 @@ export function describeContent(content: ContentDef | null | undefined): {
       return { label: "Padlet board", detail };
     }
 
+    case "rotation_timer":
+      return {
+        label: "Rotation timer (all three screens)",
+        detail: [
+          str(c.label) ? `“${str(c.label)}”` : "No label",
+          `${Number(c.rounds ?? 4)} rounds of ${secs(c.round_secs)}, ${secs(c.move_secs ?? 15)} to move between`,
+        ],
+      };
+
+    case "hazard_hotspots": {
+      const spots = (Array.isArray(c.hotspots) ? c.hotspots : []).map((h) =>
+        str((h as { label?: unknown }).label),
+      );
+      return {
+        label: "Spot the hazard (tap the image)",
+        detail: [spots.length ? `Hazards: ${spots.join(" · ")}` : "No hazards marked"],
+      };
+    }
+
     case "whiteboard":
       return {
         label: "Whiteboard",

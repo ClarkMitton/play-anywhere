@@ -43,6 +43,7 @@ export const sounds = {
   questionReveal: () => { tone(660, 80, "triangle", 0.7); setTimeout(() => tone(880, 120, "triangle", 0.7), 70); setTimeout(() => tone(1100, 180, "triangle", 0.7), 160); },
   countdownTick: () => { tone(440, 60, "square", 0.3); },
   countdownEnd: () => { tone(220, 200, "sawtooth", 0.6); setTimeout(() => tone(165, 320, "sawtooth", 0.6), 180); },
+  rotate: () => { tone(988, 120, "triangle", 0.8); setTimeout(() => tone(988, 120, "triangle", 0.8), 180); setTimeout(() => tone(1319, 260, "triangle", 0.8), 360); },
   connect: () => { tone(880, 80, "sine", 0.5); setTimeout(() => tone(1320, 120, "sine", 0.5), 60); },
   launch: () => { tone(330, 80, "triangle", 0.7); setTimeout(() => tone(523, 90, "triangle", 0.7), 70); setTimeout(() => tone(784, 110, "triangle", 0.7), 150); setTimeout(() => tone(1046, 240, "triangle", 0.8), 240); },
 };
