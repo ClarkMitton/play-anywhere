@@ -950,46 +950,8 @@ function DataTab() {
         </div>
       </section>
 
-      {/* Confidence checker results */}
-      {confidenceGroups.length > 0 && (
-        <section>
-          <h2 className="text-lg font-extrabold uppercase tracking-widest mb-5 text-[color:var(--cyan)]">
-            Confidence Check Results
-          </h2>
-          <div className="grid gap-3">
-            {confidenceGroups.map((g) => (
-              <div
-                key={g.sessionId}
-                className="bg-card/60 rounded-xl border border-border p-4 flex items-center justify-between gap-4"
-              >
-                <div>
-                  <div className="font-bold">{g.lessonTitle}</div>
-                  <div className="text-xs text-muted-foreground uppercase tracking-widest mt-1">
-                    {g.date} · {g.count} response{g.count !== 1 ? "s" : ""}
-                  </div>
-                </div>
-                <div className="text-right shrink-0">
-                  <div className="text-xs uppercase tracking-widest text-muted-foreground mb-1">
-                    Avg score
-                  </div>
-                  <div
-                    className={`text-3xl font-extrabold ${
-                      g.average >= 4
-                        ? "text-[color:var(--success)]"
-                        : g.average >= 3
-                          ? "text-[color:var(--cyan)]"
-                          : "text-[color:var(--orange)]"
-                    }`}
-                  >
-                    {g.average.toFixed(1)}
-                    <span className="text-base text-muted-foreground">/5</span>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
+      <ConfidenceReport sessions={sessions} responses={responses} />
+      {void confidenceGroups}
 
       {/* Poll / Likert placeholder */}
       {pollLikertCount > 0 && (
