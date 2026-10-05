@@ -201,7 +201,7 @@ export function SlotRenderer({
         <div className="min-h-screen w-full bg-background animate-slot-in">
           <iframe
             key={c.url}
-            src={c.url}
+            src={normalizeEmbedUrl(c.url)}
             className="w-full h-screen border-0"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; fullscreen; gyroscope; microphone; camera; picture-in-picture; web-share"
             allowFullScreen
@@ -297,13 +297,20 @@ export function SlotRenderer({
 // HELPERS
 // ─────────────────────────────────────────────
 
-function extractYouTubeId(url: string): string | null {
+import { extractYouTubeId } from "@/lib/sessionSchema";
+
+/** Turn ordinary share links (YouTube, Edpuzzle) into their embeddable form. */
+function normalizeEmbedUrl(url: string): string {
   try {
-    const u = new URL(url);
-    if (u.hostname.includes("youtube.com")) return u.searchParams.get("v");
-    if (u.hostname === "youtu.be") return u.pathname.slice(1).split("?")[0];
-    return null;
-  } catch { return null; }
+    const u = new URL(url.trim());
+    const yt = extractYouTubeId(u.href);
+    if (yt) return `https://www.youtube.com/embed/${yt}?rel=0`;
+    if (u.hostname.endsWith("edpuzzle.com")) {
+      const m = u.pathname.match(/^\/(?:embed\/)?media\/([a-z0-9]+)/i);
+      if (m) return `https://edpuzzle.com/embed/media/${m[1]}`;
+    }
+    return u.href;
+  } catch { return url; }
 }
 
 // ─────────────────────────────────────────────

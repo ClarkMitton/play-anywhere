@@ -416,7 +416,13 @@ export type Brief = z.infer<typeof briefSchema>;
 export function extractYouTubeId(url: string): string | null {
   try {
     const u = new URL(url);
-    if (u.hostname.includes("youtube.com")) return u.searchParams.get("v");
+    if (u.hostname.includes("youtube.com")) {
+      const v = u.searchParams.get("v");
+      if (v) return v;
+      // Shorts, embed and live links keep the ID in the path.
+      const m = u.pathname.match(/^\/(?:shorts|embed|live)\/([\w-]{6,})/);
+      return m ? m[1] : null;
+    }
     if (u.hostname === "youtu.be") return u.pathname.slice(1).split("?")[0];
     return null;
   } catch {
