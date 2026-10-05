@@ -181,8 +181,8 @@ is for, and what to use instead when it is the wrong fit.
 - countdown_timer — visible time pressure for work happening away from the
   screens. Always pair with a SHAREBACK so the work is captured.
 - rotation_timer — a carousel: groups work at one table or station, then
-  rotate. Runs `rounds` rounds of `round_secs`, with a chime and ROTATE! screen
-  of `move_secs` between them. Use the identical payload on all three screens.
+  rotate. Runs \`rounds\` rounds of \`round_secs\`, with a chime and ROTATE! screen
+  of \`move_secs\` between them. Use the identical payload on all three screens.
   rounds × round_secs + (rounds − 1) × move_secs must fit inside the slot.
 - multiple_choice / true_or_false — AVOID in this room. They only render on
   Touch Screen 2, so learners at Touch Screen 1 get a blank screen. Wrap the
