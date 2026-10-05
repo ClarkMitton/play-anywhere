@@ -2,6 +2,7 @@
 // PIN-protected (4158). Three tabs: Lessons, Data, Settings.
 // Stage designer navigation wires to /admin/designer/$lessonId (created in Step 8).
 
+import { buildConfidenceReport, confidenceReportCsv } from "@/lib/confidenceReport";
 import { createFileRoute, Link, Outlet, useMatchRoute } from "@tanstack/react-router";
 import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -986,5 +987,82 @@ function SettingsTab() {
         </p>
       </div>
     </div>
+  );
+}
+
+// ─────────────────────────────────────────────
+// CONFIDENCE REPORT (before vs after, for SLT)
+// ─────────────────────────────────────────────
+function ConfidenceReport({ sessions, responses }: { sessions: SessionRow[]; responses: ResponseRow[] }) {
+  const rows = buildConfidenceReport(
+    sessions as never,
+    responses as never,
+  );
+  if (rows.length === 0) return null;
+  const totalStudents = rows.reduce((a, r) => a + r.participants, 0);
+  const withBoth = rows.filter((r) => r.change !== null);
+  const avgChange = withBoth.length ? withBoth.reduce((a, r) => a + (r.change ?? 0), 0) / withBoth.length : null;
+  const improved = withBoth.filter((r) => (r.change ?? 0) > 0).length;
+  const fmt = (n: number | null) => (n === null ? "—" : n.toFixed(1));
+
+  const download = () => {
+    const blob = new Blob([confidenceReportCsv(rows)], { type: "text/csv" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `confidence-report-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  };
+
+  return (
+    <section>
+      <div className="flex items-center justify-between gap-4 mb-5 flex-wrap">
+        <h2 className="text-lg font-extrabold uppercase tracking-widest text-[color:var(--cyan)]">
+          Confidence Report · Before vs After
+        </h2>
+        <Button onClick={download} variant="outline">Download for SLT (CSV)</Button>
+      </div>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
+        {[
+          ["Sessions", String(rows.length)],
+          ["Students participated", String(totalStudents)],
+          ["Avg change", avgChange === null ? "—" : `${avgChange > 0 ? "+" : ""}${avgChange.toFixed(1)}`],
+          ["Sessions improved", withBoth.length ? `${improved}/${withBoth.length}` : "—"],
+        ].map(([k, v]) => (
+          <div key={k} className="bg-card/60 rounded-xl border border-border p-4">
+            <div className="text-xs uppercase tracking-widest text-muted-foreground">{k}</div>
+            <div className="text-3xl font-extrabold mt-1">{v}</div>
+          </div>
+        ))}
+      </div>
+      <div className="overflow-x-auto rounded-xl border border-border">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="text-left text-xs uppercase tracking-widest text-muted-foreground border-b border-border bg-card/40">
+              <th className="py-3 px-4">Date</th>
+              <th className="py-3 px-4">Class / lesson</th>
+              <th className="py-3 px-4">Students</th>
+              <th className="py-3 px-4">Before</th>
+              <th className="py-3 px-4">After</th>
+              <th className="py-3 px-4">Change</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((r) => (
+              <tr key={r.sessionId} className="border-b border-border/40">
+                <td className="py-3 px-4 font-mono text-xs text-muted-foreground">{r.date}</td>
+                <td className="py-3 px-4 font-medium">{r.lessonTitle}</td>
+                <td className="py-3 px-4">{r.participants}</td>
+                <td className="py-3 px-4">{fmt(r.startAvg)}<span className="text-muted-foreground text-xs"> ({r.startCount})</span></td>
+                <td className="py-3 px-4">{fmt(r.finalAvg)}<span className="text-muted-foreground text-xs"> ({r.finalCount})</span></td>
+                <td className={`py-3 px-4 font-bold ${r.change === null ? "text-muted-foreground" : r.change > 0 ? "text-[color:var(--success)]" : r.change < 0 ? "text-[color:var(--orange)]" : ""}`}>
+                  {r.change === null ? "—" : `${r.change > 0 ? "+" : ""}${r.change.toFixed(1)}`}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </section>
   );
 }
