@@ -2,7 +2,7 @@
 // PIN-protected (4158). Three tabs: Lessons, Data, Settings.
 // Stage designer navigation wires to /admin/designer/$lessonId (created in Step 8).
 
-import { buildConfidenceReport, confidenceReportCsv } from "@/lib/confidenceReport";
+import { buildConfidenceReport, confidenceReportCsv, scaleMaxFromContent } from "@/lib/confidenceReport";
 import { createFileRoute, Link, Outlet, useMatchRoute } from "@tanstack/react-router";
 import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -994,16 +994,26 @@ function SettingsTab() {
 // CONFIDENCE REPORT (before vs after, for SLT)
 // ─────────────────────────────────────────────
 function ConfidenceReport({ sessions, responses }: { sessions: SessionRow[]; responses: ResponseRow[] }) {
-  const rows = buildConfidenceReport(
-    sessions as never,
-    responses as never,
-  );
+  const [slotMax, setSlotMax] = useState<Map<string, number>>(new Map());
+  useEffect(() => {
+    const ids = [...new Set(responses.filter((r) => r.response_type === "confidence_checker" && r.slot_id).map((r) => r.slot_id as string))];
+    if (!ids.length) return;
+    supabase.from("slots").select("id, screen1_content, screen2_content").in("id", ids).then(({ data }) => {
+      const m = new Map<string, number>();
+      for (const s of data ?? []) {
+        const v = scaleMaxFromContent(s.screen1_content) ?? scaleMaxFromContent(s.screen2_content);
+        if (v) m.set(s.id, v);
+      }
+      setSlotMax(m);
+    });
+  }, [responses]);
+  const rows = buildConfidenceReport(sessions as never, responses as never, slotMax);
   if (rows.length === 0) return null;
   const totalStudents = rows.reduce((a, r) => a + r.participants, 0);
   const withBoth = rows.filter((r) => r.change !== null);
   const avgChange = withBoth.length ? withBoth.reduce((a, r) => a + (r.change ?? 0), 0) / withBoth.length : null;
   const improved = withBoth.filter((r) => (r.change ?? 0) > 0).length;
-  const fmt = (n: number | null) => (n === null ? "—" : n.toFixed(1));
+  const fmt = (n: number | null) => (n === null ? "—" : `${n.toFixed(0)}%`);
 
   const download = () => {
     const blob = new Blob([confidenceReportCsv(rows)], { type: "text/csv" });
@@ -1026,7 +1036,7 @@ function ConfidenceReport({ sessions, responses }: { sessions: SessionRow[]; res
         {[
           ["Sessions", String(rows.length)],
           ["Students participated", String(totalStudents)],
-          ["Avg change", avgChange === null ? "—" : `${avgChange > 0 ? "+" : ""}${avgChange.toFixed(1)}`],
+          ["Avg change", avgChange === null ? "—" : `${avgChange > 0 ? "+" : ""}${avgChange.toFixed(0)} pts`],
           ["Sessions improved", withBoth.length ? `${improved}/${withBoth.length}` : "—"],
         ].map(([k, v]) => (
           <div key={k} className="bg-card/60 rounded-xl border border-border p-4">
@@ -1056,7 +1066,7 @@ function ConfidenceReport({ sessions, responses }: { sessions: SessionRow[]; res
                 <td className="py-3 px-4">{fmt(r.startAvg)}<span className="text-muted-foreground text-xs"> ({r.startCount})</span></td>
                 <td className="py-3 px-4">{fmt(r.finalAvg)}<span className="text-muted-foreground text-xs"> ({r.finalCount})</span></td>
                 <td className={`py-3 px-4 font-bold ${r.change === null ? "text-muted-foreground" : r.change > 0 ? "text-[color:var(--success)]" : r.change < 0 ? "text-[color:var(--orange)]" : ""}`}>
-                  {r.change === null ? "—" : `${r.change > 0 ? "+" : ""}${r.change.toFixed(1)}`}
+                  {r.change === null ? "—" : `${r.change > 0 ? "+" : ""}${r.change.toFixed(0)} pts`}
                 </td>
               </tr>
             ))}

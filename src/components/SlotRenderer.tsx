@@ -397,7 +397,7 @@ function ConfidenceCheckerInput({ content, screen, sessionId, slotId }: {
     setSubmitting(true);
     await supabase.from("responses").insert({
       session_id: sessionId, slot_id: slotId ?? null, screen_role: screen,
-      response_type: "confidence_checker", response_data: { score, thoughts, checkpoint } as never,
+      response_type: "confidence_checker", response_data: { score, thoughts, checkpoint, max: options.length } as never,
     });
     setSubmitting(false);
     setRecorded(c => c + 1);
