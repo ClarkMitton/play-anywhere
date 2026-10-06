@@ -2,6 +2,7 @@
 // PIN-protected (4158). Three tabs: Lessons, Data, Settings.
 // Stage designer navigation wires to /admin/designer/$lessonId (created in Step 8).
 
+import { deleteLessonCompletely } from "@/lib/lessonCleanup";
 import { buildConfidenceReport, confidenceReportCsv, scaleMaxFromContent } from "@/lib/confidenceReport";
 import { createFileRoute, Link, Outlet, useMatchRoute } from "@tanstack/react-router";
 import { useState, useEffect, useCallback, useRef } from "react";
@@ -305,7 +306,7 @@ function LessonsTab() {
   };
 
   const deleteLesson = async (lesson: Lesson) => {
-    await supabase.from("lessons").delete().eq("id", lesson.id);
+    await deleteLessonCompletely(lesson.id);
     setDeleteTarget(null);
     loadLessons();
   };
@@ -824,7 +825,7 @@ function DataTab() {
       const [sessRes, respRes, lessRes] = await Promise.all([
         supabase
           .from("sessions")
-          .select("id, lesson_id, created_at, ended_at, status")
+          .select("id, lesson_id, created_at, ended_at, status, state")
           .order("created_at", { ascending: false }),
         supabase.from("responses").select("*").order("created_at", { ascending: false }),
         supabase.from("lessons").select("id, title"),
@@ -836,7 +837,9 @@ function DataTab() {
 
       const sessWithTitle = ((sessRes.data ?? []) as SessionRow[]).map((s) => ({
         ...s,
-        lessonTitle: s.lesson_id ? (lessonMap.get(s.lesson_id) ?? "Unknown lesson") : "—",
+        lessonTitle:
+          (s.lesson_id && lessonMap.get(s.lesson_id)) ||
+          ((s as { state?: { lesson_title?: string } }).state?.lesson_title ?? (s.lesson_id ? "Deleted lesson" : "—")),
       }));
 
       setSessions(sessWithTitle);
