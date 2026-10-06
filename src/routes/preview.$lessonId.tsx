@@ -132,6 +132,25 @@ function PreviewPage() {
     [session, slots, index],
   );
 
+  // The Host can move the lesson on by itself (a video finishing does), so
+  // follow the session instead of trusting our own count, or the notes would
+  // fall a step behind the screens.
+  useEffect(() => {
+    if (!session) return;
+    const ch = supabase.channel(`preview:${session.id}`);
+    ch.on(
+      "postgres_changes",
+      { event: "UPDATE", schema: "public", table: "sessions", filter: `id=eq.${session.id}` },
+      (payload) => {
+        const i = (payload.new as { current_slot_index?: number }).current_slot_index;
+        if (typeof i === "number") setIndex(i);
+      },
+    ).subscribe();
+    return () => {
+      supabase.removeChannel(ch);
+    };
+  }, [session]);
+
   // Arrow keys step through, like a slide deck.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {

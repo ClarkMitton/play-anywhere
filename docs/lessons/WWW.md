@@ -8,6 +8,8 @@ Newest first. Each entry has two halves:
 
 "Even better if" sits next to each so the next lesson starts from what we learned.
 
+What proves itself here is collected in [WAYS-OF-WORKING.md](WAYS-OF-WORKING.md).
+
 ---
 
 ## Us vs AI

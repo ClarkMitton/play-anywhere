@@ -133,6 +133,24 @@ function TestMode() {
     [session, slotsList, slotIndex],
   );
 
+  // The Host can move on by itself when a video finishes. Follow the session
+  // so the slot counter in the header stays in step with the screens.
+  useEffect(() => {
+    if (!session) return;
+    const ch = supabase.channel(`test:${session.id}`);
+    ch.on(
+      "postgres_changes",
+      { event: "UPDATE", schema: "public", table: "sessions", filter: `id=eq.${session.id}` },
+      (payload) => {
+        const i = (payload.new as { current_slot_index?: number }).current_slot_index;
+        if (typeof i === "number") setSlotIndex(i);
+      },
+    ).subscribe();
+    return () => {
+      supabase.removeChannel(ch);
+    };
+  }, [session]);
+
   const endTest = useCallback(async () => {
     if (!session) return;
     await supabase

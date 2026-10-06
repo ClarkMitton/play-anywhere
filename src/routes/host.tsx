@@ -406,6 +406,25 @@ function HostScreen() {
   const pushSlotRef = useRef(pushSlot);
   pushSlotRef.current = pushSlot;
   const currentIdx = session?.current_slot_index ?? 0;
+
+  // A video that plays to its end moves the lesson on by itself, so the tutor
+  // is not left hunting for Next over YouTube's end screen. The short pause
+  // lets the last frame land; it is dropped if the tutor moves first.
+  const autoAdvanceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => {
+    return () => {
+      if (autoAdvanceTimer.current) clearTimeout(autoAdvanceTimer.current);
+      autoAdvanceTimer.current = null;
+    };
+  }, [currentIdx]);
+  const advanceAfterVideo = () => {
+    if (autoAdvanceTimer.current) return;
+    const from = currentIdx;
+    autoAdvanceTimer.current = setTimeout(() => {
+      autoAdvanceTimer.current = null;
+      pushSlotRef.current(from + 1);
+    }, 1500);
+  };
   const isActive = session?.status === "active";
   useEffect(() => {
     if (!isActive) return;
@@ -498,6 +517,7 @@ function HostScreen() {
             muted={false}
             sessionId={session.id}
             channel={channelRef.current ?? undefined}
+            onMediaEnded={advanceAfterVideo}
           />
         </div>
         {/* Bottom 40% — screen2 content */}
@@ -545,6 +565,7 @@ function HostScreen() {
           muted={false}
           sessionId={session.id}
           channel={channelRef.current ?? undefined}
+          onMediaEnded={advanceAfterVideo}
         />
         {/* Floating slot navigation bar */}
         <div className={`fixed bottom-4 left-1/2 -translate-x-1/2 z-50 ${inPreview ? "hidden" : ""}`}>

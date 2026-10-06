@@ -95,6 +95,7 @@ export function SlotRenderer({
   muted = true,
   sessionId,
   slotId,
+  onMediaEnded,
 }: {
   content: SlotContent | null | undefined;
   screen: "host" | "screen1" | "screen2";
@@ -102,6 +103,8 @@ export function SlotRenderer({
   sessionId?: string;
   slotId?: string;
   channel?: RealtimeChannel;
+  /** Called once when a video on this screen plays to its end. The Host uses it to move the lesson on. */
+  onMediaEnded?: () => void;
 }) {
   if (!content || !content.type) return <Waiting screen={screen} />;
 
@@ -164,19 +167,16 @@ export function SlotRenderer({
         ? "autoplay=1&rel=0&modestbranding=1"
         : "autoplay=1&mute=1&rel=0&modestbranding=1";
       return (
-        <div className="min-h-screen w-full bg-black animate-slot-in">
-          <iframe key={videoId + screen}
-            src={`https://www.youtube.com/embed/${videoId}?${params}${youTubeClipParams(c.url)}`}
-            className="w-full h-screen border-0"
-            allow="autoplay; fullscreen" allowFullScreen title="YouTube video" />
-        </div>
+        <YouTubeFrame key={videoId + screen}
+          src={`https://www.youtube.com/embed/${videoId}?${params}${youTubeClipParams(c.url)}`}
+          onEnded={onMediaEnded} />
       );
     }
 
     case "video": {
       const c = content as Extract<SlotContent, { type: "video" }>;
       if (!c.url) return <Waiting screen={screen} />;
-      return <LoopingVideo url={c.url} loop={c.loop !== false} withSound={screen === "host"} />;
+      return <LoopingVideo url={c.url} loop={c.loop !== false} withSound={screen === "host"} onEnded={onMediaEnded} />;
     }
 
     case "image": {
@@ -324,11 +324,64 @@ export function normalizeEmbedUrl(url: string): string {
 }
 
 /**
+ * A YouTube video that can report when it finishes.
+ *
+ * YouTube's player talks to the page it is embedded in, but only once asked:
+ * the page says "listening" and the player then posts its state on every
+ * change. State 0 is "ended", which is also what a clip trimmed with `&end=`
+ * reports when it reaches its stop time. Without `onEnded` this is a plain embed.
+ */
+function YouTubeFrame({ src, onEnded }: { src: string; onEnded?: () => void }) {
+  const frameRef = useRef<HTMLIFrameElement | null>(null);
+  const onEndedRef = useRef(onEnded);
+  onEndedRef.current = onEnded;
+  const watching = !!onEnded;
+
+  useEffect(() => {
+    if (!watching) return;
+    let heard = false;
+    let done = false;
+    const say = () => {
+      frameRef.current?.contentWindow?.postMessage(
+        JSON.stringify({ event: "listening", id: "host-video", channel: "widget" }),
+        "https://www.youtube.com",
+      );
+    };
+    const onMessage = (e: MessageEvent) => {
+      if (e.origin !== "https://www.youtube.com" || e.source !== frameRef.current?.contentWindow) return;
+      let data: { event?: string; info?: { playerState?: number } | null } | null = null;
+      try { data = typeof e.data === "string" ? JSON.parse(e.data) : e.data; } catch { return; }
+      if (!data) return;
+      heard = true;
+      if (!done && data.info && data.info.playerState === 0) {
+        done = true; // once only: the end screen can report "ended" again
+        onEndedRef.current?.();
+      }
+    };
+    window.addEventListener("message", onMessage);
+    // The player ignores "listening" until it has loaded, so keep asking until it answers.
+    const ask = window.setInterval(() => { if (heard) window.clearInterval(ask); else say(); }, 500);
+    return () => { window.clearInterval(ask); window.removeEventListener("message", onMessage); };
+  }, [src, watching]);
+
+  const withApi = watching
+    ? `${src}&enablejsapi=1&origin=${encodeURIComponent(typeof window === "undefined" ? "" : window.location.origin)}`
+    : src;
+  return (
+    <div className="min-h-screen w-full bg-black animate-slot-in">
+      <iframe ref={frameRef} src={withApi}
+        className="w-full h-screen border-0"
+        allow="autoplay; fullscreen" allowFullScreen title="YouTube video" />
+    </div>
+  );
+}
+
+/**
  * An uploaded video that starts by itself and, by default, loops forever.
  * Browsers refuse to autoplay with sound until someone has interacted with the
  * page, so if the first attempt is refused it plays muted rather than not at all.
  */
-function LoopingVideo({ url, loop, withSound }: { url: string; loop: boolean; withSound: boolean }) {
+function LoopingVideo({ url, loop, withSound, onEnded }: { url: string; loop: boolean; withSound: boolean; onEnded?: () => void }) {
   const ref = useRef<HTMLVideoElement | null>(null);
   useEffect(() => {
     const v = ref.current;
@@ -342,6 +395,7 @@ function LoopingVideo({ url, loop, withSound }: { url: string; loop: boolean; wi
   return (
     <div className="h-screen w-full bg-black animate-slot-in">
       <video ref={ref} key={url} src={url} loop={loop} autoPlay playsInline muted={!withSound}
+        onEnded={loop ? undefined : onEnded}
         className="w-full h-full object-contain" />
     </div>
   );

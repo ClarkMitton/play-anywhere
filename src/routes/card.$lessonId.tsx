@@ -1,15 +1,14 @@
 // Lesson card — /card/$lessonId
 //
 // The one page you send a tutor. Title, length, outcomes, the running order at
-// a line per step, and a way into the live preview: a button, a QR code and the
-// address in full, so it still works from a printout or a flattened PDF.
+// a line per step, and a way into the live preview: a button, plus the address
+// in full so it can still be typed from a printout or a flattened PDF.
 //
 // Deliberately public (no PIN) and deliberately short. The detail a tutor needs
 // lives in the preview, one step at a time, not here.
 
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { QRCodeSVG } from "qrcode.react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { totalMinutes, type PlanLesson, type PlanSlot } from "@/lib/planExport";
@@ -125,12 +124,6 @@ function CardPage() {
             </Link>
             {origin && <div className="card-url">{previewUrl}</div>}
           </div>
-          {origin && (
-            <div className="card-qr">
-              <QRCodeSVG value={previewUrl} size={132} />
-              <span>or scan</span>
-            </div>
-          )}
         </section>
 
         {outcomes.length > 0 && (
@@ -207,8 +200,6 @@ html, body { background: #e5e7eb; }
 }
 .card-cta:hover { background: #0e7490; }
 .card-url { margin-top: 8px; font-size: 9pt; color: #155e75; word-break: break-all; font-family: Consolas, Menlo, monospace; }
-.card-qr { flex: none; display: flex; flex-direction: column; align-items: center; gap: 4px; background: #fff; padding: 8px; border-radius: 8px; }
-.card-qr span { font-size: 8pt; text-transform: uppercase; letter-spacing: .15em; color: #6b7280; }
 
 .card-page ol.card-outcomes { list-style: decimal; margin: 0; padding-left: 20px; }
 .card-outcomes li { margin-bottom: 2px; }
