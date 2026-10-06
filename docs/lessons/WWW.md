@@ -42,6 +42,7 @@ is about the second design.
 - **No activity twice in a row,** and the two question rounds have different shapes: quick true or false, then a best-answer question.
 - **Every tutor note names its technique,** so the member of staff leaves with approaches as well as a lesson.
 - **Works with any number of tables.** One pack per table, and the notes say what to do with only one or two.
+- **The video has a watching task.** The tutor sets three questions before the clip, learners write answers on the table as it plays, the same questions sit large on the touch screens, and the next slide opens the floor to them. The first attempt had one small-print question that nobody could read.
 - **Two moves, not four.** After a first attempt that sent the whole class to the touch screens for a single vote, the steps were reordered by where learners stand: tables, one trip to the screens for seven steps in a row, then back to the tables. The final answer is typed by one runner per table.
 
 ### Even better if (build)

@@ -83,9 +83,16 @@ and breaks concentration. So plan the room, not only the content.
 
 ## Videos
 
-- **Videos start conversations.** Follow each one with a talk slide carrying one open question, never straight into a quiz.
+Nobody should be a passenger during a video. Decide which of two ways it is being used.
+
+- **Full focus: the video on all three screens.** Use this when the clip is the event and you want every eye on it, wherever learners are standing.
+- **Watching task: the video on the big screen, questions on the touch screens.** Use this when you want learners thinking while they watch. Give two or three real questions, in large text, not one line in small print.
+- **Set the questions before the clip starts.** The tutor says them out loud first, so learners know what to look for from the first second.
+- **Get learners writing while they watch** when they are at the tables: answers go on the table as the clip plays.
+- **The next step opens the floor to those same questions.** A talk slide carrying the questions they just answered, never straight into a quiz, and never a new question they were not watching for.
+- **Choose by where learners are.** At the tables, a writing task works. At the touch screens, questions on the touch screens work. If they cannot see the touch screens from where they stand, put the task in what the tutor says.
 - **The lesson moves on by itself when a video ends,** so the step after it must be the one you want next.
-- **Give the touch screens a job during a video.** Show the question to think about, not a second copy of the clip.
+- **Videos start conversations.** Use them to open a debate or to bust a myth, not to deliver facts a slide could give.
 - **Trim a long video to the part that matters.** Add `&end=460` to a YouTube link to stop it at 7 minutes 40 seconds.
 - **Use a video file for anything that must loop.** A Canva video cannot loop or start itself as an embed. Download it as an MP4 and add it as "Video file (loops)".
 - **Check every link is a different video** before building around them.
