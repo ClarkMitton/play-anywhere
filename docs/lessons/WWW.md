@@ -14,29 +14,42 @@ What proves itself here is collected in [WAYS-OF-WORKING.md](WAYS-OF-WORKING.md)
 
 ## Us vs AI
 
-- **Built:** 6 October 2026
-- **For:** Level 2 and Level 3 learners, any subject
-- **Length:** 45 minutes, 21 steps
-- **Source:** `USvsAI/AI Introductions.txt` (three short clips, one article, and the brief: informative, fun, and real feedback from students)
+- **Built:** 6 October 2026 (first design), rebuilt the same day (second design)
+- **For:** Level 2 and Level 3 learners, any subject, typical group of 16
+- **Length:** 45 minutes, 20 steps, 17 minutes at the whiteboard tables
+- **Source:** `USvsAI/AI Introductions.txt`
 - **Lesson file:** [us-vs-ai.sql](us-vs-ai.sql)
+- **Slides:** eight, made in Canva, in `public/lessons/us-vs-ai/`
+- **Table packs:** `public/lessons/us-vs-ai/printables.html`
+
+### What the first design got wrong
+
+The first version was 21 steps of video, slide, quiz, repeat. Its outcomes stopped at
+"describe" and "identify", its longest task was four minutes, most of the class watched
+two touch screens, and "Demonstrate" was a recall quiz. It also tried to use all three
+clips, which were really three different lessons. It was thrown away. Everything below
+is about the second design.
 
 ### WWW in the build
 
-- **Each clip teaches one idea.** The sandwich clip is "it does what you say, not what you mean". The strawberry clip is "it predicts, it does not know". The spaghetti clip is "it is improving fast". Nothing is shown just because it is funny.
-- **Clip, then idea, then do something.** Every video is followed by one slide naming the point and then an activity that uses it.
-- **The feedback is built into the lesson, not bolted on.** Two votes, a word cloud and two shared boards ask learners what they really think and do. The answers are saved, so the college gets its feedback from an activity learners enjoyed.
-- **The article became an activity.** Learners draw a clock at half past three on the whiteboard and send it to the big screen, then find out AI usually draws ten past ten. They beat the AI before being told why.
-- **It ends on something usable.** Three checks before trusting AI, tested straight away in a team buzzer quiz.
-- **The confidence question is designed to go down.** Learners start sure they can spot AI mistakes and should finish less sure. The tutor notes say this is a good result.
-- **It does not tell learners AI is bad.** The closing message is to use it and stay in charge.
-- **Building it found a bug.** Two votes in one lesson would have shared their totals, and the same for two shared boards. Fixed before the lesson was ever run.
+- **The objectives were chosen first, by the person who asked for the lesson.** Four, climbing from identify to explain to analyse to rewrite. Everything else was built to serve them.
+- **One idea runs through it:** AI is not thinking, it is predicting. Two of the three clips did not serve that idea and were dropped.
+- **The hook opens a question the last task answers.** The sandwich clip asks "was the AI wrong, or was the instruction?" Nobody answers it until learners have rewritten an instruction themselves.
+- **Learners do it before they are told.** They finish a sentence as a word cloud, and only then learn that this is all a chatbot does. They draw half past three, and only then see the AI's watches.
+- **Two long tasks at the tables.** A case file to analyse and an instruction to rewrite, each with a second round where tables move and test another table's work.
+- **The printed packs feel like something.** Cards to sort, a stamped case file with evidence, a black role card that says "You are the AI". Nothing is written on the paper, so they can be reused.
+- **Real slides, made in Canva.** A precise brief (read from across a room, few words, no sci-fi, what each picture must show) gave eight usable slides first time.
+- **No activity twice in a row,** and the two question rounds have different shapes: quick true or false, then a best-answer question.
+- **Every tutor note names its technique,** so the member of staff leaves with approaches as well as a lesson.
+- **Works with any number of tables.** One pack per table, and the notes say what to do with only one or two.
 
 ### Even better if (build)
 
-- No length was given, so 45 minutes was assumed.
-- The clips are comedy and social media videos that were not watched during the build. The tutor needs to watch them first.
-- Chatbots change quickly. The strawberry mistake may already be fixed in the tool a learner tries, and the 10:10 claim comes from one article. The tutor notes say how to handle both honestly.
-- A real AI-drawn watch picture on the big screen would land better than a text slide. Worth adding in the designer.
+- 20 steps is still more than the dozen we aimed for. Eight of them are one-minute slides, but it is worth watching whether it feels busy.
+- One Canva picture misspells "Recommended". It is flagged in the tutor notes as a spot-the-AI-mistake moment, but it should be a choice, not an accident.
+- The watch pictures were asked to show ten past ten, so they illustrate the point without proving it. The AI picture tool was unavailable when we tried to run the real test.
+- There is no way yet to get what is written on a table onto the big screen. Learners type their final instruction instead.
+- The app has no sorting activity, so the card sort is paper only.
 
 ### WWW in the room
 

@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Us vs AI · table packs</title>
+<style>
+  :root { --ink: #111827; --teal: #0891b2; --orange: #ea580c; --green: #059669; --purple: #7c3aed; --paper: #fffdf7; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; color: var(--ink); background: #e5e7eb; }
+  .bar { position: sticky; top: 0; z-index: 5; background: #111827; color: #e5e7eb; padding: 10px 20px; display: flex; gap: 16px; align-items: center; justify-content: space-between; font-size: 14px; }
+  .bar button { font: inherit; font-weight: 700; padding: 8px 16px; border-radius: 8px; border: 0; background: #06b6d4; color: #06251f; cursor: pointer; }
+  .page { width: 210mm; min-height: 297mm; margin: 16px auto; padding: 12mm; background: #fff; box-shadow: 0 4px 24px rgba(0,0,0,.18); page-break-after: always; break-after: page; }
+  h1 { font-size: 22pt; margin: 0 0 4px; }
+  h2 { font-size: 13pt; margin: 14px 0 6px; color: var(--teal); text-transform: uppercase; letter-spacing: .08em; }
+  p, li { font-size: 11.5pt; line-height: 1.45; }
+  .eyebrow { font-size: 9pt; font-weight: 800; letter-spacing: .25em; text-transform: uppercase; color: var(--teal); }
+  .note { font-size: 10pt; color: #4b5563; }
+
+  /* Cards: cut along the dashed lines */
+  .cards { display: grid; grid-template-columns: 1fr 1fr; gap: 0; border: 1.5px dashed #9ca3af; }
+  .card { height: 62mm; border: 1.5px dashed #9ca3af; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 6mm; }
+  .card .pic { font-size: 54pt; line-height: 1; }
+  .card .name { font-size: 20pt; font-weight: 800; margin-top: 4mm; line-height: 1.1; }
+  .card .sub { font-size: 11pt; color: #4b5563; margin-top: 2mm; }
+  .headers .card { height: 42mm; color: #fff; }
+  .headers .name { font-size: 26pt; margin: 0; }
+  .is { background: var(--green); } .not { background: var(--orange); } .unsure { background: var(--purple); }
+
+  /* Case file */
+  .file { border: 3px solid var(--ink); border-radius: 6px; padding: 8mm; background: var(--paper); position: relative; }
+  .stamp { position: absolute; top: 8mm; right: 8mm; border: 3px solid #b91c1c; color: #b91c1c; font-weight: 900; font-size: 13pt; letter-spacing: .15em; padding: 3px 10px; transform: rotate(6deg); text-transform: uppercase; }
+  .evidence { display: grid; grid-template-columns: 1fr 1fr; gap: 6mm; margin-top: 4mm; }
+  .ev { border: 2px solid var(--ink); background: #fff; padding: 5mm; }
+  .ev .tag { font-size: 9pt; font-weight: 900; letter-spacing: .2em; color: #b91c1c; }
+  .ev .big { font-size: 15pt; font-weight: 800; line-height: 1.2; margin: 2mm 0; }
+  .clock { width: 34mm; height: 34mm; display: block; margin: 2mm auto; }
+  .ask { border-left: 6px solid var(--teal); padding: 2mm 5mm; margin: 4mm 0; background: #ecfeff; }
+  .ask b { font-size: 13pt; }
+  .stretch { border: 2.5px dashed var(--purple); padding: 4mm 5mm; margin-top: 5mm; }
+  .stretch .tag { color: var(--purple); font-weight: 900; letter-spacing: .15em; font-size: 9.5pt; }
+
+  /* Instruction cards */
+  .prompt { height: 62mm; }
+  .prompt .q { font-size: 9pt; font-weight: 900; letter-spacing: .2em; color: var(--orange); }
+  .prompt .name { font-size: 21pt; }
+  .role { background: #111827; color: #fff; }
+  .role .q { color: #fbbf24; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 10.5pt; }
+  th, td { text-align: left; padding: 4px 6px; border-bottom: 1px solid #e5e7eb; vertical-align: top; }
+  th { font-size: 9pt; text-transform: uppercase; letter-spacing: .1em; color: #6b7280; }
+
+  @media print {
+    @page { size: A4 portrait; margin: 0; }
+    body { background: #fff; }
+    .bar { display: none; }
+    .page { margin: 0; box-shadow: none; }
+    .is, .not, .unsure, .role, .file, .ask { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  }
+</style>
+</head>
+<body>
+
+<div class="bar">
+  <span>Us vs AI · table packs. Print one copy of pages 2 to 6 for each table. Page 1 is for you.</span>
+  <button onclick="window.print()">Print</button>
+</div>
+
+<!-- 1 · Tutor sheet -->
+<section class="page">
+  <div class="eyebrow">Us vs AI · for the tutor</div>
+  <h1>Table packs</h1>
+  <p>Print pages 2 to 6 <strong>once for each table</strong>. Colour if you can. Cut along the dashed lines. Put each table's pack in an envelope so it can be opened on cue.</p>
+  <p class="note">Learners stand at the whiteboard tables and write on the table itself, around the cards and sheets. Nothing needs writing on the paper, so packs can be reused.</p>
+
+  <h2>Pack 1 · AI or not AI? (steps 4 and 5)</h2>
+  <p>Tables sort the 16 cards under the three headings and write one reason next to any card they argued about. The point is the argument, not a perfect score.</p>
+  <table>
+    <tr><th>Uses AI</th><th>Why</th></tr>
+    <tr><td>Face unlock, "watch next" suggestions, spam filter, voice assistant, fraud alert, translation app, chatbot</td><td>Each one learned from huge numbers of examples. Nobody wrote a rule for every case.</td></tr>
+    <tr><td>Predictive text</td><td>A small cousin of a chatbot: it guesses your next word. Come back to this card in step 7.</td></tr>
+    <tr><th>Does not use AI</th><th>Why</th></tr>
+    <tr><td>Calculator, microwave timer, light switch, alarm clock, word search (Ctrl+F)</td><td>They follow fixed rules a person wrote. Same input, same answer, every time.</td></tr>
+    <tr><th>It depends</th><th>Why</th></tr>
+    <tr><td>Sat-nav</td><td>Finding the route follows rules. Guessing the traffic and your arrival time uses AI.</td></tr>
+    <tr><td>Self-checkout</td><td>Scanning a barcode is not AI. A camera that recognises loose fruit is.</td></tr>
+    <tr><td>Automatic door</td><td>Usually just a sensor. Praise anyone who argues it well either way.</td></tr>
+  </table>
+
+  <h2>Pack 2 · Case file (step 11)</h2>
+  <p>A good answer has the full chain: <strong>what it saw</strong> (watch adverts, nearly all at ten past ten), <strong>the pattern</strong> (watch means 10:10), <strong>what it made</strong> (10:10 again, whatever was asked). Stretch answers might mention AI pictures of "a nurse" or "a boss" copying who appears most in its pictures.</p>
+
+  <h2>Pack 3 · Fix the instruction (steps 12 and 13)</h2>
+  <p>Each table rewrites its instruction on the table. Then tables swap: the visiting table reads the black card and plays a very literal AI, looking for any way to get it wrong. The home table fixes each gap they find.</p>
+</section>
+
+<!-- 2 · Sort headers -->
+<section class="page">
+  <div class="eyebrow">Pack 1 · AI or not AI? · headings</div>
+  <div class="cards headers" style="grid-template-columns: 1fr; margin-top: 4mm">
+    <div class="card is"><div class="name">USES AI</div></div>
+    <div class="card not"><div class="name">DOES NOT USE AI</div></div>
+    <div class="card unsure"><div class="name">IT DEPENDS</div></div>
+  </div>
+  <p class="note" style="margin-top: 6mm">Lay the three headings across the table. Sort every card under one of them. If your table disagrees about a card, write why next to it.</p>
+</section>
+
+<!-- 3 · Sort cards A -->
+<section class="page">
+  <div class="eyebrow">Pack 1 · AI or not AI? · cards 1 to 8</div>
+  <div class="cards" style="margin-top: 4mm">
+    <div class="card"><div class="pic">🔓</div><div class="name">Face unlock</div><div class="sub">Your phone knows it is you</div></div>
+    <div class="card"><div class="pic">🧮</div><div class="name">Calculator</div><div class="sub">Works out your sums</div></div>
+    <div class="card"><div class="pic">📺</div><div class="name">"Watch next"</div><div class="sub">Suggests what you might like</div></div>
+    <div class="card"><div class="pic">⏲️</div><div class="name">Microwave timer</div><div class="sub">Counts down and beeps</div></div>
+    <div class="card"><div class="pic">🗺️</div><div class="name">Sat-nav</div><div class="sub">Route and arrival time</div></div>
+    <div class="card"><div class="pic">📧</div><div class="name">Spam filter</div><div class="sub">Hides junk email</div></div>
+    <div class="card"><div class="pic">⌨️</div><div class="name">Predictive text</div><div class="sub">Guesses your next word</div></div>
+    <div class="card"><div class="pic">💡</div><div class="name">Light switch</div><div class="sub">On and off</div></div>
+  </div>
+</section>
+
+<!-- 4 · Sort cards B -->
+<section class="page">
+  <div class="eyebrow">Pack 1 · AI or not AI? · cards 9 to 16</div>
+  <div class="cards" style="margin-top: 4mm">
+    <div class="card"><div class="pic">🎙️</div><div class="name">Voice assistant</div><div class="sub">Understands what you say</div></div>
+    <div class="card"><div class="pic">🛒</div><div class="name">Self-checkout</div><div class="sub">Scan it yourself</div></div>
+    <div class="card"><div class="pic">💳</div><div class="name">Fraud alert</div><div class="sub">"Was this payment you?"</div></div>
+    <div class="card"><div class="pic">⏰</div><div class="name">Alarm clock</div><div class="sub">Rings at the time you set</div></div>
+    <div class="card"><div class="pic">💬</div><div class="name">Chatbot</div><div class="sub">Writes answers to your questions</div></div>
+    <div class="card"><div class="pic">🚪</div><div class="name">Automatic door</div><div class="sub">Opens when you walk up</div></div>
+    <div class="card"><div class="pic">🌍</div><div class="name">Translation app</div><div class="sub">Turns one language into another</div></div>
+    <div class="card"><div class="pic">🔎</div><div class="name">Word search</div><div class="sub">Finds a word in a document</div></div>
+  </div>
+</section>
+
+<!-- 5 · Case file -->
+<section class="page">
+  <div class="file">
+    <div class="stamp">Case file</div>
+    <div class="eyebrow">Pack 2 · Why did it do that?</div>
+    <h1>The watch that is always ten past ten</h1>
+    <p>You drew half past three with no trouble. An AI picture tool was asked for the same thing. Work out what went wrong. <strong>Write your answer on the table.</strong></p>
+
+    <div class="evidence">
+      <div class="ev">
+        <div class="tag">EVIDENCE A · WHAT WE ASKED FOR</div>
+        <svg class="clock" viewBox="0 0 100 100" aria-label="Clock showing half past three">
+          <circle cx="50" cy="50" r="46" fill="#fff" stroke="#111827" stroke-width="5"/>
+          <g stroke="#111827" stroke-width="3"><line x1="50" y1="8" x2="50" y2="16"/><line x1="92" y1="50" x2="84" y2="50"/><line x1="50" y1="92" x2="50" y2="84"/><line x1="8" y1="50" x2="16" y2="50"/></g>
+          <line x1="50" y1="50" x2="50" y2="84" stroke="#111827" stroke-width="4" stroke-linecap="round"/>
+          <line x1="50" y1="50" x2="71" y2="56" stroke="#111827" stroke-width="6" stroke-linecap="round"/>
+          <circle cx="50" cy="50" r="4" fill="#111827"/>
+        </svg>
+        <div class="big">"A watch showing half past three"</div>
+      </div>
+      <div class="ev">
+        <div class="tag">EVIDENCE B · WHAT IT DREW</div>
+        <svg class="clock" viewBox="0 0 100 100" aria-label="Clock showing ten past ten">
+          <circle cx="50" cy="50" r="46" fill="#fff" stroke="#b91c1c" stroke-width="5"/>
+          <g stroke="#111827" stroke-width="3"><line x1="50" y1="8" x2="50" y2="16"/><line x1="92" y1="50" x2="84" y2="50"/><line x1="50" y1="92" x2="50" y2="84"/><line x1="8" y1="50" x2="16" y2="50"/></g>
+          <line x1="50" y1="50" x2="79" y2="33" stroke="#111827" stroke-width="4" stroke-linecap="round"/>
+          <line x1="50" y1="50" x2="30" y2="37" stroke="#111827" stroke-width="6" stroke-linecap="round"/>
+          <circle cx="50" cy="50" r="4" fill="#111827"/>
+        </svg>
+        <div class="big">Ten past ten. Again.</div>
+      </div>
+      <div class="ev">
+        <div class="tag">EVIDENCE C · WHERE IT LEARNED</div>
+        <div class="big">Millions of pictures from the internet</div>
+        <p>It never saw a real watch. It only saw pictures of them.</p>
+      </div>
+      <div class="ev">
+        <div class="tag">EVIDENCE D · A CLUE</div>
+        <div class="big">Look at any watch advert</div>
+        <p>Shops set the hands to ten past ten. It frames the logo and looks like a smile.</p>
+      </div>
+    </div>
+
+    <div class="ask"><b>1. What did the AI see?</b></div>
+    <div class="ask"><b>2. What pattern did it learn?</b></div>
+    <div class="ask"><b>3. So why could it not draw half past three?</b></div>
+
+    <div class="stretch">
+      <div class="tag">STRETCH</div>
+      <p style="margin: 2mm 0 0"><strong>Where else could copying a pattern be unfair or harmful?</strong> Think about pictures of people, jobs or places.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 6 · Instruction cards -->
+<section class="page">
+  <div class="eyebrow">Pack 3 · Fix the instruction · give each table ONE white card, and the black card</div>
+  <div class="cards" style="margin-top: 4mm">
+    <div class="card prompt"><div class="q">BAD INSTRUCTION</div><div class="name">"Make me a sandwich."</div></div>
+    <div class="card prompt"><div class="q">BAD INSTRUCTION</div><div class="name">"Write something about my course."</div></div>
+    <div class="card prompt"><div class="q">BAD INSTRUCTION</div><div class="name">"Plan a day out."</div></div>
+    <div class="card prompt"><div class="q">BAD INSTRUCTION</div><div class="name">"Help me with my CV."</div></div>
+    <div class="card prompt"><div class="q">BAD INSTRUCTION</div><div class="name">"Draw my dog."</div></div>
+    <div class="card prompt"><div class="q">BAD INSTRUCTION</div><div class="name">"Make this better."</div></div>
+    <div class="card prompt role"><div class="q">WHEN YOU VISIT ANOTHER TABLE</div><div class="name">You are the AI.</div><div class="sub" style="color:#e5e7eb">Do exactly what it says. If it can be read two ways, pick the silliest.</div></div>
+    <div class="card prompt" style="border-color: var(--purple)"><div class="q" style="color: var(--purple)">STRETCH</div><div class="name" style="font-size: 16pt">Your AI cannot ask you any questions. Does your instruction still work?</div></div>
+  </div>
+</section>
+
+</body>
+</html>
