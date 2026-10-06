@@ -81,18 +81,21 @@ function SlotNavBar({
   onNext: () => void;
   onEnd: () => void;
 }) {
+  // Solid and large on purpose: the tutor has to find and hit this from across
+  // the room, on a projected screen. Next is the one filled button because it
+  // is the one pressed all lesson; End is kept small and apart so it is not
+  // caught by accident.
   return (
-    <div className="mx-auto bg-card/70 backdrop-blur-md border border-border/60 rounded-full px-2 py-1 flex items-center justify-between gap-1.5 text-[10px] shadow-md w-fit max-w-md">
+    <div className="mx-auto bg-card border-2 border-[color:var(--cyan)]/60 rounded-full px-3 py-2 flex items-center gap-3 shadow-[0_0_30px_rgba(0,0,0,0.6)] w-fit max-w-[92vw]">
       <Button
-        size="sm"
         variant="outline"
         onClick={onPrev}
         disabled={currentIndex <= 0 || total === 0}
-        className="h-6 px-2 text-[10px] rounded-full"
+        className="h-11 px-5 text-sm font-bold rounded-full disabled:opacity-30"
       >
-        ← Previous slide
+        ← Previous
       </Button>
-      <span className="font-mono text-muted-foreground tabular-nums px-1 truncate max-w-[180px]">
+      <span className="font-mono font-bold text-sm text-foreground tabular-nums px-1 truncate max-w-[28vw]">
         {total === 0
           ? "0/0"
           : slotName
@@ -100,15 +103,18 @@ function SlotNavBar({
             : `${currentIndex + 1}/${total}`}
       </span>
       <Button
-        size="sm"
-        variant="outline"
         onClick={onNext}
         disabled={currentIndex >= total - 1 || total === 0}
-        className="h-6 px-2 text-[10px] rounded-full"
+        className="h-12 px-8 text-base font-extrabold uppercase tracking-widest rounded-full disabled:opacity-30"
       >
         Next slide →
       </Button>
-      <Button size="sm" variant="destructive" onClick={onEnd} className="h-6 px-2 text-[10px] rounded-full">
+      <Button
+        size="sm"
+        variant="destructive"
+        onClick={onEnd}
+        className="h-8 px-3 ml-2 text-xs rounded-full"
+      >
         End
       </Button>
     </div>
@@ -507,7 +513,7 @@ function HostScreen() {
           />
         </div>
         {/* Floating slot navigation bar */}
-        <div className="fixed top-2 left-1/2 -translate-x-1/2 opacity-40 hover:opacity-100 transition-opacity z-50">
+        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50">
           <SlotNavBar
             currentIndex={Math.min(session.current_slot_index, Math.max(0, slots.length - 1))}
             total={slots.length}
@@ -537,7 +543,7 @@ function HostScreen() {
           channel={channelRef.current ?? undefined}
         />
         {/* Floating slot navigation bar */}
-        <div className="fixed top-2 left-1/2 -translate-x-1/2 opacity-40 hover:opacity-100 transition-opacity z-50">
+        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50">
           <SlotNavBar
             currentIndex={Math.min(session.current_slot_index, Math.max(0, slots.length - 1))}
             total={slots.length}
