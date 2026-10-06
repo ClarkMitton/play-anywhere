@@ -2380,7 +2380,9 @@ function WhiteboardHost({ content, sessionId }: { content: WhiteboardContent; se
       {shown.length === 0 ? (
         <div className="flex-1 min-h-0 w-full flex flex-col items-center justify-center gap-4">
           {content.image_url && (
-            <img src={content.image_url} alt="" className="min-h-0 max-h-full max-w-full object-contain rounded-2xl bg-white" />
+            <div className="flex-1 min-h-0 w-full flex items-center justify-center">
+              <img src={content.image_url} alt="" className="max-h-full max-w-full object-contain rounded-2xl bg-white" />
+            </div>
           )}
           <div className="text-lg md:text-2xl text-muted-foreground text-center shrink-0">
             Press “Send to big screen” on a touch screen to show your drawing here.
@@ -2416,97 +2418,166 @@ const WB_COLORS = [
   { name: "red", value: "#dc2626" },
   { name: "purple", value: "#9333ea" },
 ];
+const WB_SIZES = [4, 9, 18];
 
+// A stroke is stored as points in 0..1 of the board, not as pixels. That makes
+// Undo a matter of dropping the last stroke and redrawing, and lets the board
+// be redrawn sharply if the screen is resized or rotated.
+type BoardStroke = { color: string; size: number; erase: boolean; points: { x: number; y: number }[] };
+
+/**
+ * The touch-screen whiteboard. The board takes the whole screen; the tools sit
+ * in one strip along the bottom (portrait) or down the side (landscape), sized
+ * for fingers. Several people can draw at once, each finger its own stroke.
+ */
 function WhiteboardCanvas({ content, screen, sessionId }: {
   content: WhiteboardContent; screen: "screen1" | "screen2"; sessionId?: string;
 }) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const bgRef = useRef<HTMLImageElement | null>(null);
-  const drawingRef = useRef(false);
-  const lastRef = useRef<{ x: number; y: number } | null>(null);
+  const strokesRef = useRef<BoardStroke[]>([]);
+  const activeRef = useRef<Map<number, BoardStroke>>(new Map());
   const [color, setColor] = useState(WB_COLORS[0].value);
-  const [size, setSize] = useState(6);
+  const [size, setSize] = useState(WB_SIZES[1]);
+  const [erasing, setErasing] = useState(false);
+  const [strokeCount, setStrokeCount] = useState(0);
+  const [confirmClear, setConfirmClear] = useState(false);
   const [sendState, setSendState] = useState<"idle" | "sending" | "sent" | "failed">("idle");
   const { title, image_url: imageUrl } = content;
 
-  // Size the canvas at device resolution. It is transparent, so the white
-  // board (and any picture) underneath shows through.
+  const paintSegment = (ctx: CanvasRenderingContext2D, st: BoardStroke, from: number) => {
+    const cvs = ctx.canvas;
+    const dpr = window.devicePixelRatio || 1;
+    ctx.globalCompositeOperation = st.erase ? "destination-out" : "source-over";
+    ctx.strokeStyle = st.color;
+    ctx.fillStyle = st.color;
+    ctx.lineWidth = st.size * dpr * (st.erase ? 3 : 1);
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+    const pts = st.points;
+    if (pts.length === 1) {
+      // A tap with no movement still leaves a dot.
+      ctx.beginPath();
+      ctx.arc(pts[0].x * cvs.width, pts[0].y * cvs.height, ctx.lineWidth / 2, 0, Math.PI * 2);
+      ctx.fill();
+      return;
+    }
+    ctx.beginPath();
+    const start = Math.max(1, from);
+    ctx.moveTo(pts[start - 1].x * cvs.width, pts[start - 1].y * cvs.height);
+    for (let i = start; i < pts.length; i++) ctx.lineTo(pts[i].x * cvs.width, pts[i].y * cvs.height);
+    ctx.stroke();
+  };
+
+  const redraw = useCallback(() => {
+    const cvs = canvasRef.current;
+    const ctx = cvs?.getContext("2d");
+    if (!cvs || !ctx) return;
+    ctx.globalCompositeOperation = "source-over";
+    ctx.clearRect(0, 0, cvs.width, cvs.height);
+    for (const st of strokesRef.current) paintSegment(ctx, st, 0);
+  }, []);
+
+  // Match the canvas to the board at device resolution, and redraw on resize.
   useEffect(() => {
     const cvs = canvasRef.current;
     if (!cvs) return;
     const resize = () => {
       const rect = cvs.getBoundingClientRect();
       const dpr = window.devicePixelRatio || 1;
-      const prev = document.createElement("canvas");
-      prev.width = cvs.width; prev.height = cvs.height;
-      const pctx = prev.getContext("2d");
-      if (pctx && cvs.width && cvs.height) pctx.drawImage(cvs, 0, 0);
-      cvs.width = Math.floor(rect.width * dpr);
-      cvs.height = Math.floor(rect.height * dpr);
-      const ctx = cvs.getContext("2d");
-      if (!ctx) return;
-      if (prev.width && prev.height) ctx.drawImage(prev, 0, 0, cvs.width, cvs.height);
+      cvs.width = Math.max(1, Math.floor(rect.width * dpr));
+      cvs.height = Math.max(1, Math.floor(rect.height * dpr));
+      redraw();
     };
     resize();
-    window.addEventListener("resize", resize);
-    return () => window.removeEventListener("resize", resize);
-  }, []);
+    const ro = new ResizeObserver(resize);
+    ro.observe(cvs);
+    return () => ro.disconnect();
+  }, [redraw]);
 
-  const getPos = (e: React.PointerEvent<HTMLCanvasElement>) => {
-    const cvs = canvasRef.current!;
-    const rect = cvs.getBoundingClientRect();
-    const scaleX = cvs.width / rect.width;
-    const scaleY = cvs.height / rect.height;
-    return { x: (e.clientX - rect.left) * scaleX, y: (e.clientY - rect.top) * scaleY };
+  const pointOf = (e: { clientX: number; clientY: number }) => {
+    const rect = canvasRef.current!.getBoundingClientRect();
+    return { x: (e.clientX - rect.left) / rect.width, y: (e.clientY - rect.top) / rect.height };
   };
 
-  const draw = (from: { x: number; y: number }, to: { x: number; y: number }) => {
-    const cvs = canvasRef.current!;
-    const ctx = cvs.getContext("2d");
-    if (!ctx) return;
-    const dpr = window.devicePixelRatio || 1;
-    ctx.strokeStyle = color;
-    ctx.lineWidth = size * dpr;
-    ctx.lineCap = "round";
-    ctx.lineJoin = "round";
-    ctx.beginPath();
-    ctx.moveTo(from.x, from.y);
-    ctx.lineTo(to.x, to.y);
-    ctx.stroke();
-    if (sendState !== "idle" && sendState !== "sending") setSendState("idle");
+  const onDown = (e: React.PointerEvent<HTMLCanvasElement>) => {
+    // Capture keeps a stroke going if the finger slides off the board. Some
+    // touch screens refuse it; drawing must carry on regardless.
+    try { (e.target as Element).setPointerCapture?.(e.pointerId); } catch { /* not capturable */ }
+    const st: BoardStroke = { color, size, erase: erasing, points: [pointOf(e)] };
+    activeRef.current.set(e.pointerId, st);
+    strokesRef.current.push(st);
+    const ctx = canvasRef.current?.getContext("2d");
+    if (ctx) paintSegment(ctx, st, 0);
+    setStrokeCount(strokesRef.current.length);
+    setConfirmClear(false);
+    if (sendState === "sent" || sendState === "failed") setSendState("idle");
   };
 
-  const clear = () => {
-    const cvs = canvasRef.current;
-    const ctx = cvs?.getContext("2d");
-    if (!cvs || !ctx) return;
-    ctx.clearRect(0, 0, cvs.width, cvs.height);
+  const onMove = (e: React.PointerEvent<HTMLCanvasElement>) => {
+    const st = activeRef.current.get(e.pointerId);
+    const ctx = canvasRef.current?.getContext("2d");
+    if (!st || !ctx) return;
+    // Fast strokes arrive bundled; using every sample keeps curves smooth.
+    const samples = e.nativeEvent.getCoalescedEvents?.() ?? [];
+    const from = st.points.length;
+    for (const s of samples.length ? samples : [e.nativeEvent]) st.points.push(pointOf(s));
+    paintSegment(ctx, st, from);
+  };
+
+  const onUp = (e: React.PointerEvent<HTMLCanvasElement>) => {
+    activeRef.current.delete(e.pointerId);
+  };
+
+  const undo = () => {
+    strokesRef.current.pop();
+    setStrokeCount(strokesRef.current.length);
+    redraw();
     setSendState("idle");
   };
 
-  // Flatten board + picture + drawing into one image, capped in size so it
-  // uploads quickly over the room's wifi.
+  // Clear takes two taps: one stray finger should not wipe a table's work.
+  const clear = () => {
+    if (!confirmClear) {
+      setConfirmClear(true);
+      setTimeout(() => setConfirmClear(false), 3000);
+      return;
+    }
+    strokesRef.current = [];
+    activeRef.current.clear();
+    setStrokeCount(0);
+    setConfirmClear(false);
+    redraw();
+    setSendState("idle");
+  };
+
+  // Flatten board + picture + drawing into one image for the Host. With a
+  // picture, the image is cropped to the picture so it fills the big screen
+  // instead of arriving as a small picture in a tall white page.
   const snapshot = (withPicture: boolean): Promise<Blob | null> => {
     const cvs = canvasRef.current;
     if (!cvs) return Promise.resolve(null);
-    const k = Math.min(1, 1400 / Math.max(cvs.width, cvs.height));
+    const img = bgRef.current;
+    const hasPicture = withPicture && !!img && img.complete && img.naturalWidth > 0;
+    let crop = { x: 0, y: 0, w: cvs.width, h: cvs.height };
+    if (hasPicture && img) {
+      // Same fit as the on-screen picture (object-contain, centred).
+      const fit = Math.min(cvs.width / img.naturalWidth, cvs.height / img.naturalHeight);
+      const w = img.naturalWidth * fit, h = img.naturalHeight * fit;
+      crop = { x: (cvs.width - w) / 2, y: (cvs.height - h) / 2, w, h };
+    }
+    const k = Math.min(1, 1600 / Math.max(crop.w, crop.h));
     const out = document.createElement("canvas");
-    out.width = Math.round(cvs.width * k);
-    out.height = Math.round(cvs.height * k);
+    out.width = Math.round(crop.w * k);
+    out.height = Math.round(crop.h * k);
     const ctx = out.getContext("2d");
     if (!ctx) return Promise.resolve(null);
     ctx.fillStyle = "#ffffff";
     ctx.fillRect(0, 0, out.width, out.height);
-    const img = bgRef.current;
-    if (withPicture && img && img.complete && img.naturalWidth) {
-      // Same fit as the on-screen picture (object-contain, centred).
-      const fit = Math.min(out.width / img.naturalWidth, out.height / img.naturalHeight);
-      const iw = img.naturalWidth * fit, ih = img.naturalHeight * fit;
-      ctx.drawImage(img, (out.width - iw) / 2, (out.height - ih) / 2, iw, ih);
-    }
-    ctx.drawImage(cvs, 0, 0, out.width, out.height);
+    if (hasPicture && img) ctx.drawImage(img, 0, 0, out.width, out.height);
+    ctx.drawImage(cvs, crop.x, crop.y, crop.w, crop.h, 0, 0, out.width, out.height);
     return new Promise((resolve) => {
-      try { out.toBlob((b) => resolve(b), "image/jpeg", 0.82); }
+      try { out.toBlob((b) => resolve(b), "image/jpeg", 0.85); }
       catch { resolve(null); } // picture from a site that forbids copying
     });
   };
@@ -2527,59 +2598,87 @@ function WhiteboardCanvas({ content, screen, sessionId }: {
     setSendState(insertError ? "failed" : "sent");
   };
 
+  const toolBtn = "h-14 w-14 shrink-0 rounded-2xl border-2 flex items-center justify-center text-2xl font-bold transition-all active:scale-95 disabled:opacity-30";
+  const sendLabel =
+    sendState === "sending" ? "Sending…" :
+    sendState === "sent" ? "Sent ✓" :
+    sendState === "failed" ? "Try again" : "Send to big screen ▲";
+
   return (
-    <div className="h-screen w-full bg-immersive flex flex-col p-3 gap-3 animate-slot-in">
-      <div className="flex items-center justify-between gap-3 flex-wrap">
-        <div>
-          <div className="text-[10px] uppercase tracking-[0.4em] text-[color:var(--cyan)]">Whiteboard</div>
-          {title && <div className="text-xl font-bold text-glow">{title}</div>}
-        </div>
-        <div className="flex items-center gap-2 flex-wrap">
-          {WB_COLORS.map(col => (
-            <button key={col.name} aria-label={col.name} onClick={() => setColor(col.value)}
-              className="w-9 h-9 rounded-full border-4 transition-transform"
-              style={{ background: col.value, borderColor: col.value === color ? "#ffffff" : "transparent", transform: col.value === color ? "scale(1.2)" : undefined }} />
-          ))}
-          <div className="flex items-center gap-2 ml-2">
-            {[3, 6, 12, 24].map(s => (
-              <button key={s} onClick={() => setSize(s)}
-                className={`w-9 h-9 rounded-full border-2 flex items-center justify-center ${size === s ? "border-[color:var(--cyan)]" : "border-border"}`}
-                aria-label={`brush ${s}`}>
-                <span className="rounded-full" style={{ width: s, height: s, background: color }} />
-              </button>
-            ))}
-          </div>
-          <Button onClick={clear} variant="outline" className="h-9 text-xs uppercase tracking-widest">Clear</Button>
-        </div>
-      </div>
-      <div className="relative flex-1 min-h-0 rounded-2xl overflow-hidden border-4 border-[color:var(--cyan)]/40 bg-white touch-none">
+    <div className="h-screen w-full bg-[#060912] flex portrait:flex-col landscape:flex-row select-none animate-slot-in">
+      {/* The board: everything that is not the tool strip. */}
+      <div className="relative flex-1 min-w-0 min-h-0 m-2 rounded-3xl overflow-hidden bg-white shadow-[0_0_0_3px_rgba(30,155,240,0.5)] touch-none">
         {imageUrl && (
           <img ref={bgRef} src={imageUrl} alt="" crossOrigin="anonymous" draggable={false}
-            className="absolute inset-0 w-full h-full object-contain pointer-events-none select-none" />
+            className="absolute inset-0 w-full h-full object-contain pointer-events-none" />
         )}
         <canvas
           ref={canvasRef}
-          className="absolute inset-0 w-full h-full block touch-none cursor-crosshair"
-          onPointerDown={(e) => {
-            (e.target as Element).setPointerCapture?.(e.pointerId);
-            drawingRef.current = true;
-            lastRef.current = getPos(e);
-          }}
-          onPointerMove={(e) => {
-            if (!drawingRef.current || !lastRef.current) return;
-            const p = getPos(e);
-            draw(lastRef.current, p);
-            lastRef.current = p;
-          }}
-          onPointerUp={() => { drawingRef.current = false; lastRef.current = null; }}
-          onPointerLeave={() => { drawingRef.current = false; lastRef.current = null; }}
+          className="absolute inset-0 w-full h-full block touch-none"
+          style={{ cursor: "crosshair" }}
+          onPointerDown={onDown}
+          onPointerMove={onMove}
+          onPointerUp={onUp}
+          onPointerCancel={onUp}
         />
+        {title && (
+          <div className="absolute top-3 left-3 right-3 flex justify-center pointer-events-none">
+            <div className="max-w-full rounded-full bg-black/75 px-5 py-2 text-white text-lg md:text-2xl font-extrabold text-center leading-tight">
+              {title}
+            </div>
+          </div>
+        )}
+        {strokeCount === 0 && !imageUrl && (
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none text-2xl md:text-4xl font-bold text-black/15">
+            Draw here with your finger
+          </div>
+        )}
       </div>
-      <Button onClick={send} disabled={!sessionId || sendState === "sending"}
-        className="h-14 shrink-0 text-lg uppercase tracking-widest font-extrabold"
-        style={sendState === "sent" ? { background: "var(--success)", color: "#fff" } : sendState === "failed" ? { background: "var(--destructive)", color: "#fff" } : undefined}>
-        {sendState === "sending" ? "Sending…" : sendState === "sent" ? "Sent to big screen ✓" : sendState === "failed" ? "Could not send — tap to try again" : "Send to big screen ▲"}
-      </Button>
+
+      {/* Tools: one strip, along the bottom in portrait and down the side in landscape. */}
+      <div className="shrink-0 flex items-center gap-3 p-2 portrait:flex-row portrait:flex-wrap portrait:justify-center portrait:pt-0 landscape:flex-col landscape:justify-center landscape:pl-0 landscape:overflow-y-auto">
+        <div className="gap-2 portrait:flex portrait:flex-row landscape:grid landscape:grid-cols-2">
+          {WB_COLORS.map(col => {
+            const on = !erasing && col.value === color;
+            return (
+              <button key={col.name} aria-label={col.name} aria-pressed={on}
+                onClick={() => { setColor(col.value); setErasing(false); }}
+                className="h-14 w-14 shrink-0 rounded-full border-4 transition-transform active:scale-95"
+                style={{ background: col.value, borderColor: on ? "#ffffff" : "rgba(255,255,255,0.15)", transform: on ? "scale(1.12)" : undefined, boxShadow: on ? `0 0 18px ${col.value}` : undefined }} />
+            );
+          })}
+        </div>
+
+        <div className="gap-2 portrait:flex portrait:flex-row landscape:grid landscape:grid-cols-2">
+          {WB_SIZES.map(sz => (
+            <button key={sz} aria-label={`pen size ${sz}`} aria-pressed={size === sz} onClick={() => setSize(sz)}
+              className={`${toolBtn} bg-white ${size === sz ? "border-[color:var(--cyan)] shadow-[0_0_14px_var(--cyan)]" : "border-transparent opacity-70"}`}>
+              <span className="rounded-full" style={{ width: sz + 4, height: sz + 4, background: erasing ? "#9ca3af" : color }} />
+            </button>
+          ))}
+          <button aria-label="eraser" aria-pressed={erasing} onClick={() => setErasing(v => !v)}
+            className={`${toolBtn} text-base ${erasing ? "border-white bg-white text-black" : "border-white/15 bg-white/5 text-white"}`}>
+            Rub
+          </button>
+          <button aria-label="undo" onClick={undo} disabled={strokeCount === 0}
+            className={`${toolBtn} border-white/15 bg-white/5 text-white`}>
+            ↶
+          </button>
+          <button aria-label="clear" onClick={clear} disabled={strokeCount === 0}
+            className={`${toolBtn} text-xs uppercase tracking-wide ${confirmClear ? "border-[color:var(--destructive)] bg-[color:var(--destructive)] text-white" : "border-white/15 bg-white/5 text-white"}`}>
+            {confirmClear ? "Sure?" : "Clear"}
+          </button>
+        </div>
+
+        <button onClick={send} disabled={!sessionId || sendState === "sending"}
+          className="min-h-14 shrink-0 rounded-2xl px-6 py-2 text-lg font-extrabold uppercase tracking-widest leading-tight transition-all active:scale-95 disabled:opacity-40 portrait:flex-1 portrait:min-w-[10rem] landscape:w-full landscape:px-2 landscape:text-xs landscape:tracking-wide"
+          style={{
+            background: sendState === "sent" ? "var(--success)" : sendState === "failed" ? "var(--destructive)" : "var(--cyan)",
+            color: sendState === "idle" || sendState === "sending" ? "#04121c" : "#ffffff",
+          }}>
+          {sendLabel}
+        </button>
+      </div>
     </div>
   );
 }
