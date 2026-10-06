@@ -39,11 +39,42 @@ function tone(freq: number, durationMs: number, type: OscillatorType = "sine", g
 }
 
 export const sounds = {
-  slotAdvance: () => { tone(523, 90, "sine", 0.6); setTimeout(() => tone(784, 140, "sine", 0.6), 80); },
-  questionReveal: () => { tone(660, 80, "triangle", 0.7); setTimeout(() => tone(880, 120, "triangle", 0.7), 70); setTimeout(() => tone(1100, 180, "triangle", 0.7), 160); },
-  countdownTick: () => { tone(440, 60, "square", 0.3); },
-  countdownEnd: () => { tone(220, 200, "sawtooth", 0.6); setTimeout(() => tone(165, 320, "sawtooth", 0.6), 180); },
-  rotate: () => { tone(988, 120, "triangle", 0.8); setTimeout(() => tone(988, 120, "triangle", 0.8), 180); setTimeout(() => tone(1319, 260, "triangle", 0.8), 360); },
-  connect: () => { tone(880, 80, "sine", 0.5); setTimeout(() => tone(1320, 120, "sine", 0.5), 60); },
-  launch: () => { tone(330, 80, "triangle", 0.7); setTimeout(() => tone(523, 90, "triangle", 0.7), 70); setTimeout(() => tone(784, 110, "triangle", 0.7), 150); setTimeout(() => tone(1046, 240, "triangle", 0.8), 240); },
+  slotAdvance: () => {
+    tone(523, 90, "sine", 0.6);
+    setTimeout(() => tone(784, 140, "sine", 0.6), 80);
+  },
+  questionReveal: () => {
+    tone(660, 80, "triangle", 0.7);
+    setTimeout(() => tone(880, 120, "triangle", 0.7), 70);
+    setTimeout(() => tone(1100, 180, "triangle", 0.7), 160);
+  },
+  countdownTick: () => {
+    tone(440, 60, "square", 0.3);
+  },
+  // Three rising pairs: has to cut through a busy room, unlike the soft slide chimes.
+  timerAlarm: () => {
+    for (let i = 0; i < 3; i++) {
+      setTimeout(() => tone(880, 180, "square", 0.9), i * 450);
+      setTimeout(() => tone(1175, 220, "square", 0.9), i * 450 + 190);
+    }
+  },
+  countdownEnd: () => {
+    tone(220, 200, "sawtooth", 0.6);
+    setTimeout(() => tone(165, 320, "sawtooth", 0.6), 180);
+  },
+  rotate: () => {
+    tone(988, 120, "triangle", 0.8);
+    setTimeout(() => tone(988, 120, "triangle", 0.8), 180);
+    setTimeout(() => tone(1319, 260, "triangle", 0.8), 360);
+  },
+  connect: () => {
+    tone(880, 80, "sine", 0.5);
+    setTimeout(() => tone(1320, 120, "sine", 0.5), 60);
+  },
+  launch: () => {
+    tone(330, 80, "triangle", 0.7);
+    setTimeout(() => tone(523, 90, "triangle", 0.7), 70);
+    setTimeout(() => tone(784, 110, "triangle", 0.7), 150);
+    setTimeout(() => tone(1046, 240, "triangle", 0.8), 240);
+  },
 };

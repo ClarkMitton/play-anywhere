@@ -113,6 +113,9 @@ function ThumbContent({
     case "youtube":
       return <Label icon="▶" label="YouTube" tint="oklch(0.4 0.2 25)" />;
 
+    case "video":
+      return <Label icon="⟳" label="Video" tint="oklch(0.4 0.18 300)" />;
+
     case "embed":
       return <Label icon="⚞" label="Embed" tint="oklch(0.3 0.1 280)" />;
 

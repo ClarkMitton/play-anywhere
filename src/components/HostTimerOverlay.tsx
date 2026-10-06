@@ -1,9 +1,11 @@
-// Floating countdown pill shown on the Host display (bottom-left, Canva-style).
+// Floating countdown pill shown on the Host display (top-right).
+// When it reaches zero it turns red, pulses and sounds an alarm once.
 // Subscribes to `timer_set` and `timer_add` broadcasts on the session channel.
 // Resets whenever the host slide index changes.
 
 import { useEffect, useRef, useState } from "react";
 import type { RealtimeChannel } from "@supabase/supabase-js";
+import { sounds } from "@/lib/audio";
 
 type Props = {
   channel: RealtimeChannel | null | undefined;
@@ -50,9 +52,8 @@ export function HostTimerOverlay({ channel, slotIndex }: Props) {
     const onAdd = (msg: { payload: { seconds: number } }) => {
       const add = Math.max(0, Math.floor(msg.payload?.seconds ?? 0));
       if (add <= 0) return;
-      const base = endsAtRef.current && endsAtRef.current > Date.now()
-        ? endsAtRef.current
-        : Date.now();
+      const base =
+        endsAtRef.current && endsAtRef.current > Date.now() ? endsAtRef.current : Date.now();
       setEndsAt(base + add * 1000);
     };
     const onClear = () => setEndsAt(null);
@@ -62,17 +63,29 @@ export function HostTimerOverlay({ channel, slotIndex }: Props) {
     // No cleanup API for individual listeners; channel teardown handles it.
   }, [channel]);
 
+  const finished = endsAt !== null && endsAt - now <= 0;
+
+  // Sound the alarm once per timer, at the moment it runs out. Keyed on endsAt
+  // so adding a minute to a finished timer re-arms it.
+  const alarmedFor = useRef<number | null>(null);
+  useEffect(() => {
+    if (finished && endsAt !== null && alarmedFor.current !== endsAt) {
+      alarmedFor.current = endsAt;
+      sounds.timerAlarm();
+    }
+  }, [finished, endsAt]);
+
   if (endsAt === null) return null;
-  const remainingMs = endsAt - now;
-  const finished = remainingMs <= 0;
-  const remainingSecs = remainingMs / 1000;
+  const remainingSecs = (endsAt - now) / 1000;
 
   return (
-    <div className="fixed bottom-6 left-6 z-50 animate-slot-in">
+    <div className="fixed top-6 right-6 z-50 animate-slot-in">
       <div
-        className="bg-white rounded-full shadow-2xl flex flex-col items-center justify-center px-8 py-4 border-4"
+        className={`rounded-full shadow-2xl flex flex-col items-center justify-center px-8 py-4 border-4 ${finished ? "animate-pulse" : ""}`}
         style={{
-          borderColor: finished ? "var(--orange)" : "var(--cyan)",
+          background: finished ? "#dc2626" : "#ffffff",
+          borderColor: finished ? "#fecaca" : "var(--cyan)",
+          boxShadow: finished ? "0 0 50px rgba(220,38,38,0.9)" : undefined,
           minWidth: 180,
         }}
       >
@@ -80,13 +93,13 @@ export function HostTimerOverlay({ channel, slotIndex }: Props) {
           className="font-mono font-extrabold tabular-nums leading-none"
           style={{
             fontSize: 56,
-            color: finished ? "var(--orange)" : "#0b0b0b",
+            color: finished ? "#ffffff" : "#0b0b0b",
           }}
         >
           {fmt(remainingSecs)}
         </div>
         {finished && (
-          <div className="text-[10px] uppercase tracking-[0.3em] font-bold text-[color:var(--orange)] mt-1">
+          <div className="text-xs uppercase tracking-[0.3em] font-extrabold text-white mt-1">
             Time's up
           </div>
         )}

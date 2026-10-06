@@ -168,7 +168,11 @@ export function describeForTeacher(content: ContentDef | null | undefined): Teac
         title: "Slide",
         summary: "",
         items: [],
-        preview: { kind: "slide", text: str(c.text), subtitle: str(c.subtitle) },
+        preview: {
+          kind: "slide",
+          text: [str(c.title), str(c.text)].filter(Boolean).join("\n"),
+          subtitle: str(c.subtitle),
+        },
         doing: ["Read it with the class and talk it through."],
       };
 
@@ -179,6 +183,17 @@ export function describeForTeacher(content: ContentDef | null | undefined): Teac
         items: [],
         preview: { kind: "image", url: str(c.url), caption: str(c.title) },
         doing: ["Talk through the picture with the class."],
+      };
+
+    case "video":
+      return {
+        title: "Video",
+        summary:
+          c.loop === false
+            ? "An uploaded video. It plays once."
+            : "An uploaded video. It plays on a loop until you move on.",
+        items: [str(c.file_name)].filter(Boolean),
+        doing: ["The video starts by itself. Sound plays on the big screen only."],
       };
 
     case "youtube": {
@@ -326,10 +341,10 @@ export function describeForTeacher(content: ContentDef | null | undefined): Teac
       return {
         title: "Word cloud",
         summary:
-          "Words appear on the big screen as they are sent. A word typed by several people grows bigger. Every word is shown in small letters.",
+          "Words gather into a cloud on the big screen as they are sent. The word sent most often is biggest. Every word is shown in small letters.",
         items: [str(c.prompt)].filter(Boolean),
         doing: [
-          `Learners type a word on a touch screen and press Send${Number(c.max_words) ? ` (up to ${Number(c.max_words)} each)` : ""}.`,
+          "Learners type a word on a touch screen and press Send. They can send as many as they like.",
           "Talk about the biggest words.",
         ],
       };
@@ -369,9 +384,19 @@ export function describeForTeacher(content: ContentDef | null | undefined): Teac
     case "whiteboard":
       return {
         title: "Whiteboard",
-        summary: "A shared drawing space. Nothing drawn here is saved.",
+        summary: "Each touch screen has its own drawing board.",
         items: [str(c.title)].filter(Boolean),
-        doing: ["Learners draw or write on a touch screen. Clear wipes the board."],
+        preview: str(c.image_url)
+          ? {
+              kind: "image",
+              url: str(c.image_url),
+              caption: "Learners draw on top of this picture",
+            }
+          : undefined,
+        doing: [
+          "Learners draw or write on a touch screen. Clear wipes the board.",
+          "They press Send to big screen to show their drawing, labelled Screen 1 or Screen 2.",
+        ],
       };
 
     default:

@@ -102,6 +102,7 @@ export function describeContent(content: ContentDef | null | undefined): {
 
     case "text_slide": {
       const detail = [`“${str(c.text) || "(no text)"}”`];
+      if (str(c.title)) detail.unshift(`Title: “${str(c.title)}”`);
       if (str(c.subtitle)) detail.push(`Subtitle: “${str(c.subtitle)}”`);
       const placeholder = str(c.text).startsWith("[ADD IMAGE]");
       return {
@@ -116,6 +117,12 @@ export function describeContent(content: ContentDef | null | undefined): {
       detail.push(str(c.url) ? `File: ${str(c.file_name) || str(c.url)}` : "No image attached yet");
       return { label: "Image", detail };
     }
+
+    case "video":
+      return {
+        label: c.loop === false ? "Video file" : "Video file (loops)",
+        detail: [str(c.file_name) || str(c.url) || "No video uploaded"],
+      };
 
     case "youtube":
       return {
@@ -253,7 +260,6 @@ export function describeContent(content: ContentDef | null | undefined): {
     case "word_cloud": {
       const detail = [`Prompt: “${str(c.prompt) || "(no prompt)"}”`];
       if (str(c.title)) detail.push(`Title: “${str(c.title)}”`);
-      if (Number(c.max_words)) detail.push(`Up to ${Number(c.max_words)} words each.`);
       return { label: "Word cloud", detail };
     }
 

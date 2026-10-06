@@ -57,6 +57,7 @@ const CONTENT_TYPES_HOST = [
   { value: "text_slide", label: "Text Slide" },
   { value: "image", label: "Image" },
   { value: "youtube", label: "YouTube" },
+  { value: "video", label: "Video file (loops)" },
   { value: "embed", label: "Embed (iframe)" },
   { value: "confidence_checker", label: "Confidence Checker" },
   { value: "voting", label: "Voting" },
@@ -75,6 +76,7 @@ const CONTENT_TYPES_SCREEN1 = [
   { value: "text_slide", label: "Text Slide" },
   { value: "image", label: "Image" },
   { value: "youtube", label: "YouTube" },
+  { value: "video", label: "Video file (loops)" },
   { value: "embed", label: "Embed (iframe)" },
   { value: "confidence_checker", label: "Confidence Checker" },
   { value: "voting", label: "Voting" },
@@ -1603,6 +1605,24 @@ function SlotEditorPanel({
       onUpdate({ host_content: next, screen1_content: { ...next }, screen2_content: { ...next } });
       return;
     }
+    // A whiteboard's title and picture should match wherever it is used, but the
+    // Host may deliberately show something else, so only the screens that
+    // already hold a whiteboard are updated.
+    if (screenContent.type === "whiteboard") {
+      const isBoard = (c: ContentDef) => c?.type === "whiteboard";
+      onUpdate({
+        ...(isBoard(slot.host_content) || activeScreen === "host"
+          ? { host_content: { ...slot.host_content, ...patch } }
+          : {}),
+        ...(isBoard(slot.screen1_content) || activeScreen === "screen1"
+          ? { screen1_content: { ...slot.screen1_content, ...patch } }
+          : {}),
+        ...(isBoard(slot.screen2_content) || activeScreen === "screen2"
+          ? { screen2_content: { ...slot.screen2_content, ...patch } }
+          : {}),
+      });
+      return;
+    }
     if (activeScreen === "host") onUpdate({ host_content: { ...screenContent, ...patch } });
     else if (activeScreen === "screen1")
       onUpdate({ screen1_content: { ...screenContent, ...patch } });
@@ -1766,6 +1786,17 @@ function ContentTypeForm({
         <div className="space-y-3">
           <div className="space-y-1.5">
             <Label className="text-[10px] uppercase tracking-widest text-muted-foreground">
+              Title (optional, shown in a box at the top)
+            </Label>
+            <Input
+              value={String(content.title ?? "")}
+              onChange={(e) => onChange({ title: e.target.value })}
+              placeholder="e.g. Today's task"
+              className="bg-background/60 border-border focus-visible:border-[color:var(--cyan)]"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-[10px] uppercase tracking-widest text-muted-foreground">
               Text
             </Label>
             <Textarea
@@ -1830,6 +1861,34 @@ function ContentTypeForm({
               </button>
             </div>
           </div>
+        </div>
+      );
+
+    case "video":
+      return (
+        <div className="space-y-3">
+          <FileUploadField
+            label="Video file (MP4 or WebM)"
+            accept="video/mp4,video/webm,video/quicktime"
+            currentFileName={content.file_name ? String(content.file_name) : undefined}
+            lessonId={lessonId}
+            maxSizeMb={500}
+            onUpload={(u, file_name) => onChange({ url: u, file_name })}
+          />
+          <div className="flex items-center justify-between">
+            <Label className="text-[10px] uppercase tracking-widest text-muted-foreground">
+              Loop forever
+            </Label>
+            <Switch
+              checked={content.loop !== false}
+              onCheckedChange={(v) => onChange({ loop: v })}
+            />
+          </div>
+          <p className="text-[10px] text-muted-foreground">
+            Starts by itself and loops, with sound on the Host only. Use this for a welcome or
+            holding video. A Canva video cannot loop as an embed: in Canva choose Share, Download,
+            MP4 Video, then upload the file here.
+          </p>
         </div>
       );
 
@@ -2155,24 +2214,9 @@ function ContentTypeForm({
               className="min-h-[52px] resize-y bg-background/60 border-border focus-visible:border-[color:var(--cyan)]"
             />
           </div>
-          <div className="space-y-1.5">
-            <Label className="text-[10px] uppercase tracking-widest text-muted-foreground">
-              Words per student
-            </Label>
-            <Input
-              type="number"
-              min={1}
-              max={20}
-              value={Number(content.max_words ?? 3)}
-              onChange={(e) =>
-                onChange({ max_words: Math.max(1, Math.min(20, Number(e.target.value) || 1)) })
-              }
-              className="h-8 text-xs w-24 bg-background/60 border-border focus-visible:border-[color:var(--cyan)]"
-            />
-          </div>
           <p className="text-[10px] text-muted-foreground">
             Put this on Host + at least one touch screen. Host shows the live cloud, touch screens
-            show the input.
+            show the input. Learners can send as many words as they like.
           </p>
         </div>
       );
@@ -2216,9 +2260,28 @@ function ContentTypeForm({
                 className="h-8 text-xs bg-background/60 border-border focus-visible:border-[color:var(--cyan)]"
               />
             </div>
+            <FileUploadField
+              label="Picture to draw on (optional)"
+              accept="image/png,image/jpeg,image/webp"
+              currentFileName={content.file_name ? String(content.file_name) : undefined}
+              lessonId={lessonId}
+              maxSizeMb={50}
+              onUpload={(u, file_name) => onChange({ image_url: u, file_name })}
+            />
+            {content.image_url ? (
+              <button
+                type="button"
+                onClick={() => onChange({ image_url: "", file_name: "" })}
+                className="text-[10px] uppercase tracking-widest text-muted-foreground hover:text-destructive"
+              >
+                Remove picture
+              </button>
+            ) : null}
             <p className="text-[10px] text-muted-foreground">
-              Free-draw canvas on the touch screens. Colours + brush sizes + clear built in. Each
-              screen draws independently (not synced).
+              Free-draw canvas on the touch screens, with colours, brush sizes and clear. Each
+              screen draws on its own copy. Learners press Send to big screen to show their
+              drawing on the Host, labelled Screen 1 or Screen 2. Put the whiteboard on the Host
+              too (use Mirror) so the drawings have somewhere to appear.
             </p>
           </div>
         );

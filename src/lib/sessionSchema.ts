@@ -62,6 +62,8 @@ const waiting = z.object({ type: z.literal("waiting") });
 const textSlide = z.object({
   type: z.literal("text_slide"),
   text: z.string().min(1),
+  /** Optional heading, shown boxed above the main text. */
+  title: z.string().optional(),
   subtitle: z.string().optional(),
   size: z.enum(["sm", "md", "lg", "xl", "2xl"]).optional(),
   color: z.string().optional(),
@@ -77,6 +79,16 @@ const image = z.object({
 const youtube = z.object({
   type: z.literal("youtube"),
   url: z.string().min(1),
+});
+
+// An uploaded video file. Unlike YouTube or a Canva embed it can loop and
+// start by itself, which is what an unattended welcome screen needs.
+// Authored in the designer only: the model has no file to point at.
+const video = z.object({
+  type: z.literal("video"),
+  url: z.string().min(1),
+  file_name: z.string().optional(),
+  loop: z.boolean().optional(),
 });
 
 const embed = z.object({
@@ -204,6 +216,9 @@ const hazardHotspots = z.object({
 const whiteboard = z.object({
   type: z.literal("whiteboard"),
   title: z.string().optional(),
+  /** Optional picture learners draw on top of. */
+  image_url: z.string().optional(),
+  file_name: z.string().optional(),
 });
 
 export const contentSchema = z.discriminatedUnion("type", [
@@ -211,6 +226,7 @@ export const contentSchema = z.discriminatedUnion("type", [
   textSlide,
   image,
   youtube,
+  video,
   embed,
   confidenceChecker,
   voting,

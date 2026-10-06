@@ -59,8 +59,9 @@ function Confetti({ count = 44 }: { count?: number }) {
 
 export type SlotContent =
   | { type: "waiting" }
-  | { type: "text_slide"; text: string; subtitle?: string; size?: "sm" | "md" | "lg" | "xl" | "2xl"; color?: string }
+  | { type: "text_slide"; text: string; title?: string; subtitle?: string; size?: "sm" | "md" | "lg" | "xl" | "2xl"; color?: string }
   | { type: "youtube"; url: string }
+  | { type: "video"; url: string; file_name?: string; loop?: boolean }
   | { type: "image"; url: string; file_name?: string; title?: string }
   | { type: "embed"; url: string; description?: string }
   | { type: "confidence_checker"; prompt: string; optional_qualitative?: boolean; scale_mode?: "numbers" | "emoji" | "likert"; max?: number; checkpoint?: "start" | "final" }
@@ -74,7 +75,7 @@ export type SlotContent =
   | { type: "quiz_buzzer"; question?: string; questions?: string[]; answers?: string[]; team1_name?: string; team2_name?: string }
   | { type: "word_cloud"; title?: string; prompt?: string; max_words?: number }
   | { type: "padlet"; question: string; title?: string }
-  | { type: "whiteboard"; title?: string }
+  | { type: "whiteboard"; title?: string; image_url?: string; file_name?: string }
   | RotationTimerContent
   | HazardHotspotsContent
   | { type: string; [k: string]: unknown };
@@ -125,24 +126,30 @@ export function SlotRenderer({
         len > 150 ? 0.55 :
         len > 80  ? 0.7  :
         len > 40  ? 0.85 : 1;
-      const fontSize = `clamp(1.25rem, ${(baseVw * shrink).toFixed(2)}vw, 14rem)`;
+      // 0.85: the main text was dominating the screen; tutors asked for it smaller.
+      const fontSize = `clamp(1.25rem, ${(baseVw * shrink * 0.85).toFixed(2)}vw, 14rem)`;
+      const slideTitle = (c.title ?? "").trim();
       return (
         <div
-          key={String(c.text) + String(c.subtitle ?? "")}
-          className="h-screen w-full bg-immersive bg-grid flex items-center justify-center p-8 overflow-hidden animate-slot-in"
+          key={String(c.text) + String(c.subtitle ?? "") + slideTitle}
+          className={`h-screen w-full bg-immersive bg-grid flex flex-col items-center p-8 overflow-hidden animate-slot-in ${slideTitle ? "pt-[7vh]" : ""}`}
         >
-          <div className="text-center max-w-[92vw] max-h-full overflow-hidden">
-            <div
-              className="leading-[1.05] font-extrabold text-glow whitespace-pre-line break-words"
-              style={{ color: c.color ?? undefined, fontSize }}
-            >
-              {text}
-            </div>
-            {c.subtitle && (
-              <div className="mt-4 text-[2.4vw] text-muted-foreground font-semibold leading-snug whitespace-pre-line">
-                {c.subtitle}
+          {/* The title is pinned near the top; the text keeps the middle of what is left. */}
+          {slideTitle && <TitleBox text={slideTitle} />}
+          <div className="flex-1 min-h-0 flex items-center justify-center">
+            <div className="text-center max-w-[92vw] max-h-full overflow-hidden">
+              <div
+                className="leading-[1.05] font-extrabold text-glow whitespace-pre-line break-words"
+                style={{ color: c.color ?? undefined, fontSize }}
+              >
+                {text}
               </div>
-            )}
+              {c.subtitle && (
+                <div className="mt-4 text-[2.4vw] text-muted-foreground font-semibold leading-snug whitespace-pre-line">
+                  {c.subtitle}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       );
@@ -166,23 +173,19 @@ export function SlotRenderer({
       );
     }
 
+    case "video": {
+      const c = content as Extract<SlotContent, { type: "video" }>;
+      if (!c.url) return <Waiting screen={screen} />;
+      return <LoopingVideo url={c.url} loop={c.loop !== false} withSound={screen === "host"} />;
+    }
+
     case "image": {
       const c = content as Extract<SlotContent, { type: "image" }>;
       if (!c.url) return <Waiting screen={screen} />;
       const title = (c.title ?? "").trim();
-      const titleLen = title.length;
-      const titleVw = titleLen > 60 ? 2.6 : titleLen > 40 ? 3.4 : titleLen > 20 ? 4.4 : 5.5;
-      const titleFontSize = `clamp(1.25rem, ${titleVw}vw, 5rem)`;
       return (
-        <div className="h-screen w-full bg-black animate-slot-in flex flex-col items-center justify-center p-4 gap-3 overflow-hidden">
-          {title && (
-            <h2
-              className="font-extrabold text-glow text-center leading-tight max-w-[94vw] shrink-0 whitespace-pre-line"
-              style={{ fontSize: titleFontSize, color: "var(--cyan)" }}
-            >
-              {title}
-            </h2>
-          )}
+        <div className="h-screen w-full bg-black animate-slot-in flex flex-col items-center justify-center px-4 pb-4 pt-[5vh] gap-[3vh] overflow-hidden">
+          {title && <TitleBox text={title} />}
           <div className="flex-1 min-h-0 w-full flex items-center justify-center">
             <img
               src={c.url}
@@ -285,7 +288,7 @@ export function SlotRenderer({
 
     case "whiteboard": {
       const c = content as Extract<SlotContent, { type: "whiteboard" }>;
-      return <WhiteboardRenderer content={c} screen={screen} />;
+      return <WhiteboardRenderer content={c} screen={screen} sessionId={sessionId} />;
     }
 
     default:
@@ -318,6 +321,48 @@ export function normalizeEmbedUrl(url: string): string {
     }
     return u.href;
   } catch { return clean; }
+}
+
+/**
+ * An uploaded video that starts by itself and, by default, loops forever.
+ * Browsers refuse to autoplay with sound until someone has interacted with the
+ * page, so if the first attempt is refused it plays muted rather than not at all.
+ */
+function LoopingVideo({ url, loop, withSound }: { url: string; loop: boolean; withSound: boolean }) {
+  const ref = useRef<HTMLVideoElement | null>(null);
+  useEffect(() => {
+    const v = ref.current;
+    if (!v) return;
+    v.muted = !withSound;
+    v.play().catch(() => {
+      v.muted = true;
+      v.play().catch(() => {});
+    });
+  }, [url, withSound]);
+  return (
+    <div className="h-screen w-full bg-black animate-slot-in">
+      <video ref={ref} key={url} src={url} loop={loop} autoPlay playsInline muted={!withSound}
+        className="w-full h-full object-contain" />
+    </div>
+  );
+}
+
+/**
+ * A heading in an outlined box. Titles sitting bare at the very top of a
+ * projected screen were getting lost, so they are boxed and pushed down a
+ * little wherever a slide has one. Shrinks as the text gets longer.
+ */
+function TitleBox({ text, small = false }: { text: string; small?: boolean }) {
+  const len = text.length;
+  const vw = (len > 60 ? 2.6 : len > 40 ? 3.4 : len > 20 ? 4.4 : 5.5) * (small ? 0.8 : 1);
+  return (
+    <h2
+      className="shrink-0 max-w-[92vw] rounded-2xl border-4 border-[color:var(--cyan)] bg-black/50 px-[2.5vw] py-[1.2vh] text-center font-extrabold leading-tight text-glow whitespace-pre-line"
+      style={{ fontSize: `clamp(1.25rem, ${vw}vw, 5rem)`, color: "var(--cyan)" }}
+    >
+      {text}
+    </h2>
+  );
 }
 
 // ─────────────────────────────────────────────
@@ -579,20 +624,24 @@ function ConfidenceCheckerHost({ content, sessionId, slotId }: {
   return (
     <div className="min-h-screen w-full bg-immersive bg-grid flex flex-col items-center justify-center p-12 gap-10 animate-slot-in">
       <div className="text-xs uppercase tracking-[0.4em] text-[color:var(--cyan)]">Confidence Checker · Live</div>
-      <div className="flex items-end gap-4 md:gap-8 h-48">
+      <div className="flex items-end gap-4 md:gap-8">
         {options.map((n, i) => (
           <div key={n} className="flex flex-col items-center gap-2">
             <span className="text-2xl font-extrabold">{counts[i]}</span>
             <div className="w-12 md:w-16 rounded-t-xl transition-all duration-700"
               style={{ height: `${counts[i] === 0 ? 4 : Math.max(12, (counts[i] / maxCount) * 176)}px`, background: barColor(i) }} />
-            <span className="text-xl font-bold" style={{ color: barColor(i) }}>{n}</span>
+            {mode === "emoji" ? (
+              <span className="text-4xl md:text-5xl leading-none">{EMOJI_FACES[i]}</span>
+            ) : (
+              <span className="text-xl font-bold" style={{ color: barColor(i) }}>{n}</span>
+            )}
           </div>
         ))}
       </div>
-      {(mode === "emoji" || mode === "likert") && (
+      {mode === "likert" && (
         <div className="flex justify-between w-full max-w-md text-xs text-muted-foreground uppercase tracking-widest">
-          <span>{mode === "emoji" ? EMOJI_FACES[0] : LIKERT_LABELS[0]}</span>
-          <span>{mode === "emoji" ? EMOJI_FACES[EMOJI_FACES.length - 1] : LIKERT_LABELS[LIKERT_LABELS.length - 1]}</span>
+          <span>{LIKERT_LABELS[0]}</span>
+          <span>{LIKERT_LABELS[LIKERT_LABELS.length - 1]}</span>
         </div>
       )}
       <div className="flex gap-16 text-center">
@@ -618,17 +667,21 @@ function confidenceBarColor(i: number, total: number) {
   return `oklch(0.75 0.17 ${Math.round(25 + t * 120)})`;
 }
 
-function ConfidenceMiniBars({ scores, options, dim }: { scores: number[]; options: number[]; dim: boolean }) {
+function ConfidenceMiniBars({ scores, options, dim, emoji }: { scores: number[]; options: number[]; dim: boolean; emoji?: boolean }) {
   const counts = options.map(n => scores.filter(s => s === n).length);
   const maxC = Math.max(...counts, 1);
   return (
-    <div className="flex items-end gap-2 md:gap-3 h-28">
+    <div className="flex items-end gap-2 md:gap-3">
       {options.map((n, i) => (
         <div key={n} className="flex flex-col items-center gap-1">
           <span className="text-sm font-bold">{counts[i]}</span>
           <div className="w-7 md:w-10 rounded-t-lg transition-all duration-700"
             style={{ height: `${counts[i] === 0 ? 3 : Math.max(8, (counts[i] / maxC) * 96)}px`, background: confidenceBarColor(i, options.length), opacity: dim ? 0.5 : 1 }} />
-          <span className="text-xs font-bold" style={{ color: confidenceBarColor(i, options.length) }}>{n}</span>
+          {emoji ? (
+            <span className="text-2xl leading-none" style={{ opacity: dim ? 0.6 : 1 }}>{EMOJI_FACES[i]}</span>
+          ) : (
+            <span className="text-xs font-bold" style={{ color: confidenceBarColor(i, options.length) }}>{n}</span>
+          )}
         </div>
       ))}
     </div>
@@ -639,7 +692,7 @@ function ConfidenceCompareHost({ content, sessionId }: {
   content: { scale_mode?: "numbers" | "emoji" | "likert"; max?: number };
   sessionId?: string;
 }) {
-  const { options } = resolveScale(content);
+  const { mode, options } = resolveScale(content);
   const [startScores, setStartScores] = useState<number[]>([]);
   const [finalScores, setFinalScores] = useState<number[]>([]);
 
@@ -685,7 +738,7 @@ function ConfidenceCompareHost({ content, sessionId }: {
       <div className="flex flex-col md:flex-row items-center gap-8 md:gap-14">
         <div className="flex flex-col items-center gap-3">
           <div className="text-xs uppercase tracking-widest text-muted-foreground">At the start</div>
-          <ConfidenceMiniBars scores={startScores} options={options} dim />
+          <ConfidenceMiniBars scores={startScores} options={options} dim emoji={mode === "emoji"} />
           <div className="text-4xl font-extrabold text-muted-foreground">{fmt(startAvg)}</div>
           <div className="text-[10px] uppercase tracking-widest text-muted-foreground">{startScores.length} responses</div>
         </div>
@@ -694,7 +747,7 @@ function ConfidenceCompareHost({ content, sessionId }: {
 
         <div className="flex flex-col items-center gap-3">
           <div className="text-xs uppercase tracking-widest text-[color:var(--cyan)]">Now · live</div>
-          <ConfidenceMiniBars scores={finalScores} options={options} dim={false} />
+          <ConfidenceMiniBars scores={finalScores} options={options} dim={false} emoji={mode === "emoji"} />
           <div className="text-4xl font-extrabold text-[color:var(--cyan)]">{fmt(finalAvg)}</div>
           <div className="text-[10px] uppercase tracking-widest text-muted-foreground">{finalScores.length} responses</div>
         </div>
@@ -924,7 +977,18 @@ function QuestionRendererTS2({ content, sessionId, slotId }: {
 // QUESTION — Host (live count → animated results)
 // ─────────────────────────────────────────────
 
-type ResponseRow = { response_data: { answer: number | string; thoughts?: string[] } };
+type ResponseRow = {
+  id?: string;
+  screen_role?: string;
+  response_data: { answer: number | string; thoughts?: string[]; qIndex?: number; round?: string };
+};
+
+/** Short stable tag for a piece of content, so answers to one activity are not mixed with another's. */
+function contentKey(text: string): string {
+  let h = 5381;
+  for (let i = 0; i < text.length; i++) h = ((h << 5) + h + text.charCodeAt(i)) | 0;
+  return (h >>> 0).toString(36);
+}
 
 function QuestionRendererHost({ content, sessionId }: { content: QuestionContent; sessionId?: string }) {
   const [revealed, setRevealed] = useState(false);
@@ -957,8 +1021,8 @@ function QuestionRendererHost({ content, sessionId }: { content: QuestionContent
     const revCh = supabase.channel(`qh-rev:${sessionId}`, { config: { broadcast: { self: true } } });
     revCh.on("broadcast", { event: "reveal" }, async () => {
       if (revealedRef.current) return;
-      const { data } = await supabase.from("responses").select("response_data")
-        .eq("session_id", sessionId).eq("response_type", "question");
+      const { data } = await supabase.from("responses").select("id,response_data,screen_role")
+        .eq("session_id", sessionId).eq("response_type", "question").order("created_at");
       setResponses((data ?? []) as ResponseRow[]);
       sounds.questionReveal();
       setRevealed(true);
@@ -969,8 +1033,8 @@ function QuestionRendererHost({ content, sessionId }: { content: QuestionContent
   // Reveal is controlled here on the Host screen.
   const handleReveal = async () => {
     if (!sessionId) return;
-    const { data } = await supabase.from("responses").select("response_data")
-      .eq("session_id", sessionId).eq("response_type", "question");
+    const { data } = await supabase.from("responses").select("id,response_data,screen_role")
+      .eq("session_id", sessionId).eq("response_type", "question").order("created_at");
     setResponses((data ?? []) as ResponseRow[]);
     sounds.questionReveal();
     setRevealed(true);
@@ -999,75 +1063,62 @@ function QuestionRendererHost({ content, sessionId }: { content: QuestionContent
     );
   }
 
-  return <QuestionResults content={content} responses={responses} />;
+  // A single question is answered on Touch Screen 2 only.
+  return <QuestionResults content={content} responses={responses} screens={["screen2"]} />;
 }
 
-function QuestionResults({ content, responses }: { content: QuestionContent; responses: ResponseRow[] }) {
-  const [animating, setAnimating] = useState(true);
-  useEffect(() => { const t = setTimeout(() => setAnimating(false), 150); return () => clearTimeout(t); }, []);
+const SCREEN_NAMES: Record<string, string> = { screen1: "Screen 1", screen2: "Screen 2" };
 
-  const total = responses.length;
-
-  if (content.type === "true_or_false") {
-    const trueCount = responses.filter(r => r.response_data.answer === "true").length;
-    const falseCount = responses.filter(r => r.response_data.answer === "false").length;
-    const correct = content.correct_tf ? "true" : "false";
-    return (
-      <div className="min-h-screen w-full bg-immersive bg-grid flex flex-col items-center justify-center p-12 gap-8 animate-slot-in">
-        <div className="text-xs uppercase tracking-[0.4em] text-[color:var(--cyan)]">Results</div>
-        <div className="text-2xl font-bold text-center max-w-2xl">{content.text}</div>
-        <div className="flex gap-16 justify-center">
-          {(["true", "false"] as const).map(v => {
-            const count = v === "true" ? trueCount : falseCount;
-            const pct = total > 0 ? Math.round((count / total) * 100) : 0;
-            const isCorrect = v === correct;
-            return (
-              <div key={v} className={`text-center transition-all duration-500 ${isCorrect ? "scale-110" : "opacity-50"}`}>
-                <div className={`text-6xl font-extrabold uppercase tracking-widest ${isCorrect ? "text-[color:var(--success)]" : "text-muted-foreground"}`}>{v}</div>
-                <div className="text-4xl font-bold mt-2">{count}</div>
-                <div className="text-lg text-muted-foreground">{pct}%</div>
-                {isCorrect && <div className="text-xs uppercase tracking-widest text-[color:var(--success)] mt-1">Correct ✓</div>}
-              </div>
-            );
-          })}
-        </div>
-        <div className="text-sm text-muted-foreground">{total} response{total !== 1 ? "s" : ""}</div>
-      </div>
-    );
-  }
-
-  // Multiple choice
-  const opts = (content as { options?: string[] }).options ?? [];
-  const counts = opts.map((_, i) => responses.filter(r => r.response_data.answer === i).length);
-  const maxCount = Math.max(...counts, 1);
+/**
+ * The reveal. One card per touch screen saying whether that screen got it
+ * right, rather than a bar chart of percentages: with two screens answering,
+ * "50%" told the room nothing that "Screen 1 correct, Screen 2 incorrect" does not.
+ */
+function QuestionResults({ content, responses, screens = ["screen1", "screen2"] }: {
+  content: QuestionContent; responses: ResponseRow[]; screens?: string[];
+}) {
+  const c = content as { type: string; text?: string; options?: string[]; correct?: number; correct_tf?: boolean };
+  const isTf = c.type === "true_or_false";
+  const opts = c.options ?? [];
+  const correct: number | string | null = isTf
+    ? (typeof c.correct_tf === "boolean" ? (c.correct_tf ? "true" : "false") : null)
+    : (typeof c.correct === "number" ? c.correct : null);
+  const label = (a: number | string) =>
+    isTf ? (a === "true" ? "True" : "False") : `${String.fromCharCode(65 + Number(a))}. ${opts[Number(a)] ?? ""}`;
 
   return (
-    <div className="min-h-screen w-full bg-immersive bg-grid flex flex-col items-center justify-center p-12 gap-6 animate-slot-in">
+    <div className="min-h-screen w-full bg-immersive bg-grid flex flex-col items-center justify-center px-12 pt-12 pb-44 gap-8 animate-slot-in">
       <div className="text-xs uppercase tracking-[0.4em] text-[color:var(--cyan)]">Results</div>
-      <div className="text-2xl font-bold text-center max-w-2xl">{(content as { text?: string }).text}</div>
-      <div className="w-full max-w-3xl space-y-4">
-        {opts.map((opt, i) => {
-          const count = counts[i];
-          const pct = total > 0 ? Math.round((count / total) * 100) : 0;
-          const barW = animating ? 0 : (counts[i] / maxCount) * 100;
-          const isCorrect = content.type === "multiple_choice" && content.correct === i;
+      {c.text && <div className="text-2xl md:text-4xl font-bold text-center max-w-3xl">{c.text}</div>}
+      {correct !== null && (
+        <div className="rounded-2xl border-2 border-[color:var(--success)] bg-[color:var(--success)]/10 px-8 py-3 text-xl md:text-3xl font-extrabold text-[color:var(--success)] text-center">
+          Correct answer: {label(correct)}
+        </div>
+      )}
+      <div className="flex flex-wrap justify-center gap-8">
+        {screens.map((s, i) => {
+          // The last answer a screen sent is the one that counts.
+          const mine = responses.filter(r => r.screen_role === s);
+          const given = mine.length ? mine[mine.length - 1].response_data.answer : null;
+          const status = given === null ? "none" : correct === null ? "answered" : given === correct ? "right" : "wrong";
+          const tone =
+            status === "right" ? "var(--success)" :
+            status === "wrong" ? "var(--destructive)" :
+            status === "answered" ? "var(--cyan)" : "var(--muted-foreground)";
           return (
-            <div key={i} className="animate-slot-in" style={{ animationDelay: `${i * 80}ms` }}>
-              <div className="flex items-center justify-between mb-1.5">
-                <span className={`font-semibold ${isCorrect ? "text-[color:var(--cyan)]" : "text-foreground"}`}>
-                  {String.fromCharCode(65 + i)}. {opt} {isCorrect && "✓"}
-                </span>
-                <span className="text-muted-foreground text-sm">{count} ({pct}%)</span>
+            <div key={s} className="w-[min(40vw,28rem)] rounded-3xl border-4 p-8 text-center animate-slot-in"
+              style={{ borderColor: tone, background: `color-mix(in oklab, ${tone} 12%, transparent)`, animationDelay: `${i * 120}ms` }}>
+              <div className="text-lg md:text-2xl uppercase tracking-[0.3em] font-bold text-muted-foreground">{SCREEN_NAMES[s] ?? s}</div>
+              <div className="text-4xl md:text-6xl font-extrabold mt-3" style={{ color: tone }}>
+                {status === "right" ? "✓ Correct" : status === "wrong" ? "✕ Incorrect" : status === "answered" ? "Answered" : "No answer"}
               </div>
-              <div className="h-5 bg-card/60 rounded-full overflow-hidden">
-                <div className="h-full rounded-full transition-all duration-700 ease-out"
-                  style={{ width: `${barW}%`, background: isCorrect ? "var(--cyan)" : "var(--orange)", transitionDelay: `${i * 80}ms` }} />
-              </div>
+              {given !== null && (
+                <div className="text-lg md:text-2xl font-semibold mt-3 text-foreground">{label(given)}</div>
+              )}
             </div>
           );
         })}
       </div>
-      <div className="text-sm text-muted-foreground">{total} response{total !== 1 ? "s" : ""}</div>
     </div>
   );
 }
@@ -1124,6 +1175,9 @@ function QuestionRoundRenderer({ content, screen, sessionId, slotId }: {
   sessionId?: string; slotId?: string;
 }) {
   const questions = (content.questions ?? []).filter(q => q && q.type);
+  // Two rounds in one lesson both have a "question 1". Without this tag the
+  // second round counted the first round's answers.
+  const roundKey = contentKey(questions.map(q => q.text ?? "").join("|"));
   const [state, setState] = useState<RoundState>({ index: 0, revealed: false });
   const stateRef = useRef(state);
   const channelRef = useRef<RealtimeChannel | null>(null);
@@ -1159,20 +1213,20 @@ function QuestionRoundRenderer({ content, screen, sessionId, slotId }: {
 
   if (screen === "screen1" || screen === "screen2")
     return <QuestionRoundTS2 question={current} qIndex={state.index} total={questions.length}
-      screen={screen} sessionId={sessionId} slotId={slotId} />;
+      screen={screen} sessionId={sessionId} slotId={slotId} roundKey={roundKey} />;
 
   if (screen === "host")
     return <QuestionRoundHost question={current} qIndex={state.index} total={questions.length}
-      revealed={state.revealed} isLast={isLast} sessionId={sessionId}
+      revealed={state.revealed} isLast={isLast} sessionId={sessionId} roundKey={roundKey}
       onReveal={() => broadcast({ ...state, revealed: true })}
       onNext={() => broadcast({ index: Math.min(questions.length - 1, state.index + 1), revealed: false })} />;
 
   return <Waiting screen={screen} />;
 }
 
-function QuestionRoundTS2({ question, qIndex, total, screen, sessionId, slotId }: {
+function QuestionRoundTS2({ question, qIndex, total, screen, sessionId, slotId, roundKey }: {
   question: RoundQ; qIndex: number; total: number;
-  screen: "screen1" | "screen2"; sessionId?: string; slotId?: string;
+  screen: "screen1" | "screen2"; sessionId?: string; slotId?: string; roundKey: string;
 }) {
   const [answer, setAnswer] = useState<number | string | null>(null);
   const [submitted, setSubmitted] = useState(false);
@@ -1187,7 +1241,7 @@ function QuestionRoundTS2({ question, qIndex, total, screen, sessionId, slotId }
     await supabase.from("responses").insert({
       session_id: sessionId, slot_id: slotId ?? null, screen_role: screen,
       response_type: "question",
-      response_data: { type: question.type, answer, questionId: question.id ?? `q${qIndex}`, qIndex } as never,
+      response_data: { type: question.type, answer, questionId: question.id ?? `q${qIndex}`, qIndex, round: roundKey } as never,
     });
     setSubmitting(false);
     setSubmitted(true);
@@ -1218,54 +1272,59 @@ function QuestionRoundTS2({ question, qIndex, total, screen, sessionId, slotId }
   );
 }
 
-function QuestionRoundHost({ question, qIndex, total, revealed, isLast, sessionId, onReveal, onNext }: {
+function QuestionRoundHost({ question, qIndex, total, revealed, isLast, sessionId, roundKey, onReveal, onNext }: {
   question: RoundQ; qIndex: number; total: number; revealed: boolean; isLast: boolean;
-  sessionId?: string; onReveal: () => void; onNext: () => void;
+  sessionId?: string; roundKey: string; onReveal: () => void; onNext: () => void;
 }) {
-  const [count, setCount] = useState(0);
   const [responses, setResponses] = useState<ResponseRow[]>([]);
 
-  // Live response count for the current question only (matched on qIndex).
+  // Answers to this question, kept live. They are held here rather than
+  // fetched when Reveal is pressed, because the reveal can also come from the
+  // tutor's phone, and that path used to show empty results.
   useEffect(() => {
     if (!sessionId) return;
-    setCount(0);
+    setResponses([]);
+    const forThis = (d: ResponseRow["response_data"] | null | undefined) =>
+      d?.qIndex === qIndex && d?.round === roundKey;
+    const add = (rows: ResponseRow[]) =>
+      setResponses(prev => {
+        const seen = new Set(prev.map(r => r.id));
+        return [...prev, ...rows.filter(r => !r.id || !seen.has(r.id))];
+      });
     (async () => {
-      const { data } = await supabase.from("responses").select("response_data")
-        .eq("session_id", sessionId).eq("response_type", "question");
-      const forThis = (data ?? []).filter(r => (r.response_data as { qIndex?: number })?.qIndex === qIndex);
-      setCount(forThis.length);
+      const { data } = await supabase.from("responses").select("id,response_data,screen_role")
+        .eq("session_id", sessionId).eq("response_type", "question").order("created_at");
+      add(((data ?? []) as unknown as ResponseRow[]).filter(r => forThis(r.response_data)));
     })();
-    const ch = supabase.channel(`qround-resp:${sessionId}:${qIndex}`);
+    const ch = supabase.channel(`qround-resp:${sessionId}:${roundKey}:${qIndex}`);
     ch.on("postgres_changes", { event: "INSERT", schema: "public", table: "responses", filter: `session_id=eq.${sessionId}` },
       (payload) => {
-        const row = payload.new as { response_type: string; response_data: { qIndex?: number } };
-        if (row.response_type === "question" && row.response_data?.qIndex === qIndex) setCount(c => c + 1);
+        const row = payload.new as ResponseRow & { response_type: string };
+        if (row.response_type === "question" && forThis(row.response_data)) add([row]);
       }).subscribe();
     return () => { supabase.removeChannel(ch); };
-  }, [sessionId, qIndex]);
+  }, [sessionId, qIndex, roundKey]);
 
-  const doReveal = async () => {
-    if (!sessionId) return;
-    const { data } = await supabase.from("responses").select("response_data")
-      .eq("session_id", sessionId).eq("response_type", "question");
-    const forThis = (data ?? []).filter(r => (r.response_data as { qIndex?: number })?.qIndex === qIndex) as ResponseRow[];
-    setResponses(forThis);
-    sounds.questionReveal();
-    onReveal();
-  };
+  // Chime on reveal wherever it was triggered from.
+  const wasRevealed = useRef(revealed);
+  useEffect(() => {
+    if (revealed && !wasRevealed.current) sounds.questionReveal();
+    wasRevealed.current = revealed;
+  }, [revealed]);
 
   if (!question) return <Waiting screen="host" />;
+  const count = responses.length;
 
   if (!revealed) {
     return (
-      <div className="min-h-screen w-full bg-immersive bg-grid flex flex-col items-center justify-center gap-8 animate-slot-in">
+      <div className="min-h-screen w-full bg-immersive bg-grid flex flex-col items-center justify-center gap-8 pb-28 animate-slot-in">
         <div className="text-xs uppercase tracking-[0.4em] text-[color:var(--cyan)]">Question {qIndex + 1} of {total} · Live</div>
         {question.text && <div className="text-2xl md:text-4xl font-bold text-center max-w-2xl">{question.text}</div>}
         <div>
           <div className="text-xs uppercase tracking-widest text-muted-foreground mb-1 text-center">Responses</div>
           <div className="text-8xl font-extrabold text-glow">{count}</div>
         </div>
-        <Button onClick={doReveal} disabled={count === 0}
+        <Button onClick={onReveal} disabled={count === 0}
           className="h-16 px-12 text-xl uppercase tracking-widest font-extrabold disabled:opacity-30">
           Reveal Results
         </Button>
@@ -1276,7 +1335,8 @@ function QuestionRoundHost({ question, qIndex, total, revealed, isLast, sessionI
   return (
     <div className="relative min-h-screen w-full">
       <QuestionResults content={question as unknown as QuestionContent} responses={responses} />
-      <div className="absolute bottom-10 left-1/2 -translate-x-1/2">
+      {/* Sits above the slide bar at the bottom of the Host. */}
+      <div className="absolute bottom-28 left-1/2 -translate-x-1/2">
         {isLast ? (
           <div className="text-sm uppercase tracking-[0.4em] text-[color:var(--success)]">End of round ✓</div>
         ) : (
@@ -1688,9 +1748,9 @@ function VotingHost({ question, options, sessionId, slotId }: {
   const maxCount = Math.max(...counts, 1);
 
   return (
-    <div className="min-h-screen w-full bg-immersive bg-grid flex flex-col items-center justify-center p-12 gap-8 animate-slot-in">
+    <div className="min-h-screen w-full bg-immersive bg-grid flex flex-col items-center justify-center px-12 pb-12 pt-[10vh] gap-8 animate-slot-in">
       <div className="text-xs uppercase tracking-[0.4em] text-[color:var(--cyan)]">Voting · Live</div>
-      <div className="text-3xl md:text-5xl font-bold text-center max-w-3xl whitespace-pre-line">{question || "Voting"}</div>
+      <TitleBox text={question || "Voting"} small />
       <div className="w-full max-w-4xl space-y-5">
         {options.map((opt, i) => {
           const c = counts[i];
@@ -1910,8 +1970,10 @@ function WordCloudInput({ content, screen, sessionId, slotId }: {
   const [error, setError] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
-  const maxWords = content.max_words ?? 3;
+  const inputRef = useRef<HTMLInputElement | null>(null);
 
+  // No limit on how many words a screen can send: a whole table shares one
+  // touch screen, so a cap of three meant most learners never got a turn.
   const submit = async () => {
     const w = word.trim();
     if (!w || !sessionId || submitting) return;
@@ -1921,16 +1983,14 @@ function WordCloudInput({ content, screen, sessionId, slotId }: {
     setSubmitting(true);
     await supabase.from("responses").insert({
       session_id: sessionId, slot_id: slotId ?? null, screen_role: screen,
-      response_type: "word_cloud", response_data: { word: w } as never,
+      response_type: "word_cloud", response_data: { word: w, key: cloudKey(content) } as never,
     });
     setSubmitted((s) => [...s, w]);
     setWord("");
     setError(null);
     setSubmitting(false);
+    inputRef.current?.focus();
   };
-
-  const remaining = maxWords - submitted.length;
-  const done = remaining <= 0;
 
   return (
     <div className="min-h-screen w-full bg-immersive bg-grid flex flex-col items-center justify-center p-6 gap-6 animate-slot-in">
@@ -1938,32 +1998,26 @@ function WordCloudInput({ content, screen, sessionId, slotId }: {
       {content.title && <div className="text-3xl md:text-4xl font-extrabold text-glow text-center max-w-2xl">{content.title}</div>}
       <div className="text-lg md:text-2xl text-center max-w-2xl whitespace-pre-line text-muted-foreground">{content.prompt || "Type a word"}</div>
 
-      {!done && (
-        <>
-          <input
-            autoFocus
-            value={word}
-            onChange={(e) => { setWord(e.target.value); setError(null); }}
-            onKeyDown={(e) => { if (e.key === "Enter") submit(); }}
-            maxLength={40}
-            placeholder="Your word…"
-            className="w-full max-w-lg h-20 text-3xl text-center bg-card/60 border-2 border-[color:var(--cyan)]/40 focus:border-[color:var(--cyan)] outline-none rounded-2xl px-6"
-          />
-          {error && <div className="text-destructive uppercase tracking-widest text-sm">{error}</div>}
-          <Button onClick={submit} disabled={!word.trim() || submitting}
-            className="h-14 px-10 text-lg uppercase tracking-widest font-extrabold">Send</Button>
-          <div className="text-xs uppercase tracking-widest text-muted-foreground">
-            {remaining} word{remaining === 1 ? "" : "s"} left
-          </div>
-        </>
-      )}
-      {done && (
-        <div className="text-3xl md:text-4xl font-extrabold text-[color:var(--success)]">Thanks — words in!</div>
-      )}
+      <input
+        ref={inputRef}
+        autoFocus
+        value={word}
+        onChange={(e) => { setWord(e.target.value); setError(null); }}
+        onKeyDown={(e) => { if (e.key === "Enter") submit(); }}
+        maxLength={40}
+        placeholder="Your word…"
+        className="w-full max-w-lg h-20 text-3xl text-center bg-card/60 border-2 border-[color:var(--cyan)]/40 focus:border-[color:var(--cyan)] outline-none rounded-2xl px-6"
+      />
+      {error && <div className="text-destructive uppercase tracking-widest text-sm">{error}</div>}
+      <Button onClick={submit} disabled={!word.trim() || submitting}
+        className="h-14 px-10 text-lg uppercase tracking-widest font-extrabold">Send</Button>
+      <div className="text-xs uppercase tracking-widest text-muted-foreground">
+        {submitted.length === 0 ? "Send as many words as you like" : `${submitted.length} sent — keep going!`}
+      </div>
 
       {submitted.length > 0 && (
-        <div className="flex flex-wrap gap-2 justify-center max-w-xl mt-4">
-          {submitted.map((w, i) => (
+        <div className="flex flex-wrap gap-2 justify-center max-w-xl mt-2">
+          {submitted.slice(-12).map((w, i) => (
             <span key={i} className="px-3 py-1.5 rounded-full bg-[color:var(--cyan)]/20 text-[color:var(--cyan)] text-sm font-bold">{w}</span>
           ))}
         </div>
@@ -1972,68 +2026,156 @@ function WordCloudInput({ content, screen, sessionId, slotId }: {
   );
 }
 
+function cloudKey(content: { title?: string; prompt?: string }): string {
+  return contentKey(`cloud|${content.title ?? ""}|${content.prompt ?? ""}`);
+}
+
+type CloudWord = { word: string; count: number };
+type PlacedWord = CloudWord & { x: number; y: number; size: number; color: string };
+
+/**
+ * Packs words into a cloud: the most-sent word largest and in the middle, the
+ * rest spiralling outwards into whatever space is free. If they do not all fit
+ * the whole cloud is shrunk a step and packed again.
+ */
+function layoutCloud(words: CloudWord[], w: number, h: number, fontFamily: string): PlacedWord[] {
+  if (w < 50 || h < 50 || words.length === 0) return [];
+  const measure = document.createElement("canvas").getContext("2d");
+  if (!measure) return [];
+  const maxCount = Math.max(...words.map(x => x.count));
+  const biggest = Math.min(h * 0.3, w * 0.16);
+
+  for (let shrink = 1; shrink > 0.2; shrink *= 0.85) {
+    const boxes: { l: number; t: number; r: number; b: number }[] = [];
+    const out: PlacedWord[] = [];
+    let failed = false;
+
+    for (let i = 0; i < words.length && !failed; i++) {
+      const item = words[i];
+      // With every word sent once there is no "biggest", so use a middling size.
+      const weight = maxCount === 1 ? 0.45 : 0.22 + 0.78 * (item.count / maxCount);
+      let size = Math.max(14, biggest * weight * shrink);
+      measure.font = `800 ${size}px ${fontFamily}`;
+      let tw = measure.measureText(item.word).width;
+      if (tw > w * 0.9) { size *= (w * 0.9) / tw; tw = w * 0.9; }
+      const bw = tw + 18, bh = size * 1.08 + 8;
+      // Each word starts its spiral at its own angle so the cloud is not lopsided.
+      const start = (parseInt(contentKey(item.word), 36) % 360) * (Math.PI / 180);
+
+      let spot: { x: number; y: number } | null = null;
+      for (let step = 0; step < 2400; step++) {
+        const a = start + step * 0.22;
+        const rad = step * 0.55;
+        const x = w / 2 + rad * Math.cos(a) * (w / h);
+        const y = h / 2 + rad * Math.sin(a);
+        const box = { l: x - bw / 2, t: y - bh / 2, r: x + bw / 2, b: y + bh / 2 };
+        if (box.l < 0 || box.t < 0 || box.r > w || box.b > h) continue;
+        if (boxes.some(o => box.l < o.r && box.r > o.l && box.t < o.b && box.b > o.t)) continue;
+        boxes.push(box);
+        spot = { x, y };
+        break;
+      }
+      if (!spot) { failed = true; break; }
+      out.push({ ...item, ...spot, size, color: CLOUD_COLORS[parseInt(contentKey(item.word), 36) % CLOUD_COLORS.length] });
+    }
+    if (!failed) return out;
+  }
+  return [];
+}
+
 function WordCloudHost({ content, sessionId, slotId }: {
   content: { title?: string; prompt?: string };
   sessionId?: string; slotId?: string;
 }) {
   const [words, setWords] = useState<string[]>([]);
+  const key = cloudKey(content);
 
   useEffect(() => {
     if (!sessionId) return;
     let cancelled = false;
+    setWords([]);
+    // Without a slot id, the key keeps two word clouds in one lesson apart.
+    const mine = (d: { word?: string; key?: string } | null | undefined, slot: string | null) =>
+      slotId ? slot === slotId : d?.key === key;
     (async () => {
-      let q = supabase.from("responses").select("response_data,slot_id,response_type").eq("session_id", sessionId).eq("response_type", "word_cloud");
-      if (slotId) q = q.eq("slot_id", slotId);
-      const { data } = await q;
-      if (!cancelled && data) setWords(data.map(r => String((r.response_data as { word?: string })?.word ?? "")).filter(Boolean));
+      const { data } = await supabase.from("responses").select("response_data,slot_id")
+        .eq("session_id", sessionId).eq("response_type", "word_cloud").order("created_at");
+      if (cancelled || !data) return;
+      setWords(data
+        .filter(r => mine(r.response_data as { word?: string; key?: string }, r.slot_id))
+        .map(r => String((r.response_data as { word?: string })?.word ?? "").trim())
+        .filter(Boolean));
     })();
-    const ch = supabase.channel(`cloud:${sessionId}`);
+    const ch = supabase.channel(`cloud:${sessionId}:${key}`);
     ch.on("postgres_changes", { event: "INSERT", schema: "public", table: "responses", filter: `session_id=eq.${sessionId}` },
       (payload) => {
-        const r = payload.new as { response_type: string; response_data: { word?: string }; slot_id: string | null };
-        if (r.response_type !== "word_cloud") return;
-        if (slotId && r.slot_id !== slotId) return;
+        const r = payload.new as { response_type: string; response_data: { word?: string; key?: string }; slot_id: string | null };
+        if (r.response_type !== "word_cloud" || !mine(r.response_data, r.slot_id)) return;
         const w = String(r.response_data?.word ?? "").trim();
         if (w) setWords(p => [...p, w]);
       }).subscribe();
     return () => { cancelled = true; supabase.removeChannel(ch); };
-  }, [sessionId, slotId]);
+  }, [sessionId, slotId, key]);
 
-  // Frequency map (case-insensitive).
+  // Count each word, ignoring capitals. Biggest first; ties keep arrival order.
   const freq = useMemo(() => {
     const m = new Map<string, number>();
     for (const w of words) {
-      const key = w.toLowerCase();
-      m.set(key, (m.get(key) ?? 0) + 1);
+      const k = w.toLowerCase();
+      m.set(k, (m.get(k) ?? 0) + 1);
     }
     return Array.from(m.entries())
-      .map(([w, n]) => ({ word: w, count: n }))
+      .map(([word, count]) => ({ word, count }))
       .sort((a, b) => b.count - a.count);
   }, [words]);
 
-  const maxCount = Math.max(...freq.map(f => f.count), 1);
+  const boxRef = useRef<HTMLDivElement | null>(null);
+  const [box, setBox] = useState({ w: 0, h: 0 });
+  useEffect(() => {
+    const el = boxRef.current;
+    if (!el) return;
+    const read = () => setBox({ w: el.clientWidth, h: el.clientHeight });
+    read();
+    const ro = new ResizeObserver(read);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  // Word widths are measured in the page font, so pack again once it has
+  // loaded: measuring in the fallback font left words overlapping.
+  const [fontsReady, setFontsReady] = useState(false);
+  useEffect(() => {
+    let live = true;
+    document.fonts?.ready.then(() => { if (live) setFontsReady(true); });
+    return () => { live = false; };
+  }, []);
+
+  const placed = useMemo(
+    () => layoutCloud(freq, box.w, box.h, typeof window === "undefined" ? "sans-serif" : getComputedStyle(document.body).fontFamily),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [freq, box.w, box.h, fontsReady],
+  );
 
   return (
-    <div className="min-h-screen w-full bg-immersive bg-grid flex flex-col items-center justify-center p-12 gap-8 animate-slot-in">
-      <div className="text-xs uppercase tracking-[0.4em] text-[color:var(--cyan)]">Word Cloud · Live</div>
-      {content.title && <div className="text-4xl md:text-6xl font-extrabold text-glow text-center max-w-4xl">{content.title}</div>}
-      {content.prompt && <div className="text-lg md:text-2xl text-muted-foreground text-center max-w-3xl whitespace-pre-line">{content.prompt}</div>}
-      <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-3 max-w-6xl">
-        {freq.length === 0 && <div className="text-2xl text-muted-foreground">Waiting for words…</div>}
-        {freq.map((f, i) => {
-          // Size scales from 1.6rem to 8rem based on frequency.
-          const scale = 0.2 + (f.count / maxCount) * 0.8;
-          const size = `clamp(1.6rem, ${(1.5 + scale * 6.5).toFixed(2)}rem, 9rem)`;
-          const color = CLOUD_COLORS[i % CLOUD_COLORS.length];
-          return (
-            <span key={f.word} className="font-extrabold leading-none transition-all duration-500 ease-out animate-slot-in"
-              style={{ fontSize: size, color, opacity: 0.55 + scale * 0.45 }}>
-              {f.word}
-            </span>
-          );
-        })}
+    <div className="h-screen w-full bg-immersive bg-grid flex flex-col items-center px-10 pt-[5vh] pb-28 gap-4 overflow-hidden animate-slot-in">
+      <div className="text-xs uppercase tracking-[0.4em] text-[color:var(--cyan)] shrink-0">Word Cloud · Live</div>
+      {content.title && <TitleBox text={content.title} small />}
+      {content.prompt && <div className="text-lg md:text-2xl text-muted-foreground text-center max-w-3xl whitespace-pre-line shrink-0">{content.prompt}</div>}
+      <div ref={boxRef} className="relative flex-1 min-h-0 w-full">
+        {freq.length === 0 && (
+          <div className="absolute inset-0 flex items-center justify-center text-2xl text-muted-foreground">Waiting for words…</div>
+        )}
+        {placed.map((f) => (
+          <span key={f.word}
+            className="absolute font-extrabold leading-none whitespace-nowrap transition-all duration-700 ease-out"
+            style={{ left: f.x, top: f.y, fontSize: f.size, color: f.color, transform: "translate(-50%, -50%)" }}>
+            {f.word}
+          </span>
+        ))}
       </div>
-      <div className="text-sm text-muted-foreground uppercase tracking-widest">{words.length} word{words.length === 1 ? "" : "s"}</div>
+      <div className="text-sm text-muted-foreground uppercase tracking-widest shrink-0">
+        {words.length} word{words.length === 1 ? "" : "s"} sent
+      </div>
     </div>
   );
 }
@@ -2170,42 +2312,131 @@ function PadletHost({ content, sessionId, slotId }: {
 }
 
 // ─────────────────────────────────────────────
-// WHITEBOARD — side-screen free-draw canvas (touch/mouse). No sync.
-// Host doesn't render it; the big screen just shows a title/waiting screen.
+// WHITEBOARD — side-screen free-draw canvas (touch/mouse).
+// Each touch screen draws on its own copy, optionally over a picture. "Send to
+// big screen" saves the drawing as an image and the Host shows it, labelled
+// with the screen it came from. Stored in `responses` with
+// response_type="whiteboard", response_data={url,key}.
 // ─────────────────────────────────────────────
 
-function WhiteboardRenderer({ content, screen }: {
-  content: { title?: string };
-  screen: "host" | "screen1" | "screen2";
-}) {
-  if (screen === "host") {
-    return (
-      <div className="min-h-screen w-full bg-immersive bg-grid flex flex-col items-center justify-center p-10 gap-6 animate-slot-in">
-        <div className="text-xs uppercase tracking-[0.5em] text-[color:var(--cyan)]">Whiteboard Active</div>
-        <div className="text-5xl md:text-7xl font-extrabold text-glow text-center max-w-4xl">{content.title || "Draw on the touch screens"}</div>
-      </div>
-    );
-  }
-  return <WhiteboardCanvas title={content.title} />;
+type WhiteboardContent = { title?: string; image_url?: string };
+
+function boardKey(content: WhiteboardContent): string {
+  return contentKey(`board|${content.title ?? ""}|${content.image_url ?? ""}`);
 }
 
-const WB_COLORS = ["#0b0b0b", "var(--cyan)", "var(--orange)", "var(--success)", "oklch(0.7 0.2 30)", "oklch(0.65 0.2 300)"];
+function WhiteboardRenderer({ content, screen, sessionId }: {
+  content: WhiteboardContent;
+  screen: "host" | "screen1" | "screen2";
+  sessionId?: string;
+}) {
+  if (screen === "host") return <WhiteboardHost content={content} sessionId={sessionId} />;
+  return <WhiteboardCanvas content={content} screen={screen} sessionId={sessionId} />;
+}
 
-function WhiteboardCanvas({ title }: { title?: string }) {
+type BoardShot = { id: string; url: string; screen: string };
+
+function WhiteboardHost({ content, sessionId }: { content: WhiteboardContent; sessionId?: string }) {
+  const [shots, setShots] = useState<BoardShot[]>([]);
+  const key = boardKey(content);
+
+  useEffect(() => {
+    if (!sessionId) return;
+    let cancelled = false;
+    setShots([]);
+    const toShot = (r: { id: string; screen_role: string; response_data: unknown }): BoardShot | null => {
+      const d = r.response_data as { url?: string; key?: string } | null;
+      return d?.url && d.key === key ? { id: r.id, url: d.url, screen: r.screen_role } : null;
+    };
+    const add = (rows: BoardShot[]) =>
+      setShots(prev => {
+        const seen = new Set(prev.map(x => x.id));
+        return [...prev, ...rows.filter(x => !seen.has(x.id))];
+      });
+    (async () => {
+      const { data } = await supabase.from("responses").select("id,screen_role,response_data")
+        .eq("session_id", sessionId).eq("response_type", "whiteboard").order("created_at");
+      if (!cancelled && data) add(data.map(toShot).filter((x): x is BoardShot => x !== null));
+    })();
+    const ch = supabase.channel(`board:${sessionId}:${key}`);
+    ch.on("postgres_changes", { event: "INSERT", schema: "public", table: "responses", filter: `session_id=eq.${sessionId}` },
+      (payload) => {
+        const r = payload.new as { id: string; response_type: string; screen_role: string; response_data: unknown };
+        if (r.response_type !== "whiteboard") return;
+        const shot = toShot(r);
+        if (shot) { sounds.connect(); add([shot]); }
+      }).subscribe();
+    return () => { cancelled = true; supabase.removeChannel(ch); };
+  }, [sessionId, key]);
+
+  // Newest first. Four is as many as stay readable from the back of the room.
+  const shown = shots.slice(-4).reverse();
+  const heading = content.title || "Draw on the touch screens";
+
+  return (
+    <div className="h-screen w-full bg-immersive bg-grid flex flex-col items-center px-8 pt-[4vh] pb-28 gap-4 overflow-hidden animate-slot-in">
+      <div className="text-xs uppercase tracking-[0.5em] text-[color:var(--cyan)] shrink-0">Whiteboard</div>
+      <TitleBox text={heading} small />
+      {shown.length === 0 ? (
+        <div className="flex-1 min-h-0 w-full flex flex-col items-center justify-center gap-4">
+          {content.image_url && (
+            <img src={content.image_url} alt="" className="min-h-0 max-h-full max-w-full object-contain rounded-2xl bg-white" />
+          )}
+          <div className="text-lg md:text-2xl text-muted-foreground text-center shrink-0">
+            Press “Send to big screen” on a touch screen to show your drawing here.
+          </div>
+        </div>
+      ) : (
+        <div className={`flex-1 min-h-0 w-full grid gap-4 ${shown.length === 1 ? "grid-cols-1" : "grid-cols-2"} ${shown.length > 2 ? "grid-rows-2" : "grid-rows-1"}`}>
+          {shown.map((shot) => {
+            const tone = shot.screen === "screen1" ? "var(--cyan)" : "var(--orange)";
+            return (
+              <div key={shot.id} className="relative min-h-0 rounded-2xl border-4 bg-white overflow-hidden animate-slot-in" style={{ borderColor: tone }}>
+                <img src={shot.url} alt="" className="w-full h-full object-contain" />
+                <div className="absolute top-0 left-0 rounded-br-2xl px-5 py-2 text-xl md:text-3xl font-extrabold uppercase tracking-widest text-black"
+                  style={{ background: tone }}>
+                  {SCREEN_NAMES[shot.screen] ?? shot.screen}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Plain colour values, not theme variables: a canvas cannot read `var(--cyan)`,
+// so blue, orange and green silently kept whatever colour was picked before.
+const WB_COLORS = [
+  { name: "black", value: "#0b0b0b" },
+  { name: "blue", value: "#1e9bf0" },
+  { name: "orange", value: "#f97316" },
+  { name: "green", value: "#16a34a" },
+  { name: "red", value: "#dc2626" },
+  { name: "purple", value: "#9333ea" },
+];
+
+function WhiteboardCanvas({ content, screen, sessionId }: {
+  content: WhiteboardContent; screen: "screen1" | "screen2"; sessionId?: string;
+}) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const bgRef = useRef<HTMLImageElement | null>(null);
   const drawingRef = useRef(false);
   const lastRef = useRef<{ x: number; y: number } | null>(null);
-  const [color, setColor] = useState(WB_COLORS[0]);
+  const [color, setColor] = useState(WB_COLORS[0].value);
   const [size, setSize] = useState(6);
+  const [sendState, setSendState] = useState<"idle" | "sending" | "sent" | "failed">("idle");
+  const { title, image_url: imageUrl } = content;
 
-  // Set up the canvas at device resolution and clear to white.
+  // Size the canvas at device resolution. It is transparent, so the white
+  // board (and any picture) underneath shows through.
   useEffect(() => {
     const cvs = canvasRef.current;
     if (!cvs) return;
     const resize = () => {
       const rect = cvs.getBoundingClientRect();
       const dpr = window.devicePixelRatio || 1;
-      // Preserve current pixels if we can, else fill white.
       const prev = document.createElement("canvas");
       prev.width = cvs.width; prev.height = cvs.height;
       const pctx = prev.getContext("2d");
@@ -2214,8 +2445,6 @@ function WhiteboardCanvas({ title }: { title?: string }) {
       cvs.height = Math.floor(rect.height * dpr);
       const ctx = cvs.getContext("2d");
       if (!ctx) return;
-      ctx.fillStyle = "#ffffff";
-      ctx.fillRect(0, 0, cvs.width, cvs.height);
       if (prev.width && prev.height) ctx.drawImage(prev, 0, 0, cvs.width, cvs.height);
     };
     resize();
@@ -2244,19 +2473,62 @@ function WhiteboardCanvas({ title }: { title?: string }) {
     ctx.moveTo(from.x, from.y);
     ctx.lineTo(to.x, to.y);
     ctx.stroke();
+    if (sendState !== "idle" && sendState !== "sending") setSendState("idle");
   };
 
   const clear = () => {
     const cvs = canvasRef.current;
-    if (!cvs) return;
-    const ctx = cvs.getContext("2d");
-    if (!ctx) return;
+    const ctx = cvs?.getContext("2d");
+    if (!cvs || !ctx) return;
+    ctx.clearRect(0, 0, cvs.width, cvs.height);
+    setSendState("idle");
+  };
+
+  // Flatten board + picture + drawing into one image, capped in size so it
+  // uploads quickly over the room's wifi.
+  const snapshot = (withPicture: boolean): Promise<Blob | null> => {
+    const cvs = canvasRef.current;
+    if (!cvs) return Promise.resolve(null);
+    const k = Math.min(1, 1400 / Math.max(cvs.width, cvs.height));
+    const out = document.createElement("canvas");
+    out.width = Math.round(cvs.width * k);
+    out.height = Math.round(cvs.height * k);
+    const ctx = out.getContext("2d");
+    if (!ctx) return Promise.resolve(null);
     ctx.fillStyle = "#ffffff";
-    ctx.fillRect(0, 0, cvs.width, cvs.height);
+    ctx.fillRect(0, 0, out.width, out.height);
+    const img = bgRef.current;
+    if (withPicture && img && img.complete && img.naturalWidth) {
+      // Same fit as the on-screen picture (object-contain, centred).
+      const fit = Math.min(out.width / img.naturalWidth, out.height / img.naturalHeight);
+      const iw = img.naturalWidth * fit, ih = img.naturalHeight * fit;
+      ctx.drawImage(img, (out.width - iw) / 2, (out.height - ih) / 2, iw, ih);
+    }
+    ctx.drawImage(cvs, 0, 0, out.width, out.height);
+    return new Promise((resolve) => {
+      try { out.toBlob((b) => resolve(b), "image/jpeg", 0.82); }
+      catch { resolve(null); } // picture from a site that forbids copying
+    });
+  };
+
+  const send = async () => {
+    if (!sessionId || sendState === "sending") return;
+    setSendState("sending");
+    const blob = (await snapshot(true)) ?? (await snapshot(false));
+    if (!blob) { setSendState("failed"); return; }
+    const path = `whiteboards/${sessionId}/${screen}-${Date.now()}.jpg`;
+    const { error } = await supabase.storage.from("lesson-media").upload(path, blob, { contentType: "image/jpeg" });
+    if (error) { console.error("Whiteboard upload failed:", error); setSendState("failed"); return; }
+    const { data } = supabase.storage.from("lesson-media").getPublicUrl(path);
+    const { error: insertError } = await supabase.from("responses").insert({
+      session_id: sessionId, slot_id: null, screen_role: screen,
+      response_type: "whiteboard", response_data: { url: data.publicUrl, key: boardKey(content) } as never,
+    });
+    setSendState(insertError ? "failed" : "sent");
   };
 
   return (
-    <div className="min-h-screen w-full bg-immersive flex flex-col p-3 gap-3 animate-slot-in">
+    <div className="h-screen w-full bg-immersive flex flex-col p-3 gap-3 animate-slot-in">
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div>
           <div className="text-[10px] uppercase tracking-[0.4em] text-[color:var(--cyan)]">Whiteboard</div>
@@ -2264,26 +2536,30 @@ function WhiteboardCanvas({ title }: { title?: string }) {
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           {WB_COLORS.map(col => (
-            <button key={col} aria-label="colour" onClick={() => setColor(col)}
-              className="w-8 h-8 rounded-full border-2"
-              style={{ background: col, borderColor: col === color ? "var(--cyan)" : "transparent", boxShadow: col === color ? "0 0 0 2px #0b0b0b" : undefined }} />
+            <button key={col.name} aria-label={col.name} onClick={() => setColor(col.value)}
+              className="w-9 h-9 rounded-full border-4 transition-transform"
+              style={{ background: col.value, borderColor: col.value === color ? "#ffffff" : "transparent", transform: col.value === color ? "scale(1.2)" : undefined }} />
           ))}
           <div className="flex items-center gap-2 ml-2">
             {[3, 6, 12, 24].map(s => (
               <button key={s} onClick={() => setSize(s)}
                 className={`w-9 h-9 rounded-full border-2 flex items-center justify-center ${size === s ? "border-[color:var(--cyan)]" : "border-border"}`}
                 aria-label={`brush ${s}`}>
-                <span className="rounded-full bg-foreground" style={{ width: s, height: s }} />
+                <span className="rounded-full" style={{ width: s, height: s, background: color }} />
               </button>
             ))}
           </div>
           <Button onClick={clear} variant="outline" className="h-9 text-xs uppercase tracking-widest">Clear</Button>
         </div>
       </div>
-      <div className="flex-1 min-h-0 rounded-2xl overflow-hidden border-4 border-[color:var(--cyan)]/40 bg-white touch-none">
+      <div className="relative flex-1 min-h-0 rounded-2xl overflow-hidden border-4 border-[color:var(--cyan)]/40 bg-white touch-none">
+        {imageUrl && (
+          <img ref={bgRef} src={imageUrl} alt="" crossOrigin="anonymous" draggable={false}
+            className="absolute inset-0 w-full h-full object-contain pointer-events-none select-none" />
+        )}
         <canvas
           ref={canvasRef}
-          className="w-full h-full block touch-none cursor-crosshair"
+          className="absolute inset-0 w-full h-full block touch-none cursor-crosshair"
           onPointerDown={(e) => {
             (e.target as Element).setPointerCapture?.(e.pointerId);
             drawingRef.current = true;
@@ -2299,6 +2575,11 @@ function WhiteboardCanvas({ title }: { title?: string }) {
           onPointerLeave={() => { drawingRef.current = false; lastRef.current = null; }}
         />
       </div>
+      <Button onClick={send} disabled={!sessionId || sendState === "sending"}
+        className="h-14 shrink-0 text-lg uppercase tracking-widest font-extrabold"
+        style={sendState === "sent" ? { background: "var(--success)", color: "#fff" } : sendState === "failed" ? { background: "var(--destructive)", color: "#fff" } : undefined}>
+        {sendState === "sending" ? "Sending…" : sendState === "sent" ? "Sent to big screen ✓" : sendState === "failed" ? "Could not send — tap to try again" : "Send to big screen ▲"}
+      </Button>
     </div>
   );
 }
