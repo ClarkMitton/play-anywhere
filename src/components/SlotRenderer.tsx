@@ -159,7 +159,7 @@ export function SlotRenderer({
       return (
         <div className="min-h-screen w-full bg-black animate-slot-in">
           <iframe key={videoId + screen}
-            src={`https://www.youtube.com/embed/${videoId}?${params}`}
+            src={`https://www.youtube.com/embed/${videoId}?${params}${youTubeClipParams(c.url)}`}
             className="w-full h-screen border-0"
             allow="autoplay; fullscreen" allowFullScreen title="YouTube video" />
         </div>
@@ -297,7 +297,7 @@ export function SlotRenderer({
 // HELPERS
 // ─────────────────────────────────────────────
 
-import { extractYouTubeId } from "@/lib/sessionSchema";
+import { extractYouTubeId, youTubeClipParams } from "@/lib/sessionSchema";
 
 /** Turn ordinary share links (YouTube, Edpuzzle) into their embeddable form. */
 function normalizeEmbedUrl(url: string): string {

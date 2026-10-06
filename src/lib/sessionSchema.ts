@@ -429,3 +429,23 @@ export function extractYouTubeId(url: string): string | null {
     return null;
   }
 }
+
+/**
+ * Start and end times (whole seconds) carried on a YouTube link, as embed
+ * params. Lets a lesson play one section of a long video: `&end=460` stops at
+ * 7:40. Accepts `start` or YouTube's own `t` (plain seconds, or "90s").
+ */
+export function youTubeClipParams(url: string): string {
+  try {
+    const q = new URL(url).searchParams;
+    const secs = (v: string | null) => {
+      const n = v ? parseInt(v, 10) : NaN;
+      return Number.isFinite(n) && n > 0 ? n : null;
+    };
+    const start = secs(q.get("start") ?? q.get("t"));
+    const end = secs(q.get("end"));
+    return `${start ? `&start=${start}` : ""}${end ? `&end=${end}` : ""}`;
+  } catch {
+    return "";
+  }
+}
