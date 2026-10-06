@@ -13,6 +13,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { TeacherPlan } from "@/components/TeacherPlan";
 import {
   buildPlanMarkdown,
   describeContent,
@@ -26,6 +27,9 @@ import {
 
 export const Route = createFileRoute("/admin/plan/$lessonId")({
   head: () => ({ meta: [{ title: "Lesson plan · Immersive Learning" }] }),
+  // ?view=teacher swaps in the plain-English version for sharing with visiting staff.
+  validateSearch: (search: Record<string, unknown>): { view?: "teacher" } =>
+    search.view === "teacher" ? { view: "teacher" } : {},
   component: PlanPage,
 });
 
@@ -39,6 +43,8 @@ const PHASE_COLOURS: Record<string, string> = {
 
 function PlanPage() {
   const { lessonId } = Route.useParams();
+  const { view } = Route.useSearch();
+  const teacherView = view === "teacher";
   const [lesson, setLesson] = useState<PlanLesson | null>(null);
   const [slots, setSlots] = useState<PlanSlot[]>([]);
   const [loading, setLoading] = useState(true);
@@ -109,201 +115,217 @@ function PlanPage() {
           ← Admin
         </Link>
         <div className="plan-toolbar-actions">
-          <button onClick={copyForReview} className="plan-btn plan-btn-ghost">
-            Copy for review
-          </button>
+          <Link
+            to="/admin/plan/$lessonId"
+            params={{ lessonId }}
+            search={teacherView ? {} : { view: "teacher" }}
+            className="plan-btn plan-btn-ghost"
+          >
+            {teacherView ? "Show full plan" : "Teacher version"}
+          </Link>
+          {!teacherView && (
+            <button onClick={copyForReview} className="plan-btn plan-btn-ghost">
+              Copy for review
+            </button>
+          )}
           <button onClick={() => window.print()} className="plan-btn">
             Print / Save as PDF
           </button>
         </div>
       </div>
 
-      <div className="plan-page">
-        {/* ── Header ── */}
-        <header className="plan-header">
-          <div className="plan-eyebrow">Bradford College · Immersive Learning Room</div>
-          <h1>{lesson.title}</h1>
-          {lesson.description && <p className="plan-desc">{lesson.description}</p>}
+      {teacherView ? (
+        <div className="plan-page">
+          <TeacherPlan lesson={lesson} slots={slots} />
+        </div>
+      ) : (
+        <div className="plan-page">
+          {/* ── Header ── */}
+          <header className="plan-header">
+            <div className="plan-eyebrow">Bradford College · Immersive Learning Room</div>
+            <h1>{lesson.title}</h1>
+            {lesson.description && <p className="plan-desc">{lesson.description}</p>}
 
-          <dl className="plan-meta">
-            <div>
-              <dt>Length</dt>
-              <dd>{lesson.estimated_duration_mins} min</dd>
-            </div>
-            <div>
-              <dt>Slots</dt>
-              <dd>
-                {slots.length}
-                {mismatch && <span className="plan-warn"> ({total} min of content)</span>}
-              </dd>
-            </div>
-            <div>
-              <dt>Origin</dt>
-              <dd>
-                {lesson.ai_generated
-                  ? `AI draft${lesson.generated_at ? ` · ${lesson.generated_at.slice(0, 10)}` : ""}`
-                  : "Built by hand"}
-              </dd>
-            </div>
-            <div>
-              <dt>Feedback form</dt>
-              <dd>{lesson.ms_form_url ? lesson.ms_form_title || "Linked" : "None"}</dd>
-            </div>
-          </dl>
+            <dl className="plan-meta">
+              <div>
+                <dt>Length</dt>
+                <dd>{lesson.estimated_duration_mins} min</dd>
+              </div>
+              <div>
+                <dt>Slots</dt>
+                <dd>
+                  {slots.length}
+                  {mismatch && <span className="plan-warn"> ({total} min of content)</span>}
+                </dd>
+              </div>
+              <div>
+                <dt>Origin</dt>
+                <dd>
+                  {lesson.ai_generated
+                    ? `AI draft${lesson.generated_at ? ` · ${lesson.generated_at.slice(0, 10)}` : ""}`
+                    : "Built by hand"}
+                </dd>
+              </div>
+              <div>
+                <dt>Feedback form</dt>
+                <dd>{lesson.ms_form_url ? lesson.ms_form_title || "Linked" : "None"}</dd>
+              </div>
+            </dl>
 
-          {lesson.ai_generated && (
-            <p className="plan-draft-note">
-              This plan was drafted by AI. A tutor is responsible for checking the content,
-              especially anything relating to safety, before teaching it.
-            </p>
-          )}
-        </header>
-
-        {/* ── Outcomes and rationale ── */}
-        {notes?.objectives && notes.objectives.length > 0 && (
-          <section className="plan-section">
-            <h2>Learning outcomes</h2>
-            <ol className="plan-list">
-              {notes.objectives.map((o, i) => (
-                <li key={i}>{o}</li>
-              ))}
-            </ol>
-          </section>
-        )}
-
-        {notes?.rationale && (
-          <section className="plan-section">
-            <h2>Why the lesson is shaped this way</h2>
-            <p>{notes.rationale}</p>
-          </section>
-        )}
-
-        {/* ── Check before teaching ── */}
-        {notes?.verify_before_teaching && notes.verify_before_teaching.length > 0 && (
-          <section className="plan-section plan-callout">
-            <h2>Check before teaching</h2>
-            <p className="plan-small">
-              Written from general knowledge, without access to the scheme of work or site rules.
-              Confirm each of these against a real source.
-            </p>
-            <ul className="plan-check">
-              {notes.verify_before_teaching.map((v, i) => (
-                <li key={i}>{v}</li>
-              ))}
-            </ul>
-          </section>
-        )}
-
-        {notes?.safety_note && (
-          <section className="plan-section">
-            <h2>Safety note</h2>
-            <p>{notes.safety_note}</p>
-          </section>
-        )}
-
-        {/* ── Media to source ── */}
-        {notes?.media_requests && notes.media_requests.length > 0 && (
-          <section className="plan-section">
-            <h2>Media still to source</h2>
-            <ul className="plan-list">
-              {notes.media_requests.map((m, i) => (
-                <li key={i}>
-                  <strong>
-                    Slot {m.slot_index + 1} ({m.screen}
-                    {m.kind ? `, ${m.kind}` : ""}):
-                  </strong>{" "}
-                  {m.search_phrase}
-                  {m.why ? ` — ${m.why}` : ""}
-                </li>
-              ))}
-            </ul>
-          </section>
-        )}
-
-        {/* ── Running order ── */}
-        <section className="plan-section">
-          <h2>Running order</h2>
-          {slots.length === 0 && <p className="plan-small">This lesson has no slots yet.</p>}
-
-          {slots.map((slot, i) => {
-            const run = notes?.run_sheet?.find((r) => r.slot_index === i);
-            const phase = phaseOf(slot);
-            return (
-              <article key={slot.id} className="plan-slot">
-                <div className="plan-slot-head">
-                  <span className="plan-slot-num">{i + 1}</span>
-                  <span className="plan-slot-name">{slot.name || "Untitled slot"}</span>
-                  <span className="plan-slot-phase" style={{ color: PHASE_COLOURS[phase] }}>
-                    {phase}
-                  </span>
-                  <span className="plan-slot-mins">{slot.duration_mins} min</span>
-                </div>
-
-                <p className="plan-slot-flow">
-                  Then {END_BEHAVIOUR_LABELS[slot.end_behaviour] ?? slot.end_behaviour}.
-                  {slot.pause_before_advance && " Pauses before advancing."}
-                  {slot.screen_delay_secs > 0 &&
-                    ` Touch screens follow ${slot.screen_delay_secs}s later.`}
-                </p>
-
-                {run?.teacher_says && (
-                  <p className="plan-run">
-                    <strong>Say:</strong> {run.teacher_says}
-                  </p>
-                )}
-                {run?.watch_for && (
-                  <p className="plan-run">
-                    <strong>Watch for:</strong> {run.watch_for}
-                  </p>
-                )}
-
-                <div className="plan-screens" data-cols={groupScreens(slot).length}>
-                  {groupScreens(slot).map((group) => {
-                    const described = describeContent(group.content);
-                    return (
-                      <div key={group.label} className="plan-screen">
-                        <div className="plan-screen-label">{group.label}</div>
-                        <div className="plan-screen-tool">{described.label}</div>
-                        {described.detail.map((d, j) => (
-                          <div key={j} className="plan-screen-detail">
-                            {d}
-                          </div>
-                        ))}
-                      </div>
-                    );
-                  })}
-                </div>
-              </article>
-            );
-          })}
-        </section>
-
-        {/* ── Raw payload appendix ── */}
-        <section className="plan-section plan-appendix">
-          <h2>Appendix: raw slot payloads</h2>
-          <p className="plan-small">
-            Exact content as stored, so it can be checked field by field.
-          </p>
-          <pre>
-            {JSON.stringify(
-              slots.map((s, i) => ({
-                slot: i + 1,
-                name: s.name,
-                lead_phase: s.lead_phase,
-                duration_mins: s.duration_mins,
-                end_behaviour: s.end_behaviour,
-                pause_before_advance: s.pause_before_advance,
-                screen_delay_secs: s.screen_delay_secs,
-                host: s.host_content,
-                screen1: s.screen1_content,
-                screen2: s.screen2_content,
-              })),
-              null,
-              2,
+            {lesson.ai_generated && (
+              <p className="plan-draft-note">
+                This plan was drafted by AI. A tutor is responsible for checking the content,
+                especially anything relating to safety, before teaching it.
+              </p>
             )}
-          </pre>
-        </section>
-      </div>
+          </header>
+
+          {/* ── Outcomes and rationale ── */}
+          {notes?.objectives && notes.objectives.length > 0 && (
+            <section className="plan-section">
+              <h2>Learning outcomes</h2>
+              <ol className="plan-list">
+                {notes.objectives.map((o, i) => (
+                  <li key={i}>{o}</li>
+                ))}
+              </ol>
+            </section>
+          )}
+
+          {notes?.rationale && (
+            <section className="plan-section">
+              <h2>Why the lesson is shaped this way</h2>
+              <p>{notes.rationale}</p>
+            </section>
+          )}
+
+          {/* ── Check before teaching ── */}
+          {notes?.verify_before_teaching && notes.verify_before_teaching.length > 0 && (
+            <section className="plan-section plan-callout">
+              <h2>Check before teaching</h2>
+              <p className="plan-small">
+                Written from general knowledge, without access to the scheme of work or site rules.
+                Confirm each of these against a real source.
+              </p>
+              <ul className="plan-check">
+                {notes.verify_before_teaching.map((v, i) => (
+                  <li key={i}>{v}</li>
+                ))}
+              </ul>
+            </section>
+          )}
+
+          {notes?.safety_note && (
+            <section className="plan-section">
+              <h2>Safety note</h2>
+              <p>{notes.safety_note}</p>
+            </section>
+          )}
+
+          {/* ── Media to source ── */}
+          {notes?.media_requests && notes.media_requests.length > 0 && (
+            <section className="plan-section">
+              <h2>Media still to source</h2>
+              <ul className="plan-list">
+                {notes.media_requests.map((m, i) => (
+                  <li key={i}>
+                    <strong>
+                      Slot {m.slot_index + 1} ({m.screen}
+                      {m.kind ? `, ${m.kind}` : ""}):
+                    </strong>{" "}
+                    {m.search_phrase}
+                    {m.why ? ` — ${m.why}` : ""}
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+
+          {/* ── Running order ── */}
+          <section className="plan-section">
+            <h2>Running order</h2>
+            {slots.length === 0 && <p className="plan-small">This lesson has no slots yet.</p>}
+
+            {slots.map((slot, i) => {
+              const run = notes?.run_sheet?.find((r) => r.slot_index === i);
+              const phase = phaseOf(slot);
+              return (
+                <article key={slot.id} className="plan-slot">
+                  <div className="plan-slot-head">
+                    <span className="plan-slot-num">{i + 1}</span>
+                    <span className="plan-slot-name">{slot.name || "Untitled slot"}</span>
+                    <span className="plan-slot-phase" style={{ color: PHASE_COLOURS[phase] }}>
+                      {phase}
+                    </span>
+                    <span className="plan-slot-mins">{slot.duration_mins} min</span>
+                  </div>
+
+                  <p className="plan-slot-flow">
+                    Then {END_BEHAVIOUR_LABELS[slot.end_behaviour] ?? slot.end_behaviour}.
+                    {slot.pause_before_advance && " Pauses before advancing."}
+                    {slot.screen_delay_secs > 0 &&
+                      ` Touch screens follow ${slot.screen_delay_secs}s later.`}
+                  </p>
+
+                  {run?.teacher_says && (
+                    <p className="plan-run">
+                      <strong>Say:</strong> {run.teacher_says}
+                    </p>
+                  )}
+                  {run?.watch_for && (
+                    <p className="plan-run">
+                      <strong>Watch for:</strong> {run.watch_for}
+                    </p>
+                  )}
+
+                  <div className="plan-screens" data-cols={groupScreens(slot).length}>
+                    {groupScreens(slot).map((group) => {
+                      const described = describeContent(group.content);
+                      return (
+                        <div key={group.label} className="plan-screen">
+                          <div className="plan-screen-label">{group.label}</div>
+                          <div className="plan-screen-tool">{described.label}</div>
+                          {described.detail.map((d, j) => (
+                            <div key={j} className="plan-screen-detail">
+                              {d}
+                            </div>
+                          ))}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </article>
+              );
+            })}
+          </section>
+
+          {/* ── Raw payload appendix ── */}
+          <section className="plan-section plan-appendix">
+            <h2>Appendix: raw slot payloads</h2>
+            <p className="plan-small">
+              Exact content as stored, so it can be checked field by field.
+            </p>
+            <pre>
+              {JSON.stringify(
+                slots.map((s, i) => ({
+                  slot: i + 1,
+                  name: s.name,
+                  lead_phase: s.lead_phase,
+                  duration_mins: s.duration_mins,
+                  end_behaviour: s.end_behaviour,
+                  pause_before_advance: s.pause_before_advance,
+                  screen_delay_secs: s.screen_delay_secs,
+                  host: s.host_content,
+                  screen1: s.screen1_content,
+                  screen2: s.screen2_content,
+                })),
+                null,
+                2,
+              )}
+            </pre>
+          </section>
+        </div>
+      )}
     </>
   );
 }
@@ -326,6 +348,7 @@ const PRINT_CSS = `
 }
 .plan-btn-ghost { background: transparent; color: #67e8f9; }
 .plan-btn:hover { filter: brightness(1.1); }
+a.plan-btn { text-decoration: none; display: inline-block; }
 
 .plan-page {
   background: #fff; color: #1b1f24;
