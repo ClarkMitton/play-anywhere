@@ -16,7 +16,7 @@ What proves itself here is collected in [WAYS-OF-WORKING.md](WAYS-OF-WORKING.md)
 
 - **Built:** 6 October 2026 (first design), rebuilt the same day (second design)
 - **For:** Level 2 and Level 3 learners, any subject, typical group of 16
-- **Length:** 45 minutes, 20 steps, 17 minutes at the whiteboard tables
+- **Length:** 45 minutes, 20 steps, 17 minutes of group tasks at the whiteboard tables, two whole-class moves
 - **Source:** `USvsAI/AI Introductions.txt`
 - **Lesson file:** [us-vs-ai.sql](us-vs-ai.sql)
 - **Slides:** eight, made in Canva, in `public/lessons/us-vs-ai/`
@@ -42,6 +42,7 @@ is about the second design.
 - **No activity twice in a row,** and the two question rounds have different shapes: quick true or false, then a best-answer question.
 - **Every tutor note names its technique,** so the member of staff leaves with approaches as well as a lesson.
 - **Works with any number of tables.** One pack per table, and the notes say what to do with only one or two.
+- **Two moves, not four.** After a first attempt that sent the whole class to the touch screens for a single vote, the steps were reordered by where learners stand: tables, one trip to the screens for seven steps in a row, then back to the tables. The final answer is typed by one runner per table.
 
 ### Even better if (build)
 

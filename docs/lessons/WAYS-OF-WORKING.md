@@ -32,6 +32,7 @@ Get these agreed first. Building without them is what produced a quiz chain.
 - **Do it before being told.** Learners predict, act out or attempt the task first, then see the explanation.
 - **A stretch on every table task** for the groups who finish first or are working at a higher level.
 - **Close the loop.** The question opened in Launch is answered in the last step.
+- **A movement plan.** The whole class changes place as few times as possible, and every move is worth it. See "Where are the learners?" below.
 
 ## The design question
 
@@ -42,6 +43,21 @@ Ask this for every idea in the lesson:
 The tools: video, Canva slide, picture, vote, word cloud, shared board, question
 round, buzzer quiz, whiteboard with send to big screen, wheel spinner, countdown,
 rotation timer, hotspot picture, printed packs on the tables, Canva code activity.
+
+## Where are the learners?
+
+Learners are standing, at the tables or at the touch screens. Every step happens
+somewhere, and getting sixteen people from one place to the other costs a minute
+and breaks concentration. So plan the room, not only the content.
+
+- **Write down where learners are for every step** before building. If the answer keeps changing, the order is wrong.
+- **Ask of every move: is it worth it?** Walking the whole class to the touch screens for one vote or three taps is not.
+- **Group the screen steps together.** One trip to the touch screens should cover several things: questions, a vote, a word cloud, the whiteboard. Then one trip back.
+- **Aim for two whole-class moves in 45 minutes.** Tables, then screens, then tables.
+- **Send a runner, not the room.** When only one answer per table is needed, one person goes to the screen.
+- **Do quick checks where they stand.** Hands up, thumbs, or writing T or F on the table costs nothing. Save the touch screens for things worth saving or showing.
+- **Slides and videos need no move.** Everyone can see the big screen from anywhere.
+- **Tell the tutor.** Each step's note starts with where learners are, and says clearly when they move.
 
 ## Table tasks
 
