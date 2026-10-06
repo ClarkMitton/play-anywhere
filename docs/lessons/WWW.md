@@ -49,6 +49,7 @@ is about the second design.
 - 20 steps is still more than the dozen we aimed for. Eight of them are one-minute slides, but it is worth watching whether it feels busy.
 - One Canva picture misspells "Recommended". It is flagged in the tutor notes as a spot-the-AI-mistake moment, but it should be a choice, not an accident.
 - The watch pictures were asked to show ten past ten, so they illustrate the point without proving it. The AI picture tool was unavailable when we tried to run the real test.
+- The people in the slides are not a fair mix: four young men, three of them white, and no women. The brief asked for "a young person" and left the rest to the AI. Future briefs name who should appear on each slide, and the deck is checked as a set.
 - There is no way yet to get what is written on a table onto the big screen. Learners type their final instruction instead.
 - The app has no sorting activity, so the card sort is paper only.
 

@@ -32,6 +32,7 @@ Get these agreed first. Building without them is what produced a quiz chain.
 - **Do it before being told.** Learners predict, act out or attempt the task first, then see the explanation.
 - **A stretch on every table task** for the groups who finish first or are working at a higher level.
 - **Close the loop.** The question opened in Launch is answered in the last step.
+- **Inclusive by design.** Pictures, names and examples reflect the college's learners, and nobody is left out by an activity that assumes money, a device, or a home set-up. See "Slides" for pictures.
 - **A movement plan.** The whole class changes place as few times as possible, and every move is worth it. See "Where are the learners?" below.
 
 ## The design question
@@ -72,8 +73,11 @@ and breaks concentration. So plan the room, not only the content.
 ## Slides
 
 - **Make real slides in Canva** for the teaching points, so the lesson does not look like an app.
-- **Brief Canva's AI precisely:** who it is for, that it is read from across a room, very few words, the exact wording per slide, the style wanted and the style to avoid, and what each picture must show.
+- **Brief Canva's AI precisely:** who it is for, that it is read from across a room, very few words, the exact wording per slide, the style wanted and the style to avoid, what each picture must show, and who should be in it.
 - **Export the slides as pictures** and add them as picture slides. An embedded Canva loads slowly and shows Canva's own toolbar.
+- **Make the people in the pictures look like the people in the room.** Across a deck, show a real mix: women and men, different ethnicities, visible faith dress such as a hijab or turban, disabled people, and a range of ages and body types. AI picture tools default to the same face again and again, so ask for the mix in the brief, slide by slide. Do not leave it to chance.
+- **Avoid stereotypes in who does what.** Vary who is shown as the expert, the one using the technology, the one in charge. Show disabled people as ordinary participants, not as the subject of the picture.
+- **Review the finished deck as a set,** not slide by slide. Count who appears. If one group dominates or is missing, regenerate before it goes in a lesson.
 - **Check every AI picture for garbled words.** They are common. Fix them, or use them as a teaching point if the lesson is about AI.
 - **Keep on-screen text short.** The detail belongs in what the tutor says.
 
