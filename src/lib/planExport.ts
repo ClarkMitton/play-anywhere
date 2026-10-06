@@ -11,6 +11,7 @@
 // ─────────────────────────────────────────────────────────────
 
 import type { ContentDef } from "@/types/slot";
+import { extractEmbedUrl } from "@/lib/sessionSchema";
 
 export type PlanLesson = {
   id: string;
@@ -126,7 +127,7 @@ export function describeContent(content: ContentDef | null | undefined): {
       return {
         label: "Embedded website",
         detail: [
-          str(c.url) || "No address set",
+          extractEmbedUrl(str(c.url)) || "No address set",
           str(c.description)
             ? `Shows: ${str(c.description)}`
             : "No description yet. Add one in the designer so tutors know what this shows.",

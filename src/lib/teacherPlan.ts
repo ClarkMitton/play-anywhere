@@ -16,7 +16,7 @@
 
 import type { ContentDef } from "@/types/slot";
 import { groupScreens, type PlanSlot } from "@/lib/planExport";
-import { extractYouTubeId } from "@/lib/sessionSchema";
+import { extractEmbedUrl, extractYouTubeId } from "@/lib/sessionSchema";
 
 export const PHASE_FRIENDLY: Record<string, { label: string; hint: string }> = {
   Launch: { label: "Starter", hint: "Hooks attention and finds out where learners are" },
@@ -80,6 +80,8 @@ const PROVIDERS: [RegExp, string][] = [
   [/(^|\.)kahoot\.(it|com)$/, "Kahoot"],
   [/(^|\.)quizizz\.com$|(^|\.)wayground\.com$/, "Quizizz"],
   [/(^|\.)blooket\.com$/, "Blooket"],
+  [/(^|\.)jigsawplanet\.com$/, "Jigsaw Planet"],
+  [/(^|\.)webwordsearch\.com$/, "Word search"],
   [/(^|\.)nearpod\.com$/, "Nearpod"],
   [/(^|\.)mentimeter\.com$|(^|\.)menti\.com$/, "Mentimeter"],
   [/forms\.(office|microsoft)\.com$|forms\.cloud\.microsoft$/, "Microsoft Forms"],
@@ -197,7 +199,7 @@ export function describeForTeacher(content: ContentDef | null | undefined): Teac
     }
 
     case "embed": {
-      const url = str(c.url);
+      const url = extractEmbedUrl(str(c.url));
       const provider = embedProvider(url);
       return {
         title: `${provider} page`,

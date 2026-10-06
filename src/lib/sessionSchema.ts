@@ -433,6 +433,23 @@ export function extractYouTubeId(url: string): string | null {
 }
 
 /**
+ * The address inside whatever a tutor pasted into an embed box.
+ *
+ * Sites hand out three different things under "share" or "embed": a plain
+ * link, an <iframe> snippet, or (Jigsaw Planet) a preview picture wrapped in a
+ * link. Only the first is an address. For the other two, take the iframe's src
+ * or failing that the first link, and undo the HTML escaping of "&".
+ */
+export function extractEmbedUrl(raw: string): string {
+  const trimmed = (raw ?? "").trim();
+  if (!trimmed.includes("<")) return trimmed;
+  const match =
+    trimmed.match(/<iframe[^>]*\ssrc\s*=\s*["']([^"']+)["']/i) ??
+    trimmed.match(/<a[^>]*\shref\s*=\s*["']([^"']+)["']/i);
+  return match ? match[1].replace(/&amp;/g, "&").trim() : trimmed;
+}
+
+/**
  * Start and end times (whole seconds) carried on a YouTube link, as embed
  * params. Lets a lesson play one section of a long video: `&end=460` stops at
  * 7:40. Accepts `start` or YouTube's own `t` (plain seconds, or "90s").

@@ -297,20 +297,27 @@ export function SlotRenderer({
 // HELPERS
 // ─────────────────────────────────────────────
 
-import { extractYouTubeId, youTubeClipParams } from "@/lib/sessionSchema";
+import { extractEmbedUrl, extractYouTubeId, youTubeClipParams } from "@/lib/sessionSchema";
 
-/** Turn ordinary share links (YouTube, Edpuzzle) into their embeddable form. */
+/** Turn ordinary share links (YouTube, Edpuzzle, Jigsaw Planet) into their embeddable form. */
 export function normalizeEmbedUrl(url: string): string {
+  // Lessons saved before the designer understood share snippets hold raw HTML
+  // here, so pull the address out again at render time.
+  const clean = extractEmbedUrl(url);
   try {
-    const u = new URL(url.trim());
+    const u = new URL(clean);
     const yt = extractYouTubeId(u.href);
     if (yt) return `https://www.youtube.com/embed/${yt}?rel=0`;
     if (u.hostname.endsWith("edpuzzle.com")) {
       const m = u.pathname.match(/^\/(?:embed\/)?media\/([a-z0-9]+)/i);
       if (m) return `https://edpuzzle.com/embed/media/${m[1]}`;
     }
+    // Jigsaw Planet refuses to be framed unless asked for its iframe view.
+    if (u.hostname.endsWith("jigsawplanet.com") && u.searchParams.get("rc") === "play") {
+      u.searchParams.set("view", "iframe");
+    }
     return u.href;
-  } catch { return url; }
+  } catch { return clean; }
 }
 
 // ─────────────────────────────────────────────

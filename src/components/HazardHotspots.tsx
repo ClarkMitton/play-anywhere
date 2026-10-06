@@ -29,11 +29,17 @@ type Miss = { id: number; x: number; y: number };
 
 const DEFAULT_R = 7; // % of image width
 
+// A fingertip covers roughly this much screen. Small hotspots are widened to it
+// on the touch screens so a tap that looks right is not counted as a miss.
+const MIN_TAP_RADIUS_PX = 44;
+
 export function hitTest(
   hotspots: Hotspot[],
   xPct: number,
   yPct: number,
   aspect: number,
+  /** Smallest radius to accept, in % of image width. The nearest hotspot still wins. */
+  minR = 0,
 ): Hotspot | null {
   // Compare in width-percent units so circles stay round on non-square images.
   let best: Hotspot | null = null;
@@ -42,7 +48,7 @@ export function hitTest(
     const dx = xPct - h.x;
     const dy = (yPct - h.y) * aspect;
     const d = Math.hypot(dx, dy);
-    if (d <= (h.r ?? DEFAULT_R) && d < bestD) {
+    if (d <= Math.max(h.r ?? DEFAULT_R, minR) && d < bestD) {
       best = h;
       bestD = d;
     }
@@ -144,7 +150,8 @@ export function HazardHotspotsRenderer({
     const xPct = ((e.clientX - rect.left) / rect.width) * 100;
     const yPct = ((e.clientY - rect.top) / rect.height) * 100;
     if (xPct < 0 || xPct > 100 || yPct < 0 || yPct > 100) return;
-    const hit = hitTest(hotspots, xPct, yPct, rect.height / rect.width);
+    const minR = (MIN_TAP_RADIUS_PX / rect.width) * 100;
+    const hit = hitTest(hotspots, xPct, yPct, rect.height / rect.width, minR);
     if (hit && !state.found.includes(hit.id)) {
       sounds.questionReveal();
       publish({ found: [hit.id] });

@@ -21,6 +21,7 @@ import {
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { SlotStackThumbnail, SlotThumbnail } from "@/components/SlotThumbnail";
 import { makeSlot, makeFeedbackSlot } from "@/lib/slotDefaults";
+import { extractEmbedUrl } from "@/lib/sessionSchema";
 import { rotationTotalSecs } from "@/components/RotationTimer";
 import type { Hotspot } from "@/components/HazardHotspots";
 import { HotspotEditorDialog } from "@/components/HotspotEditor";
@@ -1593,6 +1594,15 @@ function SlotEditorPanel({
   };
 
   const onContentUpdate = (patch: Record<string, unknown>) => {
+    // Spot the Hazard only works with identical content on all three screens:
+    // hotspots are matched by id, and a touch screen with none marks every tap
+    // a miss. The Mirror switch is a one-time copy, so hazards marked after
+    // mirroring never reached the touch screens. Keep all three in step here.
+    if (screenContent.type === "hazard_hotspots") {
+      const next = { ...screenContent, ...patch };
+      onUpdate({ host_content: next, screen1_content: { ...next }, screen2_content: { ...next } });
+      return;
+    }
     if (activeScreen === "host") onUpdate({ host_content: { ...screenContent, ...patch } });
     else if (activeScreen === "screen1")
       onUpdate({ screen1_content: { ...screenContent, ...patch } });
@@ -1868,12 +1878,7 @@ function ContentTypeForm({
       );
 
     case "embed": {
-      const extractUrl = (raw: string): string => {
-        const trimmed = raw.trim();
-        const match = trimmed.match(/<iframe[^>]*\ssrc\s*=\s*["']([^"']+)["']/i);
-        if (match) return match[1];
-        return trimmed;
-      };
+      const extractUrl = extractEmbedUrl;
       return (
         <div className="space-y-1.5">
           <Label className="text-[10px] uppercase tracking-widest text-muted-foreground">

@@ -244,6 +244,21 @@ export function ScreenJoin({ role, autoCode }: { role: "screen1" | "screen2"; au
   );
 }
 
+/**
+ * What this touch screen should show for the current slot.
+ *
+ * Spot the Hazard is the exception to "each screen shows its own content": the
+ * hotspots are matched by id across screens, so a touch screen whose copy has
+ * different hotspots (or none) cannot find anything. Lessons were saved in that
+ * state when hazards were marked on the Host after mirroring. Whenever the Host
+ * is running it, the touch screens use the Host's copy.
+ */
+function contentForRole(session: SessionRow, role: "screen1" | "screen2"): SlotContent {
+  const slot = session.state?.slot;
+  if (slot?.host?.type === "hazard_hotspots") return slot.host;
+  return (role === "screen1" ? slot?.screen1 : slot?.screen2) ?? { type: "waiting" };
+}
+
 // ── Delayed screen renderer ───────────────────
 // Intercepts slot changes and shows a countdown before revealing new content.
 
@@ -261,7 +276,7 @@ function DelayedScreen({
   hostPaused: boolean;
 }) {
   const [displayedContent, setDisplayedContent] = useState<SlotContent>(() =>
-    (role === "screen1" ? session.state?.slot?.screen1 : session.state?.slot?.screen2) ?? { type: "waiting" }
+    contentForRole(session, role)
   );
   const [displayedKey, setDisplayedKey] = useState(session.current_slot_index);
   const [countdown, setCountdown] = useState<number | null>(null);
@@ -281,9 +296,7 @@ function DelayedScreen({
 
     const roleKey = role === "screen1" ? "screen1" : "screen2";
     const newIndex = session.state?.indices?.[roleKey] ?? session.current_slot_index ?? 0;
-    const rawContent =
-      (role === "screen1" ? session.state?.slot?.screen1 : session.state?.slot?.screen2) ??
-      { type: "waiting" as const };
+    const rawContent = contentForRole(session, role);
     const delay = session.state?.screen_delay_secs ?? 0;
 
     if (prevIndexRef.current === -1) {
