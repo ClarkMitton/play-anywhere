@@ -10,6 +10,44 @@ Newest first. Each entry has two halves:
 
 ---
 
+## Us vs AI
+
+- **Built:** 6 October 2026
+- **For:** Level 2 and Level 3 learners, any subject
+- **Length:** 45 minutes, 21 steps
+- **Source:** `USvsAI/AI Introductions.txt` (three short clips, one article, and the brief: informative, fun, and real feedback from students)
+- **Lesson file:** [us-vs-ai.sql](us-vs-ai.sql)
+
+### WWW in the build
+
+- **Each clip teaches one idea.** The sandwich clip is "it does what you say, not what you mean". The strawberry clip is "it predicts, it does not know". The spaghetti clip is "it is improving fast". Nothing is shown just because it is funny.
+- **Clip, then idea, then do something.** Every video is followed by one slide naming the point and then an activity that uses it.
+- **The feedback is built into the lesson, not bolted on.** Two votes, a word cloud and two shared boards ask learners what they really think and do. The answers are saved, so the college gets its feedback from an activity learners enjoyed.
+- **The article became an activity.** Learners draw a clock at half past three on the whiteboard and send it to the big screen, then find out AI usually draws ten past ten. They beat the AI before being told why.
+- **It ends on something usable.** Three checks before trusting AI, tested straight away in a team buzzer quiz.
+- **The confidence question is designed to go down.** Learners start sure they can spot AI mistakes and should finish less sure. The tutor notes say this is a good result.
+- **It does not tell learners AI is bad.** The closing message is to use it and stay in charge.
+- **Building it found a bug.** Two votes in one lesson would have shared their totals, and the same for two shared boards. Fixed before the lesson was ever run.
+
+### Even better if (build)
+
+- No length was given, so 45 minutes was assumed.
+- The clips are comedy and social media videos that were not watched during the build. The tutor needs to watch them first.
+- Chatbots change quickly. The strawberry mistake may already be fixed in the tool a learner tries, and the 10:10 claim comes from one article. The tutor notes say how to handle both honestly.
+- A real AI-drawn watch picture on the big screen would land better than a text slide. Worth adding in the designer.
+
+### WWW in the room
+
+_To fill in after the lesson has been taught._
+
+-
+
+### Even better if (room)
+
+-
+
+---
+
 ## ESOL Proper Nouns
 
 - **Built:** 6 October 2026

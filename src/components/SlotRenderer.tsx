@@ -1639,6 +1639,12 @@ function HostTimerRenderer({ content }: {
 
 const VOTE_PALETTE = ["var(--cyan)", "var(--orange)", "var(--success)", "oklch(0.72 0.18 300)"];
 
+// Tags a vote's answers so a second vote in the same lesson starts from zero
+// instead of inheriting the first one's totals.
+function voteKey(question: string, options: string[]): string {
+  return contentKey(`vote|${question}|${options.join("|")}`);
+}
+
 function VotingRenderer({ content, screen, sessionId, slotId }: {
   content: { question: string; options: string[] };
   screen: "host" | "screen1" | "screen2";
@@ -1665,7 +1671,7 @@ function VotingInput({ question, options, screen, sessionId, slotId }: {
     setSubmitting(true);
     await supabase.from("responses").insert({
       session_id: sessionId, slot_id: slotId ?? null, screen_role: screen,
-      response_type: "voting", response_data: { option: i } as never,
+      response_type: "voting", response_data: { option: i, key: voteKey(question, options) } as never,
     });
     setSubmitting(false);
     setRecorded(c => c + 1);
@@ -1722,26 +1728,32 @@ function VotingHost({ question, options, sessionId, slotId }: {
   question: string; options: string[]; sessionId?: string; slotId?: string;
 }) {
   const [votes, setVotes] = useState<number[]>([]);
+  const key = voteKey(question, options);
 
   useEffect(() => {
     if (!sessionId) return;
     let cancelled = false;
+    setVotes([]);
+    const mine = (d: { option?: number; key?: string } | null | undefined, slot: string | null) =>
+      slotId ? slot === slotId : d?.key === key;
     (async () => {
-      let q = supabase.from("responses").select("response_data").eq("session_id", sessionId).eq("response_type", "voting");
-      if (slotId) q = q.eq("slot_id", slotId);
-      const { data } = await q;
-      if (!cancelled && data) setVotes(data.map(r => (r.response_data as { option?: number })?.option).filter((n): n is number => typeof n === "number"));
+      const { data } = await supabase.from("responses").select("response_data,slot_id")
+        .eq("session_id", sessionId).eq("response_type", "voting");
+      if (cancelled || !data) return;
+      setVotes(data
+        .filter(r => mine(r.response_data as { option?: number; key?: string }, r.slot_id))
+        .map(r => (r.response_data as { option?: number })?.option)
+        .filter((n): n is number => typeof n === "number"));
     })();
-    const ch = supabase.channel(`vote:${sessionId}`);
+    const ch = supabase.channel(`vote:${sessionId}:${key}`);
     ch.on("postgres_changes", { event: "INSERT", schema: "public", table: "responses", filter: `session_id=eq.${sessionId}` },
       (payload) => {
-        const r = payload.new as { response_type: string; response_data: { option?: number }; slot_id: string | null };
-        if (r.response_type !== "voting") return;
-        if (slotId && r.slot_id !== slotId) return;
+        const r = payload.new as { response_type: string; response_data: { option?: number; key?: string }; slot_id: string | null };
+        if (r.response_type !== "voting" || !mine(r.response_data, r.slot_id)) return;
         if (typeof r.response_data?.option === "number") setVotes(p => [...p, r.response_data.option!]);
       }).subscribe();
     return () => { cancelled = true; supabase.removeChannel(ch); };
-  }, [sessionId, slotId]);
+  }, [sessionId, slotId, key]);
 
   const counts = options.map((_, i) => votes.filter(v => v === i).length);
   const total = votes.length;
@@ -2195,6 +2207,11 @@ const PADLET_COLORS = [
   { bg: "oklch(0.9 0.14 290)",  ink: "#20083a" },  // purple
 ];
 
+// Same idea as voteKey: two shared boards in one lesson must not share notes.
+function padKey(content: { question?: string; title?: string }): string {
+  return contentKey(`pad|${content.title ?? ""}|${content.question ?? ""}`);
+}
+
 function PadletRenderer({ content, screen, sessionId, slotId }: {
   content: { question: string; title?: string };
   screen: "host" | "screen1" | "screen2";
@@ -2223,7 +2240,7 @@ function PadletInput({ content, screen, sessionId, slotId }: {
     setSubmitting(true);
     await supabase.from("responses").insert({
       session_id: sessionId, slot_id: slotId ?? null, screen_role: screen,
-      response_type: "padlet", response_data: { text: t } as never,
+      response_type: "padlet", response_data: { text: t, key: padKey(content) } as never,
     });
     setText("");
     setError(null);
@@ -2261,27 +2278,33 @@ function PadletHost({ content, sessionId, slotId }: {
   sessionId?: string; slotId?: string;
 }) {
   const [notes, setNotes] = useState<{ id: string; text: string }[]>([]);
+  const key = padKey(content);
 
   useEffect(() => {
     if (!sessionId) return;
     let cancelled = false;
+    setNotes([]);
+    const mine = (d: { text?: string; key?: string } | null | undefined, slot: string | null) =>
+      slotId ? slot === slotId : d?.key === key;
     (async () => {
-      let q = supabase.from("responses").select("id,response_data,slot_id,response_type").eq("session_id", sessionId).eq("response_type", "padlet");
-      if (slotId) q = q.eq("slot_id", slotId);
-      const { data } = await q;
-      if (!cancelled && data) setNotes(data.map(r => ({ id: r.id as string, text: String((r.response_data as { text?: string })?.text ?? "") })).filter(n => n.text));
+      const { data } = await supabase.from("responses").select("id,response_data,slot_id")
+        .eq("session_id", sessionId).eq("response_type", "padlet").order("created_at");
+      if (cancelled || !data) return;
+      setNotes(data
+        .filter(r => mine(r.response_data as { text?: string; key?: string }, r.slot_id))
+        .map(r => ({ id: r.id as string, text: String((r.response_data as { text?: string })?.text ?? "") }))
+        .filter(n => n.text));
     })();
-    const ch = supabase.channel(`padlet:${sessionId}`);
+    const ch = supabase.channel(`padlet:${sessionId}:${key}`);
     ch.on("postgres_changes", { event: "INSERT", schema: "public", table: "responses", filter: `session_id=eq.${sessionId}` },
       (payload) => {
-        const r = payload.new as { id: string; response_type: string; response_data: { text?: string }; slot_id: string | null };
-        if (r.response_type !== "padlet") return;
-        if (slotId && r.slot_id !== slotId) return;
+        const r = payload.new as { id: string; response_type: string; response_data: { text?: string; key?: string }; slot_id: string | null };
+        if (r.response_type !== "padlet" || !mine(r.response_data, r.slot_id)) return;
         const t = String(r.response_data?.text ?? "").trim();
-        if (t) setNotes(p => [...p, { id: r.id, text: t }]);
+        if (t) setNotes(p => (p.some(n => n.id === r.id) ? p : [...p, { id: r.id, text: t }]));
       }).subscribe();
     return () => { cancelled = true; supabase.removeChannel(ch); };
-  }, [sessionId, slotId]);
+  }, [sessionId, slotId, key]);
 
   return (
     <div className="min-h-screen w-full bg-immersive bg-grid flex flex-col p-8 gap-6 animate-slot-in">
