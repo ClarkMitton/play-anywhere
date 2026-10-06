@@ -28,6 +28,9 @@ export const Route = createFileRoute("/host")({
   }),
   validateSearch: (search: Record<string, unknown>) => ({
     session: typeof search.session === "string" ? search.session : undefined,
+    // Set by the tutor preview page, which has its own Next and Back. Hides the
+    // slide bar and the fullscreen prompt so the frame shows only the lesson.
+    preview: search.preview === "1" || search.preview === 1 ? ("1" as const) : undefined,
   }),
   component: HostScreen,
 });
@@ -122,7 +125,8 @@ function SlotNavBar({
 }
 
 function HostScreen() {
-  const { session: sessionParam } = Route.useSearch();
+  const { session: sessionParam, preview } = Route.useSearch();
+  const inPreview = preview === "1";
   const navigate = useNavigate();
   const [session, setSession] = useState<SessionRow | null>(null);
   const [lessonMeta, setLessonMeta] = useState<LessonMeta | null>(null);
@@ -513,7 +517,7 @@ function HostScreen() {
           />
         </div>
         {/* Floating slot navigation bar */}
-        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50">
+        <div className={`fixed bottom-4 left-1/2 -translate-x-1/2 z-50 ${inPreview ? "hidden" : ""}`}>
           <SlotNavBar
             currentIndex={Math.min(session.current_slot_index, Math.max(0, slots.length - 1))}
             total={slots.length}
@@ -524,7 +528,7 @@ function HostScreen() {
           />
         </div>
         <HostTimerOverlay channel={channelRef.current} slotIndex={session.current_slot_index} />
-        {needsFullscreenClick && <FullscreenPrompt onClick={enterFullscreen} />}
+        {needsFullscreenClick && !inPreview && <FullscreenPrompt onClick={enterFullscreen} />}
       </div>
     );
   }
@@ -543,7 +547,7 @@ function HostScreen() {
           channel={channelRef.current ?? undefined}
         />
         {/* Floating slot navigation bar */}
-        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50">
+        <div className={`fixed bottom-4 left-1/2 -translate-x-1/2 z-50 ${inPreview ? "hidden" : ""}`}>
           <SlotNavBar
             currentIndex={Math.min(session.current_slot_index, Math.max(0, slots.length - 1))}
             total={slots.length}
@@ -554,7 +558,7 @@ function HostScreen() {
           />
         </div>
         <HostTimerOverlay channel={channelRef.current} slotIndex={session.current_slot_index} />
-        {needsFullscreenClick && <FullscreenPrompt onClick={enterFullscreen} />}
+        {needsFullscreenClick && !inPreview && <FullscreenPrompt onClick={enterFullscreen} />}
       </div>
     );
   }

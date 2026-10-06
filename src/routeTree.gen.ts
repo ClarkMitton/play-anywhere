@@ -15,6 +15,8 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as Screen2RouteImport } from './routes/screen.2'
 import { Route as Screen1RouteImport } from './routes/screen.1'
 import { Route as RemoteSessionIdRouteImport } from './routes/remote.$sessionId'
+import { Route as PreviewLessonIdRouteImport } from './routes/preview.$lessonId'
+import { Route as CardLessonIdRouteImport } from './routes/card.$lessonId'
 import { Route as AdminTestRouteImport } from './routes/admin.test'
 import { Route as AdminGenerateRouteImport } from './routes/admin.generate'
 import { Route as AdminPlanLessonIdRouteImport } from './routes/admin.plan.$lessonId'
@@ -50,6 +52,16 @@ const RemoteSessionIdRoute = RemoteSessionIdRouteImport.update({
   path: '/remote/$sessionId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PreviewLessonIdRoute = PreviewLessonIdRouteImport.update({
+  id: '/preview/$lessonId',
+  path: '/preview/$lessonId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CardLessonIdRoute = CardLessonIdRouteImport.update({
+  id: '/card/$lessonId',
+  path: '/card/$lessonId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminTestRoute = AdminTestRouteImport.update({
   id: '/test',
   path: '/test',
@@ -77,6 +89,8 @@ export interface FileRoutesByFullPath {
   '/host': typeof HostRoute
   '/admin/generate': typeof AdminGenerateRoute
   '/admin/test': typeof AdminTestRoute
+  '/card/$lessonId': typeof CardLessonIdRoute
+  '/preview/$lessonId': typeof PreviewLessonIdRoute
   '/remote/$sessionId': typeof RemoteSessionIdRoute
   '/screen/1': typeof Screen1Route
   '/screen/2': typeof Screen2Route
@@ -89,6 +103,8 @@ export interface FileRoutesByTo {
   '/host': typeof HostRoute
   '/admin/generate': typeof AdminGenerateRoute
   '/admin/test': typeof AdminTestRoute
+  '/card/$lessonId': typeof CardLessonIdRoute
+  '/preview/$lessonId': typeof PreviewLessonIdRoute
   '/remote/$sessionId': typeof RemoteSessionIdRoute
   '/screen/1': typeof Screen1Route
   '/screen/2': typeof Screen2Route
@@ -102,6 +118,8 @@ export interface FileRoutesById {
   '/host': typeof HostRoute
   '/admin/generate': typeof AdminGenerateRoute
   '/admin/test': typeof AdminTestRoute
+  '/card/$lessonId': typeof CardLessonIdRoute
+  '/preview/$lessonId': typeof PreviewLessonIdRoute
   '/remote/$sessionId': typeof RemoteSessionIdRoute
   '/screen/1': typeof Screen1Route
   '/screen/2': typeof Screen2Route
@@ -116,6 +134,8 @@ export interface FileRouteTypes {
     | '/host'
     | '/admin/generate'
     | '/admin/test'
+    | '/card/$lessonId'
+    | '/preview/$lessonId'
     | '/remote/$sessionId'
     | '/screen/1'
     | '/screen/2'
@@ -128,6 +148,8 @@ export interface FileRouteTypes {
     | '/host'
     | '/admin/generate'
     | '/admin/test'
+    | '/card/$lessonId'
+    | '/preview/$lessonId'
     | '/remote/$sessionId'
     | '/screen/1'
     | '/screen/2'
@@ -140,6 +162,8 @@ export interface FileRouteTypes {
     | '/host'
     | '/admin/generate'
     | '/admin/test'
+    | '/card/$lessonId'
+    | '/preview/$lessonId'
     | '/remote/$sessionId'
     | '/screen/1'
     | '/screen/2'
@@ -151,6 +175,8 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRouteWithChildren
   HostRoute: typeof HostRoute
+  CardLessonIdRoute: typeof CardLessonIdRoute
+  PreviewLessonIdRoute: typeof PreviewLessonIdRoute
   RemoteSessionIdRoute: typeof RemoteSessionIdRoute
   Screen1Route: typeof Screen1Route
   Screen2Route: typeof Screen2Route
@@ -198,6 +224,20 @@ declare module '@tanstack/react-router' {
       path: '/remote/$sessionId'
       fullPath: '/remote/$sessionId'
       preLoaderRoute: typeof RemoteSessionIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/preview/$lessonId': {
+      id: '/preview/$lessonId'
+      path: '/preview/$lessonId'
+      fullPath: '/preview/$lessonId'
+      preLoaderRoute: typeof PreviewLessonIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/card/$lessonId': {
+      id: '/card/$lessonId'
+      path: '/card/$lessonId'
+      fullPath: '/card/$lessonId'
+      preLoaderRoute: typeof CardLessonIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/test': {
@@ -251,6 +291,8 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRouteWithChildren,
   HostRoute: HostRoute,
+  CardLessonIdRoute: CardLessonIdRoute,
+  PreviewLessonIdRoute: PreviewLessonIdRoute,
   RemoteSessionIdRoute: RemoteSessionIdRoute,
   Screen1Route: Screen1Route,
   Screen2Route: Screen2Route,

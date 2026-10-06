@@ -9,6 +9,7 @@ import type { PlanLesson, PlanSlot } from "@/lib/planExport";
 import { totalMinutes } from "@/lib/planExport";
 import { normalizeEmbedUrl } from "@/components/SlotRenderer";
 import {
+  activityFor,
   beforeYouStart,
   endingForTeacher,
   friendlyPhase,
@@ -181,7 +182,7 @@ export function TeacherPlan({ lesson, slots }: { lesson: PlanLesson; slots: Plan
   // the server render has no address to read.
   const [testUrl, setTestUrl] = useState("");
   useEffect(() => {
-    setTestUrl(`${window.location.origin}/admin/test?lesson=${encodeURIComponent(lesson.id)}`);
+    setTestUrl(`${window.location.origin}/preview/${encodeURIComponent(lesson.id)}`);
   }, [lesson.id]);
 
   return (
@@ -256,8 +257,8 @@ export function TeacherPlan({ lesson, slots }: { lesson: PlanLesson; slots: Plan
             </a>
           </p>
           <p className="plan-small">
-            You will be asked for the admin PIN. Press Start Test, then use Next and Prev at the top
-            to move through the steps. Nothing you do there affects a real class.
+            No sign-in needed. Use Next and Back to move through the steps. Nothing you do there
+            affects a real class.
           </p>
         </section>
       )}
@@ -353,16 +354,6 @@ export function TeacherPlan({ lesson, slots }: { lesson: PlanLesson; slots: Plan
       </section>
     </>
   );
-}
-
-/**
- * The block that carries the step's activity. Usually the big screen, but when
- * the big screen only holds a picture or a video while the touch screens run
- * something interactive, the interactive one is what the tutor has to operate.
- */
-function activityFor(slot: PlanSlot): TeacherBlock {
-  const blocks = teacherScreenGroups(slot).map((g) => g.block);
-  return blocks.find((b) => !b.preview && !b.holding) ?? blocks[0];
 }
 
 const TEACHER_CSS = `

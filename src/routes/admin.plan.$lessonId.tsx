@@ -115,6 +115,9 @@ function PlanPage() {
           ← Admin
         </Link>
         <div className="plan-toolbar-actions">
+          <Link to="/card/$lessonId" params={{ lessonId }} className="plan-btn plan-btn-ghost">
+            Lesson card
+          </Link>
           <Link
             to="/admin/plan/$lessonId"
             params={{ lessonId }}

@@ -422,6 +422,16 @@ export function teacherScreenGroups(slot: PlanSlot): { where: string; block: Tea
   return real.length > 0 ? real : groups.slice(0, 1);
 }
 
+/**
+ * The block that carries the step's activity. Usually the big screen, but when
+ * the big screen only holds a picture or a video while the touch screens run
+ * something interactive, the interactive one is what the tutor has to operate.
+ */
+export function activityFor(slot: PlanSlot): TeacherBlock {
+  const blocks = teacherScreenGroups(slot).map((g) => g.block);
+  return blocks.find((b) => !b.preview && !b.holding) ?? blocks[0];
+}
+
 export function endingForTeacher(slot: PlanSlot): string {
   switch (slot.end_behaviour) {
     case "timed":
