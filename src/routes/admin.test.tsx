@@ -11,6 +11,10 @@ import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/admin/test")({
   head: () => ({ meta: [{ title: "Test Mode · Admin" }] }),
+  // ?lesson=<id> opens with that lesson already chosen. The tutor plan links
+  // here so a tutor can walk through their own lesson before teaching it.
+  validateSearch: (search: Record<string, unknown>): { lesson?: string } =>
+    typeof search.lesson === "string" && search.lesson ? { lesson: search.lesson } : {},
   component: TestMode,
 });
 
@@ -29,6 +33,7 @@ type SlotRow = {
 };
 
 function TestMode() {
+  const { lesson: requestedLessonId } = Route.useSearch();
   const [lessons, setLessons] = useState<Lesson[]>([]);
   const [selectedLessonId, setSelectedLessonId] = useState<string>("");
   const [session, setSession] = useState<TestSession | null>(null);
@@ -47,10 +52,11 @@ function TestMode() {
         .order("created_at", { ascending: false });
       const list = (data ?? []) as Lesson[];
       setLessons(list);
+      const requested = list.find((l) => l.id === requestedLessonId);
       const featured = list.find((l) => l.featured);
-      setSelectedLessonId(featured?.id ?? list[0]?.id ?? "");
+      setSelectedLessonId(requested?.id ?? featured?.id ?? list[0]?.id ?? "");
     })();
-  }, []);
+  }, [requestedLessonId]);
 
   const startTest = useCallback(async () => {
     if (!selectedLessonId) return;
@@ -149,9 +155,7 @@ function TestMode() {
             <div className="text-xs uppercase tracking-[0.4em] text-[color:var(--cyan)]">
               Admin · Test Mode
             </div>
-            <h1 className="text-3xl font-extrabold mt-1 text-glow">
-              Test all 3 screens at once
-            </h1>
+            <h1 className="text-3xl font-extrabold mt-1 text-glow">Test all 3 screens at once</h1>
           </div>
           <Link to="/admin">
             <Button variant="outline" className="h-11 px-6 uppercase tracking-widest">
@@ -162,9 +166,8 @@ function TestMode() {
 
         <div className="max-w-xl mx-auto bg-card/60 backdrop-blur border border-border rounded-2xl p-8 animate-slot-in">
           <p className="text-muted-foreground mb-6">
-            Spins up a fresh session and embeds Host, Screen 1 and Screen 2 in
-            three live windows on this page. Both touch screens auto-join — no
-            code entry needed.
+            Spins up a fresh session and embeds Host, Screen 1 and Screen 2 in three live windows on
+            this page. Both touch screens auto-join — no code entry needed.
           </p>
 
           <label className="text-xs uppercase tracking-widest text-muted-foreground mb-2 block">
@@ -223,9 +226,7 @@ function TestMode() {
             ← Prev
           </Button>
           <span className="text-xs font-mono text-muted-foreground tabular-nums px-1">
-            {slotsList.length === 0
-              ? "—"
-              : `Slot ${slotIndex + 1}/${slotsList.length}`}
+            {slotsList.length === 0 ? "—" : `Slot ${slotIndex + 1}/${slotsList.length}`}
           </span>
           <Button
             size="sm"
@@ -309,12 +310,7 @@ function TestFrame({
         style={{ color: accent, background: `color-mix(in oklab, ${accent} 8%, transparent)` }}
       >
         <span>{title}</span>
-        <a
-          href={src}
-          target="_blank"
-          rel="noreferrer"
-          className="opacity-60 hover:opacity-100"
-        >
+        <a href={src} target="_blank" rel="noreferrer" className="opacity-60 hover:opacity-100">
           open ↗
         </a>
       </div>

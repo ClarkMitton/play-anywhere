@@ -1896,6 +1896,20 @@ function ContentTypeForm({
           <p className="text-[10px] text-muted-foreground">
             Paste a URL or the full embed code — we extract the src automatically.
           </p>
+          <Label className="text-[10px] uppercase tracking-widest text-muted-foreground pt-2 block">
+            What does this show? (for the lesson plan)
+          </Label>
+          <Textarea
+            value={String(content.description ?? "")}
+            onChange={(e) => onChange({ description: e.target.value })}
+            placeholder="e.g. Canva slides: 6 pictures of kitchen hazards. Learners name each one."
+            rows={3}
+            className="bg-background/60 border-border focus-visible:border-[color:var(--cyan)]"
+          />
+          <p className="text-[10px] text-muted-foreground">
+            The plan cannot see inside a Canva, Wordwall or other website. Whatever you write here
+            is what tutors will read. Learners never see it.
+          </p>
         </div>
       );
     }

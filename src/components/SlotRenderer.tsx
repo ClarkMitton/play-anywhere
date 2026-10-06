@@ -62,7 +62,7 @@ export type SlotContent =
   | { type: "text_slide"; text: string; subtitle?: string; size?: "sm" | "md" | "lg" | "xl" | "2xl"; color?: string }
   | { type: "youtube"; url: string }
   | { type: "image"; url: string; file_name?: string; title?: string }
-  | { type: "embed"; url: string }
+  | { type: "embed"; url: string; description?: string }
   | { type: "confidence_checker"; prompt: string; optional_qualitative?: boolean; scale_mode?: "numbers" | "emoji" | "likert"; max?: number; checkpoint?: "start" | "final" }
   | { type: "wheel_spinner"; items: string[]; prompt?: string }
   | { type: "countdown_timer"; label?: string; duration_secs: number }
@@ -300,7 +300,7 @@ export function SlotRenderer({
 import { extractYouTubeId, youTubeClipParams } from "@/lib/sessionSchema";
 
 /** Turn ordinary share links (YouTube, Edpuzzle) into their embeddable form. */
-function normalizeEmbedUrl(url: string): string {
+export function normalizeEmbedUrl(url: string): string {
   try {
     const u = new URL(url.trim());
     const yt = extractYouTubeId(u.href);

@@ -82,6 +82,8 @@ const youtube = z.object({
 const embed = z.object({
   type: z.literal("embed"),
   url: z.string().min(1),
+  /** What the page shows, in the tutor's words. The app cannot see inside an embed, so the lesson plan prints this. */
+  description: z.string().optional(),
 });
 
 const confidenceChecker = z.object({

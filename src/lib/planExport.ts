@@ -125,7 +125,12 @@ export function describeContent(content: ContentDef | null | undefined): {
     case "embed":
       return {
         label: "Embedded website",
-        detail: [str(c.url) || "No address set"],
+        detail: [
+          str(c.url) || "No address set",
+          str(c.description)
+            ? `Shows: ${str(c.description)}`
+            : "No description yet. Add one in the designer so tutors know what this shows.",
+        ],
       };
 
     case "confidence_checker": {
