@@ -24,14 +24,27 @@ export type HazardHotspotsContent = {
   hotspots: Hotspot[];
 };
 
-type State = { found: string[]; revealed: boolean };
+// Each touch screen keeps its own found list so both groups must find every
+// hotspot themselves; the Host shows the union of both.
+type State = { s1: string[]; s2: string[]; revealed: boolean };
 type Miss = { id: number; x: number; y: number };
 
+const EMPTY: State = { s1: [], s2: [], revealed: false };
 const DEFAULT_R = 7; // % of image width
 
 // A fingertip covers roughly this much screen. Small hotspots are widened to it
 // on the touch screens so a tap that looks right is not counted as a miss.
 const MIN_TAP_RADIUS_PX = 44;
+
+const union = (a: string[], b: string[]) => Array.from(new Set([...a, ...b]));
+
+function mergeState(prev: State, inc: Partial<State>): State {
+  return {
+    s1: union(prev.s1, inc.s1 ?? []),
+    s2: union(prev.s2, inc.s2 ?? []),
+    revealed: prev.revealed || !!inc.revealed,
+  };
+}
 
 export function hitTest(
   hotspots: Hotspot[],
@@ -66,30 +79,20 @@ export function HazardHotspotsRenderer({
   sessionId?: string;
 }) {
   const hotspots = Array.isArray(content.hotspots) ? content.hotspots : [];
-  const [state, setState] = useState<State>({ found: [], revealed: false });
+  const [state, setState] = useState<State>(EMPTY);
   const [misses, setMisses] = useState<Miss[]>([]);
   const stateRef = useRef(state);
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
   const imgRef = useRef<HTMLImageElement | null>(null);
+  const myKey: "s1" | "s2" | null = screen === "screen1" ? "s1" : screen === "screen2" ? "s2" : null;
 
-  useEffect(() => {
-    stateRef.current = state;
-  }, [state]);
-
-  const merge = (incoming: Partial<State> & { reset?: boolean }) => {
-    setState((prev) => {
-      if (incoming.reset) return { found: [], revealed: false };
-      const newly = (incoming.found ?? []).filter((id) => !prev.found.includes(id));
-      if (newly.length === 0 && (!incoming.revealed || prev.revealed)) return prev;
-      return {
-        found: [...prev.found, ...newly],
-        revealed: prev.revealed || !!incoming.revealed,
-      };
-    });
+  const apply = (next: State) => {
+    stateRef.current = next;
+    setState(next);
   };
 
   useEffect(() => {
-    setState({ found: [], revealed: false });
+    apply(EMPTY);
     if (!sessionId) return;
     const ch = supabase.channel(`hotspots:${sessionId}`, {
       config: { broadcast: { self: false } },
@@ -101,11 +104,14 @@ export function HazardHotspotsRenderer({
     ch.on(
       "broadcast",
       { event: "hs_state" },
-      ({ payload }: { payload: State & { url: string; reset?: boolean } }) => {
+      ({ payload }: { payload: Partial<State> & { url: string; reset?: boolean } }) => {
         if (payload.url !== content.url) return;
-        if (!payload.reset && payload.found.some((id) => !stateRef.current.found.includes(id)))
+        if (payload.reset) return apply(EMPTY);
+        const prev = stateRef.current;
+        const next = mergeState(prev, payload);
+        if (screen === "host" && union(next.s1, next.s2).length > union(prev.s1, prev.s2).length)
           sounds.connect();
-        merge(payload);
+        apply(next);
       },
     );
     ch.on(
@@ -114,7 +120,7 @@ export function HazardHotspotsRenderer({
       ({ payload }: { payload: { url: string } }) => {
         if (payload.url !== content.url) return;
         const s = stateRef.current;
-        if (s.found.length === 0 && !s.revealed) return;
+        if (s.s1.length === 0 && s.s2.length === 0 && !s.revealed) return;
         ch.send({ type: "broadcast", event: "hs_state", payload: { ...s, url: content.url } });
       },
     );
@@ -127,34 +133,31 @@ export function HazardHotspotsRenderer({
       supabase.removeChannel(ch);
       channelRef.current = null;
     };
-  }, [sessionId, content.url]);
+  }, [sessionId, content.url, screen]);
 
-  const publish = (next: Partial<State> & { reset?: boolean }) => {
-    merge(next);
-    const s = next.reset ? { found: [], revealed: false } : stateRef.current;
+  const publish = (inc: Partial<State> & { reset?: boolean }) => {
+    const next = inc.reset ? EMPTY : mergeState(stateRef.current, inc);
+    apply(next);
     channelRef.current?.send({
       type: "broadcast",
       event: "hs_state",
-      payload: {
-        found: next.reset ? [] : Array.from(new Set([...s.found, ...(next.found ?? [])])),
-        revealed: next.reset ? false : s.revealed || !!next.revealed,
-        reset: !!next.reset,
-        url: content.url,
-      },
+      payload: { ...next, reset: !!inc.reset, url: content.url },
     });
   };
 
+  const foundIds = myKey ? state[myKey] : union(state.s1, state.s2);
+
   const handleTap = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (screen === "host" || !imgRef.current) return;
+    if (!myKey || !imgRef.current) return;
     const rect = imgRef.current.getBoundingClientRect();
     const xPct = ((e.clientX - rect.left) / rect.width) * 100;
     const yPct = ((e.clientY - rect.top) / rect.height) * 100;
     if (xPct < 0 || xPct > 100 || yPct < 0 || yPct > 100) return;
     const minR = (MIN_TAP_RADIUS_PX / rect.width) * 100;
     const hit = hitTest(hotspots, xPct, yPct, rect.height / rect.width, minR);
-    if (hit && !state.found.includes(hit.id)) {
+    if (hit && !foundIds.includes(hit.id)) {
       sounds.questionReveal();
-      publish({ found: [hit.id] });
+      publish({ [myKey]: [hit.id] });
     } else if (!hit) {
       const miss = { id: Date.now() + Math.random(), x: xPct, y: yPct };
       setMisses((m) => [...m, miss]);
@@ -171,7 +174,7 @@ export function HazardHotspotsRenderer({
   }
 
   const total = hotspots.length;
-  const foundCount = hotspots.filter((h) => state.found.includes(h.id)).length;
+  const foundCount = hotspots.filter((h) => foundIds.includes(h.id)).length;
   const allFound = total > 0 && foundCount === total;
   const title =
     content.title?.trim() ||
@@ -211,7 +214,7 @@ export function HazardHotspotsRenderer({
             }`}
           />
           {hotspots.map((h) => {
-            const found = state.found.includes(h.id);
+            const found = foundIds.includes(h.id);
             if (!found && !state.revealed) return null;
             const r = h.r ?? DEFAULT_R;
             return (
@@ -260,7 +263,7 @@ export function HazardHotspotsRenderer({
             </div>
             <ul className="space-y-1.5 text-[clamp(0.9rem,1.4vw,1.6rem)] font-semibold">
               {hotspots
-                .filter((h) => state.found.includes(h.id))
+                .filter((h) => foundIds.includes(h.id))
                 .map((h) => (
                   <li key={h.id} className="text-[color:var(--success)]">
                     ✓ {h.label}
