@@ -490,7 +490,9 @@ function DesignerPage() {
     [lessonId, markDirty],
   );
 
-  const deleteSlot = useCallback(
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+  const deleteSlot = useCallback((id: string) => setPendingDeleteId(id), []);
+  const performDelete = useCallback(
     (id: string) => {
       setDeletedIds((prev) => [...prev, id]);
       setSlots((prev) => prev.filter((s) => s.id !== id).map((s, i) => ({ ...s, order_index: i })));
@@ -633,6 +635,30 @@ function DesignerPage() {
           />
         )}
       </div>
+
+      <Dialog open={!!pendingDeleteId} onOpenChange={(o) => !o && setPendingDeleteId(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete this slot?</DialogTitle>
+          </DialogHeader>
+          <p className="text-muted-foreground">
+            Are you sure you want to delete "
+            {slots.find((s) => s.id === pendingDeleteId)?.name || "this slot"}"? This can't be undone once saved.
+          </p>
+          <div className="flex justify-end gap-2 pt-2">
+            <Button variant="outline" onClick={() => setPendingDeleteId(null)}>Cancel</Button>
+            <Button
+              variant="destructive"
+              onClick={() => {
+                if (pendingDeleteId) performDelete(pendingDeleteId);
+                setPendingDeleteId(null);
+              }}
+            >
+              Delete
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Context menu */}
       {ctxMenu && (

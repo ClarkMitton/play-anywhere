@@ -175,7 +175,7 @@ export function HazardHotspotsRenderer({
   const allFound = total > 0 && foundCount === total;
   const title =
     content.title?.trim() ||
-    (screen === "host" ? "Spot the hazards" : "Tap on every hazard you can see");
+    (screen === "host" ? "Hotspots" : "Tap on every hotspot you can find");
 
   return (
     <div className="h-screen w-full bg-black flex flex-col items-center p-4 gap-3 overflow-hidden animate-slot-in select-none">
