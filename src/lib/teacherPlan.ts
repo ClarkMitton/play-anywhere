@@ -373,7 +373,7 @@ export function describeForTeacher(content: ContentDef | null | undefined): Teac
         .map((h) => str((h as { label?: unknown }).label))
         .filter(Boolean);
       return {
-        title: "Spot the hazard",
+        title: "Hotspots",
         summary: "",
         items: spots.length ? [`Hazards to find: ${spots.join(", ")}`] : [],
         preview: str(c.url) ? { kind: "image", url: str(c.url), caption: str(c.title) } : undefined,

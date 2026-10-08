@@ -284,7 +284,7 @@ export function describeContent(content: ContentDef | null | undefined): {
         str((h as { label?: unknown }).label),
       );
       return {
-        label: "Spot the hazard (tap the image)",
+        label: "Hotspots (tap the image)",
         detail: [spots.length ? `Hazards: ${spots.join(" · ")}` : "No hazards marked"],
       };
     }
