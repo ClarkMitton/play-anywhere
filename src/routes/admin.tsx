@@ -55,6 +55,7 @@ type Lesson = {
   featured: boolean;
   created_at: string;
   updated_at: string;
+  run_count?: number;
 };
 
 type SessionRow = {
@@ -283,11 +284,13 @@ function LessonsTab() {
   const [uploadingFor, setUploadingFor] = useState<string | null>(null);
 
   const loadLessons = useCallback(async () => {
-    const { data } = await supabase
-      .from("lessons")
-      .select("*")
-      .order("created_at", { ascending: false });
-    setLessons((data ?? []) as Lesson[]);
+    const [{ data }, { data: runs }] = await Promise.all([
+      supabase.from("lessons").select("*").order("created_at", { ascending: false }),
+      supabase.from("sessions").select("lesson_id").not("lesson_id", "is", null),
+    ]);
+    const counts = new Map<string, number>();
+    for (const r of runs ?? []) counts.set(r.lesson_id!, (counts.get(r.lesson_id!) ?? 0) + 1);
+    setLessons(((data ?? []) as Lesson[]).map((l) => ({ ...l, run_count: counts.get(l.id) ?? 0 })));
     setLoading(false);
   }, []);
 
@@ -483,18 +486,57 @@ function LessonCard({
     onReload();
   };
 
+  const [renaming, setRenaming] = useState(false);
+  const [newTitle, setNewTitle] = useState(lesson.title);
+  const saveTitle = async () => {
+    const t = newTitle.trim();
+    if (t && t !== lesson.title) {
+      await supabase.from("lessons").update({ title: t }).eq("id", lesson.id);
+      onReload();
+    }
+    setRenaming(false);
+  };
+
   return (
     <div className="bg-card/60 backdrop-blur border border-border rounded-2xl p-6 animate-slot-in">
       <div className="flex items-start justify-between gap-4 flex-wrap">
         {/* Info */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-3 flex-wrap">
-            <h3 className="text-xl font-extrabold">{lesson.title}</h3>
+            {renaming ? (
+              <input
+                autoFocus
+                value={newTitle}
+                onChange={(e) => setNewTitle(e.target.value)}
+                onBlur={saveTitle}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") saveTitle();
+                  if (e.key === "Escape") { setNewTitle(lesson.title); setRenaming(false); }
+                }}
+                className="text-xl font-extrabold bg-background border border-border rounded-md px-2 py-1 min-w-[16rem]"
+              />
+            ) : (
+              <>
+                <h3 className="text-xl font-extrabold">{lesson.title}</h3>
+                <button
+                  type="button"
+                  onClick={() => { setNewTitle(lesson.title); setRenaming(true); }}
+                  className="text-xs uppercase tracking-widest text-muted-foreground hover:text-foreground"
+                  title="Rename lesson"
+                >
+                  ✎ Rename
+                </button>
+              </>
+            )}
             {lesson.featured && (
               <Badge className="bg-[color:var(--orange)]/20 text-[color:var(--orange)] border border-[color:var(--orange)]/40 uppercase tracking-widest text-[10px] px-2">
                 Featured
               </Badge>
             )}
+          </div>
+          <div className="mt-1 text-xs uppercase tracking-widest text-muted-foreground">
+            Created {new Date(lesson.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
+            {" · "}Run {lesson.run_count ?? 0} {lesson.run_count === 1 ? "time" : "times"}
           </div>
           {lesson.description && (
             <p className="text-muted-foreground mt-1 text-sm max-w-2xl">{lesson.description}</p>
