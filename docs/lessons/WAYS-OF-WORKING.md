@@ -60,6 +60,30 @@ and breaks concentration. So plan the room, not only the content.
 - **Slides and videos need no move.** Everyone can see the big screen from anywhere.
 - **Tell the tutor.** Each step's note starts with where learners are, and says clearly when they move.
 
+## Building a lesson end to end
+
+What a finished build contains, so nothing is left for the next person. Each of
+these was in the Us vs AI and Phantom of the Opera builds.
+
+1. **The brief, agreed in chat first** (see "Before building"). Offer objectives to pick from. If Clark drops one, build to what was chosen and say what the lesson does not reach.
+2. **`docs/lessons/<slug>.sql`.** Make it with a small script, not by hand: single quotes in the JSON are easy to break. Check every step against `contentSchema` in `src/lib/sessionSchema.ts` before saving. Tutor notes (`teacher_says`, `watch_for`) for every step, with the technique named.
+3. **`public/lessons/<slug>/`:** the slide pictures (`slide-01.jpg` upward) and `printables.html` (page one the answer sheet, then one page per envelope).
+4. **A WWW entry** in [WWW.md](WWW.md), "in the build" filled in, "in the room" blank.
+5. **Commit and push** to the connected branch, additive only (see AGENTS.md). Pictures are only found once pushed and republished, so until then the slide thumbnails in the designer are black. Say so when handing over the SQL.
+6. **Tell Clark what to do:** run the SQL, push, print the packs, watch the clips.
+
+## Escape-room lessons
+
+The app has no locked doors, but it can feel like one.
+
+- **The envelopes are the locks.** Each printed puzzle gives a code word. The last task only works with all of them, and one runner per table types the answer to a shared board. The tutor is the lock for anything else.
+- **Each puzzle needs a different skill,** so it is not the same task three times. Phantom: tell an order from a fact, sequence orders, follow place words on a map.
+- **Add a trap on purpose.** A decoy card, or "do not say FIVE" in the last note, makes learners read, not skim.
+- **Clips do jobs:** a trailer as the hook on all screens, music to cover the walk to the touch screens, a big moment as the finale.
+- **Cinematic on a budget.** Canva AI for about five picture slides in one style (parchment, candlelight, black and gold), real YouTube clips for video, never AI video. Say what the room should feel like in the brief, and ask for the exact words so there is no garbled text.
+- **Entry level reading:** every card is two short sentences at most, one order per line, order words first (First, Next, Then, Finally), three options at most on any question.
+- **Check the clips yourself.** Links found by search are not proof they play or cut well. Set `&end=` and `&start=` after watching.
+
 ## Table tasks
 
 - **Learners stand at the whiteboard tables and write on the table,** around the printed sheet. Nothing is written on the paper, so packs can be reused.

@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Phantom of the Opera · table packs</title>
+<style>
+  :root { --ink: #1a1013; --gold: #b8860b; --wine: #7f1d1d; --paper: #f6ecd2; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: Georgia, "Times New Roman", serif; color: var(--ink); background: #e5e7eb; }
+  .bar { position: sticky; top: 0; z-index: 5; background: #1a1013; color: #f6ecd2; padding: 10px 20px; display: flex; gap: 16px; align-items: center; justify-content: space-between; font: 14px system-ui, sans-serif; }
+  .bar button { font: inherit; font-weight: 700; padding: 8px 16px; border-radius: 8px; border: 0; background: #d4af37; color: #1a1013; cursor: pointer; }
+  .page { width: 210mm; min-height: 297mm; margin: 16px auto; padding: 12mm; background: #fff; box-shadow: 0 4px 24px rgba(0,0,0,.18); page-break-after: always; break-after: page; }
+  h1 { font-size: 22pt; margin: 0 0 4px; }
+  h2 { font: 800 12pt system-ui, sans-serif; margin: 14px 0 6px; color: var(--wine); text-transform: uppercase; letter-spacing: .08em; }
+  p, li { font-size: 12pt; line-height: 1.5; }
+  .eyebrow { font: 800 9pt system-ui, sans-serif; letter-spacing: .25em; text-transform: uppercase; color: var(--wine); }
+  .note { font: 10pt system-ui, sans-serif; color: #4b5563; }
+  .cards { display: grid; grid-template-columns: 1fr 1fr; border: 1.5px dashed #9ca3af; }
+  .card { height: 60mm; border: 1.5px dashed #9ca3af; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 6mm; background: var(--paper); position: relative; }
+  .card .t { font-size: 19pt; font-weight: 700; line-height: 1.25; }
+  .card .ring { position: absolute; top: 4mm; right: 4mm; width: 11mm; height: 11mm; border: 2px solid var(--wine); border-radius: 50%; font: 800 13pt system-ui, sans-serif; color: var(--wine); display: flex; align-items: center; justify-content: center; }
+  .map { display: grid; grid-template-columns: repeat(3, 1fr); border: 3px solid var(--ink); margin: 5mm 0; }
+  .room { height: 33mm; border: 1.5px solid var(--ink); display: flex; align-items: center; justify-content: center; text-align: center; font: 800 14pt system-ui, sans-serif; text-transform: uppercase; letter-spacing: .04em; padding: 3mm; }
+  .room.start { background: #fde68a; }
+  .directions { border-left: 6px solid var(--gold); background: #fffbeb; padding: 3mm 6mm; margin: 4mm 0; }
+  .directions li { font-size: 14pt; margin: 3mm 0; }
+  .parchment { background: var(--paper); border: 3px double var(--wine); padding: 10mm; position: relative; }
+  .parchment p, .parchment li { font-size: 15pt; line-height: 1.55; }
+  .seal { position: absolute; top: 6mm; right: 8mm; width: 20mm; height: 20mm; border-radius: 50%; background: var(--wine); color: #f6ecd2; display: flex; align-items: center; justify-content: center; font: 900 14pt Georgia, serif; }
+  .stretch { border: 2px dashed var(--gold); padding: 4mm 6mm; margin-top: 6mm; font: 12pt system-ui, sans-serif; }
+  .stretch b { color: var(--wine); }
+  .answer { background: #ecfdf5; border: 2px solid #059669; padding: 3mm 6mm; margin: 4mm 0; }
+  .env { display: inline-block; font: 800 11pt system-ui, sans-serif; border: 2px solid var(--ink); border-radius: 50%; width: 9mm; height: 9mm; text-align: center; line-height: 8mm; margin-right: 3mm; }
+  @media print { body { background: #fff; } .bar { display: none; } .page { margin: 0; box-shadow: none; } }
+</style>
+</head>
+<body>
+<div class="bar"><span>Phantom of the Opera · table packs · print pages 2 to 4 once per table</span><button onclick="window.print()">Print</button></div>
+
+<!-- PAGE 1: ANSWER SHEET -->
+<section class="page">
+  <div class="eyebrow">Tutor sheet · do not give out</div>
+  <h1>Escape the theatre: answers</h1>
+  <p class="note">Print one copy for yourself. Pages 2, 3 and 4 are the three envelopes. Print them once per table, cut the cards on page 2, and put each table's set in an envelope marked 1, 2 or 3. Nobody writes on the paper. Learners write on the whiteboard table.</p>
+
+  <h2><span class="env">1</span>Scene 1 · The dressing room</h2>
+  <div class="answer">
+    <p><b>Order:</b> First (M) → Next (A) → Then (S) → Finally (K). The circled letters spell <b>MASK</b>.</p>
+    <p><b>Facts, not orders (no letter):</b> "The Phantom loves music." and "The mirror is very old." Tables that put these in the order have not yet separated an order from a fact. Ask: "Is this telling me to do something?"</p>
+  </div>
+
+  <h2><span class="env">2</span>Scene 2 · The map</h2>
+  <div class="answer">
+    <p><b>Route:</b> dressing room → stage (next to) → the lake (under the stage) → the organ (next to the lake). They finish in <b>THE ORGAN</b>. Code word two is <b>ORGAN</b>.</p>
+    <p><b>Stretch:</b> Box Five is above the dressing room. Directions might be: "Start in the dressing room. Box Five is above the dressing room. Go there." Accept any correct place words.</p>
+  </div>
+
+  <h2><span class="env">3</span>Scene 4 · The last riddle</h2>
+  <div class="answer">
+    <p><b>Correct answer:</b> "ORGAN. MASK." and then knock three times. The room word comes first, the key word second. FIVE is a trap: the note says do not say it.</p>
+    <p><b>Look for:</b> order (room word first), the knock, and not saying FIVE. A table that says "MASK, ORGAN" read the order wrong. A table that says "FIVE" did not read the second order.</p>
+  </div>
+
+  <h2>Setting the room</h2>
+  <ul>
+    <li>Lights low if you can. Candles are not allowed; use the screens.</li>
+    <li>Read the Phantom's letter in a low voice.</li>
+    <li>Do not translate the cards. Point, mime, say it again slower.</li>
+  </ul>
+</section>
+
+<!-- PAGE 2: ENVELOPE 1 -->
+<section class="page">
+  <div class="eyebrow">Envelope 1 · Scene 1</div>
+  <h1>The dressing room</h1>
+  <p>Cut the cards. Some cards are orders. Some are only facts. Find the orders. Put them in the right order. The circled letters make a secret word.</p>
+  <div class="cards">
+    <div class="card"><div class="ring">S</div><div class="t">Then, open the small box.</div></div>
+    <div class="card"><div class="t">The Phantom loves music.</div></div>
+    <div class="card"><div class="ring">K</div><div class="t">Finally, take the key from the box.</div></div>
+    <div class="card"><div class="ring">M</div><div class="t">First, take the rose from the table.</div></div>
+    <div class="card"><div class="t">The mirror is very old.</div></div>
+    <div class="card"><div class="ring">A</div><div class="t">Next, look behind the mirror.</div></div>
+  </div>
+  <div class="stretch"><b>Stretch.</b> Write one more order for the story. Start with First, Next, Then or Finally.</div>
+</section>
+
+<!-- PAGE 3: ENVELOPE 2 -->
+<section class="page">
+  <div class="eyebrow">Envelope 2 · Scene 2</div>
+  <h1>The map of the theatre</h1>
+  <div class="map">
+    <div class="room">Box Five</div><div class="room">The chandelier</div><div class="room">The balcony</div>
+    <div class="room start">Dressing room</div><div class="room">The stage</div><div class="room">The orchestra</div>
+    <div class="room">The cellar</div><div class="room">The lake</div><div class="room">The organ</div>
+  </div>
+  <div class="directions">
+    <p><b>Start in the dressing room.</b> Put your finger on it.</p>
+    <ol>
+      <li>The stage is <b>next to</b> the dressing room. Go to the stage.</li>
+      <li>The lake is <b>under</b> the stage. Go to the lake.</li>
+      <li>The organ is <b>next to</b> the lake. Go to the organ.</li>
+    </ol>
+  </div>
+  <p>Where are you? Write the word on the table.</p>
+  <div class="stretch"><b>Stretch.</b> Write directions from the dressing room to Box Five. Use a place word: <b>above</b>, <b>next to</b>, <b>under</b>, <b>in front of</b>.</div>
+</section>
+
+<!-- PAGE 4: ENVELOPE 3 -->
+<section class="page">
+  <div class="eyebrow">Envelope 3 · Scene 4</div>
+  <h1>The last riddle</h1>
+  <div class="parchment">
+    <div class="seal">P</div>
+    <p><b>You are in the cellar.</b><br>The door is next to the organ.</p>
+    <ol>
+      <li>First, go to the lake. It is under the stage.</li>
+      <li>Next, take the boat to the door.</li>
+      <li>At the door, do not say FIVE.</li>
+      <li>Say the room word. Then say the key word.</li>
+      <li>Finally, knock three times.</li>
+    </ol>
+    <p>What do you say? What do you do?</p>
+    <p><i>Write it on the table. One of you will type it for the whole room.</i></p>
+  </div>
+  <div class="stretch"><b>Stretch.</b> Write a riddle note for another table. It must have First, Next, Then and Finally, and one place word.</div>
+</section>
+</body>
+</html>

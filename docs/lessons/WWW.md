@@ -12,6 +12,51 @@ What proves itself here is collected in [WAYS-OF-WORKING.md](WAYS-OF-WORKING.md)
 
 ---
 
+## Phantom of the Opera: Escape the Theatre
+
+- **Built:** 8 October 2026 (a demo of what the room can do)
+- **For:** ESOL Entry 2, typical group of 16
+- **Length:** 45 minutes, 15 steps, 28 minutes at the whiteboard tables or in rotation rounds, two whole-class moves
+- **Source:** none; built from a request for a cinematic, escape-room style lesson
+- **Lesson file:** [phantom-of-the-opera.sql](phantom-of-the-opera.sql)
+- **Slides:** five, made in Canva, in `public/lessons/phantom-of-the-opera/`
+- **Table packs:** `public/lessons/phantom-of-the-opera/printables.html`
+
+### WWW in the build
+
+- **The brief was agreed before building.** Length, language focus (reading clues and following instructions), final product (solve the last riddle) and three objectives came from Clark first. Clark skipped the suggested fourth objective at analyse level, so the lesson stops at apply.
+- **An escape room without a lock feature.** The app cannot lock a door, so the locks are the printed envelopes: each puzzle gives a code word, and the last riddle only works with both. Learners type the answer to a shared board.
+- **One idea:** reading short clues and following instructions. The three puzzles each need a different skill: telling an order from a fact, sequencing with First, Next, Then, Finally, and following place words on a map.
+- **Act it out before being told.** The tutor gives four orders aloud, learners do them, and only then see the words on the screen.
+- **Clips do real jobs.** The trailer is the hook on all three screens, the Music of the Night clip covers the walk to the touch screens, and the chandelier crash is the finale. Nobody watches two clips in a row.
+- **Two moves, not four.** Tables, one trip to the touch screens for a question round and a drawing, then back to the tables. One runner per table types the final answer.
+- **Mixed question shapes** in the guard's round: best answer, true or false, best answer.
+- **Every table task has a stretch:** write your own order, write directions to Box Five, write a riddle for another table.
+- **Slides in Canva, video from YouTube.** Canva AI made the stills (letter, order words, place words, code word, falling chandelier). Clark chose not to spend credits on AI video, so the clips are real YouTube recordings.
+- **Checked against the app's own content rules** before anyone runs it. All 15 steps passed.
+
+### Even better if (build)
+
+- The three YouTube links came from a search and were not played end to end. Watch each one, check the sound, and move the trim points (`&end=` and `&start=`) if they cut badly.
+- There is no way to lock a step until a code is entered. A real escape room would use one. For now the tutor is the lock.
+- The padlet step is a shared board, so the tutor checks answers by eye. A single correct-answer check on screen would be better.
+- No confidence check at the start, so the end one has nothing to compare with. Adding one costs a screen trip.
+- The Canva deck came back with no garbled words and the exact wording asked for. Slide 2 shows a woman in a hijab, an older Black man, a South Asian man and a white woman who uses a wheelchair. The other four slides have no people, so across the deck there are two women and two men and no children or young adults. Worth asking for a younger face next time.
+- On the last slide the red line "Time is running out" is dark red on black and hard to read from the back. On the place-words slide the key is beside the mirror, not clearly behind it, and the text colours split oddly ("NEXT" gold, "TO" white).
+- The pack cards are plain parchment. A designer could make them feel more like props: torn programmes, a wax seal, an aged map.
+
+### WWW in the room
+
+_To fill in after the lesson has been taught._
+
+-
+
+### Even better if (room)
+
+-
+
+---
+
 ## Us vs AI
 
 - **Built:** 6 October 2026 (first design), rebuilt the same day (second design)
