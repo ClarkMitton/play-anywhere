@@ -16,7 +16,9 @@ Get these agreed first. Building without them is what produced a quiz chain.
 - **The one idea the session is about.** If you cannot say it in a sentence, the session does not know what it is about yet.
 - **The learning objectives, chosen by the person who asked for the lesson.** Offer a set to pick from.
 - **What learners will make or do by the end** that proves the last objective.
-- **The kit in the room:** whiteboard tables, pens, printing, anything else.
+- **Whiteboard tables: ask, every time.** "Do you want learners writing on the whiteboard tables in this lesson?" Never assume yes or no. The answer decides whether the table tasks below are written on the tables, done another way, or left out.
+- **Printing: ask, every time.** "Do you want printed packs, or nothing printed?" A lesson built around envelopes is no use to someone who is not printing today.
+- **Any other kit in the room:** pens, paper, anything else.
 - **What must be kept** from any source material, and what can go.
 - **What feedback should be collected** from learners along the way.
 
@@ -85,6 +87,8 @@ The app has no locked doors, but it can feel like one.
 - **Check the clips yourself.** Links found by search are not proof they play or cut well. Set `&end=` and `&start=` after watching.
 
 ## Table tasks
+
+Only if the brief said yes to the whiteboard tables. Printed packs only if it said yes to printing.
 
 - **Learners stand at the whiteboard tables and write on the table,** around the printed sheet. Nothing is written on the paper, so packs can be reused.
 - **Print one pack per table, in an envelope,** opened on cue. Design it so it works with any number of tables.
