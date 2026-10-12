@@ -1944,8 +1944,9 @@ function ContentTypeForm({
             onUpload={(u, file_name) => onChange({ url: u, file_name })}
           />
           <p className="text-[10px] text-muted-foreground">
-            Plays once with sound on the Host only, with Pause and Play again buttons. It does not
-            move the lesson on by itself. Put the task on the touch screens.
+            Does not start by itself: explain the task, then press Play on the Host. Sound is on
+            the Host only, with Pause and Play again. It does not move the lesson on. Put the task
+            on the touch screens.
           </p>
         </div>
       );

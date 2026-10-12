@@ -16,7 +16,7 @@ What proves itself here is collected in [WAYS-OF-WORKING.md](WAYS-OF-WORKING.md)
 
 - **Built:** 12 October 2026
 - **For:** Shamim Nizami, ESOL Pre-Entry (week 2)
-- **Length:** 60 minutes, 20 steps, about 27 minutes writing or drawing on the whiteboard tables, four whole-class moves
+- **Length:** 60 minutes, 19 steps, about 27 minutes writing or drawing on the whiteboard tables, four whole-class moves
 - **Source:** `Shamim/week 2/` (alphabet Wordwall, a 49 second audio track, two YouTube clips, the homework note)
 - **Lesson file:** [esol-this-is-me.sql](esol-this-is-me.sql)
 - **Slides:** five, made in Canva, in `public/lessons/esol-this-is-me/`
@@ -25,9 +25,9 @@ What proves itself here is collected in [WAYS-OF-WORKING.md](WAYS-OF-WORKING.md)
 
 ### WWW in the build
 
-- **No printing at all.** The first build had an envelope with a model card and picture cards. Clark asked for writing on the table with activities instead, so the model card became a slide the tutor copies to the board, and the picture cards became "draw one, your table says it". A number dictation on the table was added too.
+- **No printing at all.** The first build had an envelope with a model card and picture cards. Clark asked for writing on the table with activities instead, so the tutor writes their own card on the board as the model, and the picture cards became "draw one, your table says it". A number dictation on the table was added too.
 - **The brief was agreed before building.** Clark chose the thread (this is me, and my morning), three objectives and the final product from a short set of options.
-- **The app can now play sound.** There was no audio activity, so one was added: "Audio (listening)". It plays on the big screen only, with Pause and Play again, and never moves the lesson on. A class needs to hear a track more than once, and the tutor decides when.
+- **The app can now play sound.** There was no audio activity, so one was added: "Audio (listening)". It plays on the big screen only, when the tutor presses Play, with Pause and Play again, and never moves the lesson on. The first version started by itself; Clark asked for a Play button, because an activity needs explaining first. A class needs to hear a track more than once, and the tutor decides when.
 - **Two topics, one thread.** Introductions and morning routine are different lessons, so both feed one About me card: name, country, three morning things. The card is then used with a partner from another table.
 - **The lesson follows the videos.** YouTube's chapter marks showed the first clip runs names, age, where from, jobs, so it stops at 1:55 before jobs. The morning clip's own description lists its eleven sentences and says the second half is speak-along, so learners act out the first half and speak the second.
 - **Nobody reads to take part.** Hello before any teaching, fingers before the numbers slide, the tutor acting out the morning before the words appear, actions during the video, hands high or rocking for always and sometimes.
@@ -42,7 +42,7 @@ What proves itself here is collected in [WAYS-OF-WORKING.md](WAYS-OF-WORKING.md)
 - The Wordwall was first put on the big screen with the tutor tapping. Clark corrected this: a Wordwall is an activity and always goes on the touch screens. Moving it added a trip to the screens, so the lesson now has four whole-class moves, the first straight from the hello walk.
 - The audio could not be listened to while building, so the lesson does not hold its answers. The tutor needs to listen first and note the names and numbers.
 - The first video's transcript could not be read, only its chapter marks. The watching task asks for one name, one number and one place, which works whatever the speakers say, but the cut at 1:55 needs checking by eye.
-- The model card slide goes when the timer for the last task starts, so the tutor has to copy it to the board. A timer that could sit on top of a slide would fix this.
+- A model card slide (Amina's card) was tried before the last task and removed at Clark's request: it did not work, because the slide goes when the timer starts. A timer that could sit on top of a slide would fix this.
 - The Wordwall was opened as far as its start screen ("Open the box"). What is in the boxes was not checked.
 - "Say and spell my name" was offered as an objective and not chosen. Spelling is still in the lesson as one of the three questions, but it gets four minutes, not ten.
 - The shared board (`padlet`) is drawn by the app but is missing from the app's content rules, so those two steps were not checked by the rules. It was the same in the earlier lessons.

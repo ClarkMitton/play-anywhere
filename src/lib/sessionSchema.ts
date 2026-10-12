@@ -91,8 +91,9 @@ const video = z.object({
   loop: z.boolean().optional(),
 });
 
-// A sound file for a listening task. It plays on the Host only, once, and the
-// tutor can pause it or play it again; it never moves the lesson on by itself.
+// A sound file for a listening task. It plays on the Host only, when the tutor
+// presses Play, and can be paused or played again; it never starts or moves
+// the lesson on by itself.
 // Authored in the designer only: the model has no file to point at.
 const audio = z.object({
   type: z.literal("audio"),

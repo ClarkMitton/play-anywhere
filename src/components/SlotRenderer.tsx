@@ -409,8 +409,9 @@ function LoopingVideo({ url, loop, withSound, onEnded }: { url: string; loop: bo
 }
 
 /**
- * A sound file for a listening task. The Host plays it once and shows Pause and
- * Play again, because a class nearly always needs a second listen. The touch
+ * A sound file for a listening task. It waits for the tutor to press Play on
+ * the Host, because a task needs explaining first, and offers Play again,
+ * because a class nearly always needs a second listen. The touch
  * screens stay silent and only show what to listen for. It never moves the
  * lesson on: the tutor decides when the class has heard enough.
  */
@@ -419,12 +420,7 @@ function AudioPlayer({ url, title, withSound }: { url: string; title: string; wi
   const [playing, setPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
 
-  useEffect(() => {
-    if (!withSound) return;
-    // Browsers can refuse sound before the first click. The Play button covers that.
-    ref.current?.play().catch(() => {});
-  }, [url, withSound]);
-
+  // No autoplay: the tutor explains the task first, then presses Play.
   const toggle = () => {
     const a = ref.current;
     if (!a) return;

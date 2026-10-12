@@ -92,7 +92,7 @@ The app has no locked doors, but it can feel like one.
 - **Give the tutor an answer sheet** as page one of the pack.
 - **Use the rotation timer for two rounds:** do the task, then move and check or challenge another table's work.
 - **Put the brief and the success criteria on the big screen** while tables work.
-- **A lesson can run with no printing.** Put the model on a slide and have the tutor copy it to the board, and swap picture cards for "draw it, your table says it".
+- **A lesson can run with no printing.** Have the tutor write the model on the board, since a slide disappears when the timer starts, and swap picture cards for "draw it, your table says it".
 - **Capture the product at the end** on a shared board, so there is evidence of the learning.
 
 ## Slides
@@ -124,7 +124,8 @@ Nobody should be a passenger during a video. Decide which of two ways it is bein
 
 ## Listening
 
-- **Use "Audio (listening)" for a sound file.** It plays on the big screen only, with Pause and Play again. It does not move the lesson on, because a class needs more than one listen.
+- **Use "Audio (listening)" for a sound file.** It plays on the big screen only, with Play, Pause and Play again. It does not move the lesson on, because a class needs more than one listen.
+- **Audio never starts by itself.** An activity always needs explaining first, so the tutor sets the task and then presses Play.
 - **Give each listen a narrower job:** just listen, then listen for names, then write the numbers.
 - **Put the task on the touch screens** in large text while the sound plays.
 - **Listen to the track yourself and note the answers.** The lesson cannot hear it for you.
@@ -147,6 +148,7 @@ Nobody should be a passenger during a video. Decide which of two ways it is bein
 
 ## Activities
 
+- **Explain before it starts.** Nothing a learner has to do something with should begin on its own. Set the task, then start it.
 - **Teach before you test.** A question should follow the slide or task that answers it.
 - **Pick the tool for the job.** Word cloud for many short answers. Shared board when the exact wording matters. Vote for opinions. Question round for right answers. Buzzer for fast recall of things already taught.
 - **Use the word cloud to act things out.** "Finish this sentence" shows how a chatbot works better than any slide.

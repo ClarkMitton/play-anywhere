@@ -199,11 +199,11 @@ export function describeForTeacher(content: ContentDef | null | undefined): Teac
     case "audio":
       return {
         title: "Listening",
-        summary: "A sound file. It plays once on the big screen.",
+        summary: "A sound file. It waits for you to press Play on the big screen.",
         items: [str(c.title), str(c.file_name)].filter(Boolean),
         doing: [
-          "Say what to listen for before it starts. Check the sound is on.",
-          "Press Play again on the big screen for a second listen. It does not move on by itself.",
+          "Explain what to listen for, then press Play. Check the sound is on.",
+          "Press Play again for a second listen. It does not move on by itself.",
         ],
       };
 
