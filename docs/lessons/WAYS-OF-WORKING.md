@@ -92,6 +92,7 @@ The app has no locked doors, but it can feel like one.
 - **Give the tutor an answer sheet** as page one of the pack.
 - **Use the rotation timer for two rounds:** do the task, then move and check or challenge another table's work.
 - **Put the brief and the success criteria on the big screen** while tables work.
+- **A lesson can run with no printing.** Put the model on a slide and have the tutor copy it to the board, and swap picture cards for "draw it, your table says it".
 - **Capture the product at the end** on a shared board, so there is evidence of the learning.
 
 ## Slides
@@ -126,7 +127,7 @@ Nobody should be a passenger during a video. Decide which of two ways it is bein
 - **Use "Audio (listening)" for a sound file.** It plays on the big screen only, with Pause and Play again. It does not move the lesson on, because a class needs more than one listen.
 - **Give each listen a narrower job:** just listen, then listen for names, then write the numbers.
 - **Put the task on the touch screens** in large text while the sound plays.
-- **Listen to the track yourself and write the answers on the tutor sheet.** The lesson cannot hear it for you.
+- **Listen to the track yourself and note the answers.** The lesson cannot hear it for you.
 - **Sound files can sit in `public/lessons/<slug>/`** next to the slides, or be uploaded in the designer.
 
 ## Pre-Entry lessons
