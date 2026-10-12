@@ -69,7 +69,7 @@ these was in the Us vs AI and Phantom of the Opera builds.
 2. **`docs/lessons/<slug>.sql`.** Make it with a small script, not by hand: single quotes in the JSON are easy to break. Check every step against `contentSchema` in `src/lib/sessionSchema.ts` before saving. Tutor notes (`teacher_says`, `watch_for`) for every step, with the technique named.
 3. **`public/lessons/<slug>/`:** the slide pictures (`slide-01.jpg` upward) and `printables.html` (page one the answer sheet, then one page per envelope).
 4. **A WWW entry** in [WWW.md](WWW.md), "in the build" filled in, "in the room" blank.
-5. **Commit and push** to the connected branch, additive only (see AGENTS.md). Pictures are only found once pushed and republished, so until then the slide thumbnails in the designer are black. Say so when handing over the SQL.
+5. **Commit and push** to the connected branch, additive only (see AGENTS.md). Do not hand over the SQL before pushing. Pictures and sound files are only found once pushed and republished, so a lesson run before then shows blank slides. If slides are blank, check the push first.
 6. **Tell Clark what to do:** run the SQL, push, print the packs, watch the clips.
 
 ## Escape-room lessons
@@ -139,6 +139,8 @@ Nobody should be a passenger during a video. Decide which of two ways it is bein
 ## Screens
 
 - **Both touch screens show the same activity.** Half the class is standing at each one.
+- **A Wordwall always goes on the touch screens, never the big screen.** It is an activity, so it belongs in learners' hands. The same goes for any embedded game learners tap. The big screen carries the instruction in a few large words.
+- **Count a Wordwall as a trip to the touch screens** when planning where learners stand. Put it next to another screen step, or straight after an activity where learners are already on their feet.
 - **Put the whiteboard on the big screen too,** or the drawings learners send have nowhere to appear.
 - **Hotspot activities are set up once, on any screen.** The other two follow.
 - **Give text slides a title** when the text needs context. It sits in a box at the top.

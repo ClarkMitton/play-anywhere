@@ -16,7 +16,7 @@ What proves itself here is collected in [WAYS-OF-WORKING.md](WAYS-OF-WORKING.md)
 
 - **Built:** 12 October 2026
 - **For:** Shamim Nizami, ESOL Pre-Entry (week 2)
-- **Length:** 60 minutes, 20 steps, about 27 minutes writing or drawing on the whiteboard tables, two whole-class moves
+- **Length:** 60 minutes, 20 steps, about 27 minutes writing or drawing on the whiteboard tables, four whole-class moves
 - **Source:** `Shamim/week 2/` (alphabet Wordwall, a 49 second audio track, two YouTube clips, the homework note)
 - **Lesson file:** [esol-this-is-me.sql](esol-this-is-me.sql)
 - **Slides:** five, made in Canva, in `public/lessons/esol-this-is-me/`
@@ -38,6 +38,8 @@ What proves itself here is collected in [WAYS-OF-WORKING.md](WAYS-OF-WORKING.md)
 
 ### Even better if (build)
 
+- The SQL was handed over before the commits were pushed, so Clark opened the lesson and every Canva slide was blank. Push first, then hand over.
+- The Wordwall was first put on the big screen with the tutor tapping. Clark corrected this: a Wordwall is an activity and always goes on the touch screens. Moving it added a trip to the screens, so the lesson now has four whole-class moves, the first straight from the hello walk.
 - The audio could not be listened to while building, so the lesson does not hold its answers. The tutor needs to listen first and note the names and numbers.
 - The first video's transcript could not be read, only its chapter marks. The watching task asks for one name, one number and one place, which works whatever the speakers say, but the cut at 1:55 needs checking by eye.
 - The model card slide goes when the timer for the last task starts, so the tutor has to copy it to the board. A timer that could sit on top of a slide would fix this.
