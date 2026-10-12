@@ -196,6 +196,17 @@ export function describeForTeacher(content: ContentDef | null | undefined): Teac
         doing: ["The video starts by itself. Sound plays on the big screen only."],
       };
 
+    case "audio":
+      return {
+        title: "Listening",
+        summary: "A sound file. It plays once on the big screen.",
+        items: [str(c.title), str(c.file_name)].filter(Boolean),
+        doing: [
+          "Say what to listen for before it starts. Check the sound is on.",
+          "Press Play again on the big screen for a second listen. It does not move on by itself.",
+        ],
+      };
+
     case "youtube": {
       const url = str(c.url);
       const clip = clipNote(url);

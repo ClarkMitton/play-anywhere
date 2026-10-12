@@ -58,6 +58,7 @@ const CONTENT_TYPES_HOST = [
   { value: "image", label: "Image" },
   { value: "youtube", label: "YouTube" },
   { value: "video", label: "Video file (loops)" },
+  { value: "audio", label: "Audio (listening)" },
   { value: "embed", label: "Embed (iframe)" },
   { value: "confidence_checker", label: "Confidence Checker" },
   { value: "voting", label: "Voting" },
@@ -77,6 +78,7 @@ const CONTENT_TYPES_SCREEN1 = [
   { value: "image", label: "Image" },
   { value: "youtube", label: "YouTube" },
   { value: "video", label: "Video file (loops)" },
+  { value: "audio", label: "Audio (listening)" },
   { value: "embed", label: "Embed (iframe)" },
   { value: "confidence_checker", label: "Confidence Checker" },
   { value: "voting", label: "Voting" },
@@ -1914,6 +1916,36 @@ function ContentTypeForm({
             Starts by itself and loops, with sound on the Host only. Use this for a welcome or
             holding video. A Canva video cannot loop as an embed: in Canva choose Share, Download,
             MP4 Video, then upload the file here.
+          </p>
+        </div>
+      );
+
+    case "audio":
+      return (
+        <div className="space-y-3">
+          <div className="space-y-1.5">
+            <Label className="text-[10px] uppercase tracking-widest text-muted-foreground">
+              What to listen for (optional)
+            </Label>
+            <Textarea
+              value={String(content.title ?? "")}
+              onChange={(e) => onChange({ title: e.target.value })}
+              placeholder="e.g. Listen. Write the numbers you hear."
+              rows={2}
+              className="min-h-[60px] resize-y bg-background/60 border-border focus-visible:border-[color:var(--cyan)]"
+            />
+          </div>
+          <FileUploadField
+            label="Sound file (MP3, M4A or WAV)"
+            accept="audio/mpeg,audio/mp4,audio/x-m4a,audio/wav,.mp3,.m4a,.wav"
+            currentFileName={content.file_name ? String(content.file_name) : undefined}
+            lessonId={lessonId}
+            maxSizeMb={50}
+            onUpload={(u, file_name) => onChange({ url: u, file_name })}
+          />
+          <p className="text-[10px] text-muted-foreground">
+            Plays once with sound on the Host only, with Pause and Play again buttons. It does not
+            move the lesson on by itself. Put the task on the touch screens.
           </p>
         </div>
       );

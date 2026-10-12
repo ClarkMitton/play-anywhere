@@ -62,6 +62,7 @@ export type SlotContent =
   | { type: "text_slide"; text: string; title?: string; subtitle?: string; size?: "sm" | "md" | "lg" | "xl" | "2xl"; color?: string }
   | { type: "youtube"; url: string }
   | { type: "video"; url: string; file_name?: string; loop?: boolean }
+  | { type: "audio"; url: string; file_name?: string; title?: string }
   | { type: "image"; url: string; file_name?: string; title?: string }
   | { type: "embed"; url: string; description?: string }
   | { type: "confidence_checker"; prompt: string; optional_qualitative?: boolean; scale_mode?: "numbers" | "emoji" | "likert"; max?: number; checkpoint?: "start" | "final" }
@@ -177,6 +178,12 @@ export function SlotRenderer({
       const c = content as Extract<SlotContent, { type: "video" }>;
       if (!c.url) return <Waiting screen={screen} />;
       return <LoopingVideo url={c.url} loop={c.loop !== false} withSound={screen === "host"} onEnded={onMediaEnded} />;
+    }
+
+    case "audio": {
+      const c = content as Extract<SlotContent, { type: "audio" }>;
+      if (!c.url) return <Waiting screen={screen} />;
+      return <AudioPlayer key={c.url} url={c.url} title={(c.title ?? "").trim()} withSound={screen === "host"} />;
     }
 
     case "image": {
@@ -397,6 +404,81 @@ function LoopingVideo({ url, loop, withSound, onEnded }: { url: string; loop: bo
       <video ref={ref} key={url} src={url} loop={loop} autoPlay playsInline muted={!withSound}
         onEnded={loop ? undefined : onEnded}
         className="w-full h-full object-contain" />
+    </div>
+  );
+}
+
+/**
+ * A sound file for a listening task. The Host plays it once and shows Pause and
+ * Play again, because a class nearly always needs a second listen. The touch
+ * screens stay silent and only show what to listen for. It never moves the
+ * lesson on: the tutor decides when the class has heard enough.
+ */
+function AudioPlayer({ url, title, withSound }: { url: string; title: string; withSound: boolean }) {
+  const ref = useRef<HTMLAudioElement | null>(null);
+  const [playing, setPlaying] = useState(false);
+  const [progress, setProgress] = useState(0);
+
+  useEffect(() => {
+    if (!withSound) return;
+    // Browsers can refuse sound before the first click. The Play button covers that.
+    ref.current?.play().catch(() => {});
+  }, [url, withSound]);
+
+  const toggle = () => {
+    const a = ref.current;
+    if (!a) return;
+    if (a.paused) a.play().catch(() => {});
+    else a.pause();
+  };
+  const again = () => {
+    const a = ref.current;
+    if (!a) return;
+    a.currentTime = 0;
+    a.play().catch(() => {});
+  };
+
+  return (
+    <div className="h-screen w-full bg-immersive bg-grid flex flex-col items-center justify-center gap-[5vh] p-8 overflow-hidden animate-slot-in">
+      {title && <TitleBox text={title} />}
+      <div className={`text-[16vh] leading-none ${playing ? "animate-pulse" : "opacity-60"}`} aria-hidden>
+        🔊
+      </div>
+      {withSound ? (
+        <>
+          <audio
+            ref={ref}
+            src={url}
+            preload="auto"
+            onPlay={() => setPlaying(true)}
+            onPause={() => setPlaying(false)}
+            onEnded={() => setPlaying(false)}
+            onTimeUpdate={(e) => {
+              const a = e.currentTarget;
+              setProgress(a.duration ? a.currentTime / a.duration : 0);
+            }}
+          />
+          <div className="h-[1.5vh] w-[60vw] rounded-full bg-white/15 overflow-hidden">
+            <div className="h-full bg-[color:var(--cyan)]" style={{ width: `${progress * 100}%` }} />
+          </div>
+          <div className="flex gap-[2vw]">
+            <button
+              onClick={toggle}
+              className="rounded-2xl border-4 border-[color:var(--cyan)] bg-black/50 px-[3vw] py-[1.5vh] text-[3vw] font-extrabold text-[color:var(--cyan)]"
+            >
+              {playing ? "Pause" : "Play"}
+            </button>
+            <button
+              onClick={again}
+              className="rounded-2xl border-4 border-white/40 bg-black/50 px-[3vw] py-[1.5vh] text-[3vw] font-extrabold"
+            >
+              Play again
+            </button>
+          </div>
+        </>
+      ) : (
+        <div className="text-[5vw] font-extrabold text-glow">Listen</div>
+      )}
     </div>
   );
 }

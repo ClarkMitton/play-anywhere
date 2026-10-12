@@ -116,6 +116,9 @@ function ThumbContent({
     case "video":
       return <Label icon="⟳" label="Video" tint="oklch(0.4 0.18 300)" />;
 
+    case "audio":
+      return <Label icon="🔊" label="Audio" tint="oklch(0.4 0.14 200)" />;
+
     case "embed":
       return <Label icon="⚞" label="Embed" tint="oklch(0.3 0.1 280)" />;
 

@@ -121,6 +121,20 @@ Nobody should be a passenger during a video. Decide which of two ways it is bein
 - **Use a video file for anything that must loop.** A Canva video cannot loop or start itself as an embed. Download it as an MP4 and add it as "Video file (loops)".
 - **Check every link is a different video** before building around them.
 
+## Listening
+
+- **Use "Audio (listening)" for a sound file.** It plays on the big screen only, with Pause and Play again. It does not move the lesson on, because a class needs more than one listen.
+- **Give each listen a narrower job:** just listen, then listen for names, then write the numbers.
+- **Put the task on the touch screens** in large text while the sound plays.
+- **Listen to the track yourself and write the answers on the tutor sheet.** The lesson cannot hear it for you.
+- **Sound files can sit in `public/lessons/<slug>/`** next to the slides, or be uploaded in the designer.
+
+## Pre-Entry lessons
+
+- **Nobody should have to read to take part.** Model it, act it out, use fingers and gestures, and read every question and option aloud.
+- **Show a personal picture to the whole deck's audience in mind.** A photo of someone in the shower is fine in a textbook and wrong on a big screen in this room. Use an object, not a person, for washing and dressing.
+- **Give waiting learners something to say.** A queue at a touch screen is speaking practice: ask the person next to you.
+
 ## Screens
 
 - **Both touch screens show the same activity.** Half the class is standing at each one.

@@ -91,6 +91,17 @@ const video = z.object({
   loop: z.boolean().optional(),
 });
 
+// A sound file for a listening task. It plays on the Host only, once, and the
+// tutor can pause it or play it again; it never moves the lesson on by itself.
+// Authored in the designer only: the model has no file to point at.
+const audio = z.object({
+  type: z.literal("audio"),
+  url: z.string().min(1),
+  file_name: z.string().optional(),
+  /** What learners are listening for, shown large while the sound plays. */
+  title: z.string().optional(),
+});
+
 const embed = z.object({
   type: z.literal("embed"),
   url: z.string().min(1),
@@ -227,6 +238,7 @@ export const contentSchema = z.discriminatedUnion("type", [
   image,
   youtube,
   video,
+  audio,
   embed,
   confidenceChecker,
   voting,

@@ -12,6 +12,53 @@ What proves itself here is collected in [WAYS-OF-WORKING.md](WAYS-OF-WORKING.md)
 
 ---
 
+## ESOL This Is Me
+
+- **Built:** 12 October 2026
+- **For:** Shamim Nizami, ESOL Pre-Entry (week 2)
+- **Length:** 60 minutes, 18 steps, about 23 minutes writing or working at the whiteboard tables, two whole-class moves
+- **Source:** `Shamim/week 2/` (alphabet Wordwall, a 49 second audio track, two YouTube clips, the homework note)
+- **Lesson file:** [esol-this-is-me.sql](esol-this-is-me.sql)
+- **Slides:** five, made in Canva, in `public/lessons/esol-this-is-me/`
+- **Audio:** `public/lessons/esol-this-is-me/names-and-numbers.mp3`
+- **Table packs:** `public/lessons/esol-this-is-me/printables.html`
+
+### WWW in the build
+
+- **The brief was agreed before building.** Clark chose the thread (this is me, and my morning), three objectives and the final product from a short set of options.
+- **The app can now play sound.** There was no audio activity, so one was added: "Audio (listening)". It plays on the big screen only, with Pause and Play again, and never moves the lesson on. A class needs to hear a track more than once, and the tutor decides when.
+- **Two topics, one thread.** Introductions and morning routine are different lessons, so both feed one About me card: name, country, three morning things. The card is then used with a partner from another table.
+- **The lesson follows the videos.** YouTube's chapter marks showed the first clip runs names, age, where from, jobs, so it stops at 1:55 before jobs. The morning clip's own description lists its eleven sentences and says the second half is speak-along, so learners act out the first half and speak the second.
+- **Nobody reads to take part.** Hello before any teaching, fingers before the numbers slide, the tutor acting out the morning before the words appear, actions during the video, hands high or rocking for always and sometimes.
+- **The opening question is the closing question.** "Hello! What's your name?" gets one word in minute one and three sentences in minute sixty.
+- **Learners waiting at a touch screen have a job:** ask the person next to them where they are from.
+- **A runner types the product.** The partner's name and country go on the shared board, which tests "How do you spell it?" for real.
+- **Slides checked as a set.** Ten adults across five slides, with a mix of ages, ethnicities, faith dress, body types and a wheelchair user. One photo was not suitable for the room and was replaced.
+- **Picture cards without spending credits.** The six morning cards in the pack use emoji, which print in any browser.
+
+### Even better if (build)
+
+- The audio could not be listened to while building, so the lesson does not hold its answers. The tutor sheet has two empty boxes to fill in after listening.
+- The first video's transcript could not be read, only its chapter marks. The watching task asks for one name, one number and one place, which works whatever the speakers say, but the cut at 1:55 needs checking by eye.
+- The Wordwall was opened as far as its start screen ("Open the box"). What is in the boxes was not checked.
+- "Say and spell my name" was offered as an objective and not chosen. Spelling is still in the lesson as one of the three questions, but it gets four minutes, not ten.
+- The shared board (`padlet`) is drawn by the app but is missing from the app's content rules, so those two steps were not checked by the rules. It was the same in the earlier lessons.
+- The audio is a publisher's track (Headway Beginner workbook) and now sits in the repo. Clark approved this. Worth confirming the college's licence covers it.
+- Slide 5 has seven dots for always and eight for sometimes. It reads fine from a distance but is not tidy.
+- The replaced shower picture is a drawing among photos. A photo with no person in it would match better.
+
+### WWW in the room
+
+_To fill in after the lesson has been taught._
+
+-
+
+### Even better if (room)
+
+-
+
+---
+
 ## Phantom of the Opera: Escape the Theatre
 
 - **Built:** 8 October 2026 (a demo of what the room can do)

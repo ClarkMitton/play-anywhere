@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ESOL This Is Me · table packs</title>
+<style>
+  :root { --ink: #0b2545; --teal: #3d8f8a; --orange: #f08a3c; --mint: #cfe3de; --cream: #faf6ea; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: system-ui, "Segoe UI", Arial, sans-serif; color: var(--ink); background: #e5e7eb; }
+  .bar { position: sticky; top: 0; z-index: 5; background: var(--ink); color: #fff; padding: 10px 20px; display: flex; gap: 16px; align-items: center; justify-content: space-between; font-size: 14px; }
+  .bar button { font: inherit; font-weight: 700; padding: 8px 16px; border-radius: 8px; border: 0; background: var(--orange); color: var(--ink); cursor: pointer; }
+  .page { width: 210mm; min-height: 297mm; margin: 16px auto; padding: 12mm; background: #fff; box-shadow: 0 4px 24px rgba(0,0,0,.18); page-break-after: always; break-after: page; }
+  h1 { font-size: 22pt; margin: 0 0 4px; }
+  h2 { font-size: 12pt; font-weight: 800; margin: 14px 0 6px; color: var(--teal); text-transform: uppercase; letter-spacing: .08em; }
+  p, li { font-size: 12pt; line-height: 1.5; }
+  .eyebrow { font-size: 9pt; font-weight: 800; letter-spacing: .25em; text-transform: uppercase; color: var(--teal); }
+  .note { font-size: 10pt; color: #4b5563; }
+  .answer { background: #ecfdf5; border: 2px solid #059669; padding: 3mm 6mm; margin: 4mm 0; }
+  .blank { border: 2px dashed #9ca3af; padding: 3mm 6mm; margin: 4mm 0; min-height: 22mm; }
+  .idcard { border: 4px solid var(--ink); border-radius: 8mm; background: var(--cream); padding: 10mm 12mm; margin-top: 8mm; }
+  .idcard .head { font-size: 30pt; font-weight: 900; color: var(--orange); margin-bottom: 6mm; }
+  .idcard .row { display: flex; align-items: baseline; gap: 6mm; border-bottom: 2px solid var(--mint); padding: 5mm 0; }
+  .idcard .k { font-size: 16pt; font-weight: 800; color: var(--teal); width: 42mm; flex: none; }
+  .idcard .v { font-size: 26pt; font-weight: 800; }
+  .idcard .morning { font-size: 22pt; font-weight: 700; line-height: 1.7; padding-top: 5mm; }
+  .idcard .morning span { color: var(--orange); }
+  .cards { display: grid; grid-template-columns: 1fr 1fr; border: 1.5px dashed #9ca3af; margin-top: 6mm; }
+  .card { height: 78mm; border: 1.5px dashed #9ca3af; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 6mm; background: var(--cream); }
+  .card .pic { font-size: 64pt; line-height: 1.1; }
+  .card .t { font-size: 24pt; font-weight: 800; margin-top: 4mm; }
+  .stretch { border: 2px dashed var(--orange); padding: 4mm 6mm; margin-top: 8mm; font-size: 13pt; }
+  .stretch b { color: var(--orange); }
+  @media print { body { background: #fff; } .bar { display: none; } .page { margin: 0; box-shadow: none; } }
+</style>
+</head>
+<body>
+<div class="bar">
+  <span>ESOL This Is Me · print one tutor sheet, then pages 2 and 3 once per table</span>
+  <button onclick="window.print()">Print</button>
+</div>
+
+<!-- PAGE 1 · tutor sheet -->
+<section class="page">
+  <div class="eyebrow">Tutor sheet · do not put in the envelopes</div>
+  <h1>ESOL This Is Me</h1>
+  <p class="note">Pre-Entry · 60 minutes · built from Shamim Nizami's week 2 resources</p>
+
+  <h2>Before the lesson</h2>
+  <ul>
+    <li>Print pages 2 and 3 once for each table. Cut page 3 into six cards. Put page 2 and the six cards in one envelope per table.</li>
+    <li>Every learner needs a whiteboard pen. Nothing is written on the paper, so the packs can be used again.</li>
+    <li>Listen to the audio and fill in the two boxes below.</li>
+  </ul>
+
+  <h2>Step 6 · the audio (49 seconds)</h2>
+  <p>Play it three times: just listen, listen for names, write the numbers.</p>
+  <div class="blank"><b>Names in the audio:</b></div>
+  <div class="blank"><b>Numbers in the audio:</b></div>
+
+  <h2>Step 7 · the first video (stops at 1:55)</h2>
+  <div class="answer">
+    <p>People in the street say and spell their names, then say how old they are (from about 1:02), then where they are from (from about 1:24). One name, one number and one place per table is a good result.</p>
+  </div>
+
+  <h2>Step 10 · Which answer?</h2>
+  <div class="answer">
+    <p>1 What's your name? <b>I'm Amina.</b><br>
+    2 7 is seven. <b>True</b><br>
+    3 Where are you from? <b>I'm from Iraq.</b><br>
+    4 3 is five. <b>False</b><br>
+    5 How do you spell it? <b>A - N - N - A</b></p>
+  </div>
+
+  <h2>Step 14 · the morning video</h2>
+  <div class="answer">
+    <p>Mark says: I'm always very busy in the morning. I usually get up at 6:10. I always make the bed. I sometimes go for a run. I always take a shower, brush my teeth, make coffee, make breakfast, read the newspaper, check my email, leave for work. From 1:49 learners say the sentences with him.</p>
+  </div>
+
+  <h2>Step 16 · About me: what a good card has</h2>
+  <div class="answer">
+    <p>A name with a capital letter. A country or a town with a capital letter. Three morning things, each with <b>always</b> or <b>sometimes</b>. In round 2 the learner asks all three questions and says their own three sentences.</p>
+  </div>
+</section>
+
+<!-- PAGE 2 · model card -->
+<section class="page">
+  <div class="eyebrow">Envelope · one per table</div>
+  <h1>This is Amina's card. Make your card on the table.</h1>
+
+  <div class="idcard">
+    <div class="head">About me</div>
+    <div class="row"><div class="k">Name</div><div class="v">Amina</div></div>
+    <div class="row"><div class="k">From</div><div class="v">Somalia</div></div>
+    <div class="morning">
+      In the morning<br>
+      I <span>always</span> make coffee.<br>
+      I <span>always</span> brush my teeth.<br>
+      I <span>sometimes</span> make breakfast.
+    </div>
+  </div>
+
+  <div class="stretch"><b>More?</b> Write one more line with a number: I usually get up at 7.</div>
+</section>
+
+<!-- PAGE 3 · picture cards -->
+<section class="page">
+  <div class="eyebrow">Envelope · cut along the lines · six cards per table</div>
+  <h1>In the morning</h1>
+  <div class="cards">
+    <div class="card"><div class="pic">⏰</div><div class="t">get up</div></div>
+    <div class="card"><div class="pic">🛏️</div><div class="t">make the bed</div></div>
+    <div class="card"><div class="pic">🚿</div><div class="t">take a shower</div></div>
+    <div class="card"><div class="pic">🪥</div><div class="t">brush my teeth</div></div>
+    <div class="card"><div class="pic">☕</div><div class="t">make coffee</div></div>
+    <div class="card"><div class="pic">🍳</div><div class="t">make breakfast</div></div>
+  </div>
+</section>
+</body>
+</html>

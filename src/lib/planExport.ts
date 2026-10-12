@@ -124,6 +124,13 @@ export function describeContent(content: ContentDef | null | undefined): {
         detail: [str(c.file_name) || str(c.url) || "No video uploaded"],
       };
 
+    case "audio": {
+      const detail: string[] = [];
+      if (str(c.title)) detail.push(`Listen for: “${str(c.title)}”`);
+      detail.push(str(c.file_name) || str(c.url) || "No sound file uploaded");
+      return { label: "Audio (listening)", detail };
+    }
+
     case "youtube":
       return {
         label: "YouTube video",
