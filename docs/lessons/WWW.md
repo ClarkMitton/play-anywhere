@@ -12,6 +12,54 @@ What proves itself here is collected in [WAYS-OF-WORKING.md](WAYS-OF-WORKING.md)
 
 ---
 
+## ESOL Adjectives
+
+- **Built:** 13 October 2026
+- **For:** Shamim Nizami, ESOL Entry 2, typical group of 16
+- **Length:** 60 minutes, 24 steps, about 30 minutes writing on the whiteboard tables, two whole-class moves
+- **Source:** `Shamim/E2/Adjectives/adjectives.ppt` (14 slides) and one YouTube video (Ellii, "Adjectives", 4 minutes 18 seconds)
+- **Lesson file:** [esol-adjectives.sql](esol-adjectives.sql)
+- **Slides:** Shamim's slides rebuilt as ten pictures, one slide for the video's two patterns, and five Canva photos, all in `public/lessons/esol-adjectives/`
+- **Table packs:** none. Clark asked for no printing, only writing on the tables and the side screens.
+
+### WWW in the build
+
+- **The brief was agreed before building.** Clark chose the thread (describing people, then where the adjective goes), three objectives, the final product (three sentences about a classmate) and the slide style from a short set of options. Tables and printing were stated up front.
+- **The PowerPoint is the spine, in Shamim's order.** Every sentence slide is in the lesson with her wording. Her worksheet tasks became table tasks: "do the worksheet" is three plain sentences to improve on the table, and "think about your classmates" is the final product.
+- **Her clip art was recovered.** The old `.ppt` holds its pictures as Windows metafiles. They were pulled out and redrawn at full size, so eight of her own pictures are on the slides.
+- **The whole transcript was read this time.** YouTube's transcript panel would not load, but the captions the player fetched could be read from the browser. The practice section has no speech, so its five mixed-up sentences were read from still frames.
+- **One video, two jobs.** The first 2 minutes 31 seconds teach the two patterns with a watching task. The video's own practice section then plays as a separate step and becomes a race at the tables.
+- **Write first, then see hers.** Four times learners describe a picture before Shamim's sentence appears, each in a different way: a two minute list, a one minute race, one spoken word, a table guess.
+- **Canva made photos with no words.** Asking for pictures only, and drawing the words here, meant nothing garbled to fix and no credits spent on text slides.
+- **Slides checked as a set.** Twelve people across five photos: a mix of ages, ethnicities and body types, a hijab, a wheelchair user and a child. Slide 5 was made to match Shamim's four named people.
+- **Two moves in sixty minutes.** Tables, one trip to the touch screens for a question round and a word cloud, then back. The word cloud doubles as the word bank for the last task. One runner per table types the final sentence.
+- **Mixed question shapes:** true or false, odd one out, and a best-answer question where clever and thoughtful both look right.
+- **Checked before anyone runs it.** All 24 steps passed the app's content rules and the SQL was run against a real database engine.
+
+### Even better if (build)
+
+- 24 steps is a lot. Ten are one or two minute slides, but watch whether the first twenty minutes feel like a slide show.
+- Slides 3 and 4 share one screen, and slides 6, 7 and 8 share one screen, to keep the step count down. Shamim may prefer one slide each.
+- Her clip art of the lady (a showgirl in a leotard) was swapped for a photo. Worth telling her.
+- "Sort and justify" (positive and negative) was offered as an objective and not chosen. It survives as a thumbs up or down check and one question, because the last task needs positive words.
+- The practice clips give about ten seconds per sentence, too fast to write. The tutor has to pause the video by hand. A pause-on-cue feature would fix this.
+- The timer still hides the slide, so both table tasks rely on the tutor writing on the board first.
+- In the Canva photo of the classmates the woman asked for as "in her fifties" looks about thirty. Ages are the thing the AI drifts on.
+- The photos could only be downloaded by placing them in a holder deck in Canva and exporting it. That deck ("ESOL Adjectives - picture stills") is still in Clark's Canva.
+- The shared board (`padlet`) is still missing from the app's content rules, so that step was not checked by them.
+
+### WWW in the room
+
+_To fill in after the lesson has been taught._
+
+-
+
+### Even better if (room)
+
+-
+
+---
+
 ## ESOL This Is Me
 
 - **Built:** 12 October 2026

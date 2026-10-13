@@ -107,6 +107,7 @@ Only if the brief said yes to the whiteboard tables. Printed packs only if it sa
 - **Make the people in the pictures look like the people in the room.** Across a deck, show a real mix: women and men, different ethnicities, visible faith dress such as a hijab or turban, disabled people, and a range of ages and body types. AI picture tools default to the same face again and again, so ask for the mix in the brief, slide by slide. Do not leave it to chance.
 - **Avoid stereotypes in who does what.** Vary who is shown as the expert, the one using the technology, the one in charge. Show disabled people as ordinary participants, not as the subject of the picture.
 - **Review the finished deck as a set,** not slide by slide. Count who appears. If one group dominates or is missing, regenerate before it goes in a lesson.
+- **For a picture prompt, ask Canva for a photo with no words at all** and put any words on in the lesson. Nothing to garble, and the teacher's own slides stay theirs.
 - **Check every AI picture for garbled words.** They are common. Fix them, or use them as a teaching point if the lesson is about AI.
 - **Keep on-screen text short.** The detail belongs in what the tutor says.
 
@@ -125,6 +126,8 @@ Nobody should be a passenger during a video. Decide which of two ways it is bein
 - **Trim a long video to the part that matters.** Add `&end=460` to a YouTube link to stop it at 7 minutes 40 seconds.
 - **Use a video file for anything that must loop.** A Canva video cannot loop or start itself as an embed. Download it as an MP4 and add it as "Video file (loops)".
 - **Check every link is a different video** before building around them.
+- **One video can do two jobs.** Split it with `&end=` on one step and `&start=` on a later one. A clip's own practice section makes a good race at the tables, with the tutor pausing it.
+- **Read the transcript before building.** If YouTube's transcript panel will not load, the captions the player fetched can be read from the browser. Read silent sections from still frames.
 
 ## Listening
 
