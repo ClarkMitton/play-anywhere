@@ -35,7 +35,7 @@ select
 from new_lesson nl, (values
   -- 1 · Nouns: what you need to know (1 min)
   (0, 'Nouns: what you need to know', 'Launch', 1, 'screen1_continue',
-    '{"type": "image", "url": "/lessons/esol-proper-nouns/01-title.png", "title": "NOUNS\nWhat you need to know!", "file_name": "01-title.png"}',
+    '{"type": "image", "url": "https://sxrhecwyhqwdwwfawojn.supabase.co/storage/v1/object/public/lesson-media/lessons/esol-proper-nouns/01-title.png", "title": "NOUNS\nWhat you need to know!", "file_name": "01-title.png"}',
     null),
 
   -- 2 · How do you feel at the start? (2 min)
@@ -45,22 +45,22 @@ from new_lesson nl, (values
 
   -- 3 · A noun is a naming word (1 min)
   (2, 'A noun is a naming word', 'Establish', 1, 'screen1_continue',
-    '{"type": "image", "url": "/lessons/esol-proper-nouns/02-naming-words.png", "title": "A noun is a naming word", "file_name": "02-naming-words.png"}',
+    '{"type": "image", "url": "https://sxrhecwyhqwdwwfawojn.supabase.co/storage/v1/object/public/lesson-media/lessons/esol-proper-nouns/02-naming-words.png", "title": "A noun is a naming word", "file_name": "02-naming-words.png"}',
     null),
 
   -- 4 · More nouns (1 min)
   (3, 'More nouns', 'Establish', 1, 'screen1_continue',
-    '{"type": "image", "url": "/lessons/esol-proper-nouns/03-more-nouns.png", "title": "Nouns name things and places", "file_name": "03-more-nouns.png"}',
+    '{"type": "image", "url": "https://sxrhecwyhqwdwwfawojn.supabase.co/storage/v1/object/public/lesson-media/lessons/esol-proper-nouns/03-more-nouns.png", "title": "Nouns name things and places", "file_name": "03-more-nouns.png"}',
     null),
 
   -- 5 · People are nouns (1 min)
   (4, 'People are nouns', 'Establish', 1, 'screen1_continue',
-    '{"type": "image", "url": "/lessons/esol-proper-nouns/04-people.png", "title": "People", "file_name": "04-people.png"}',
+    '{"type": "image", "url": "https://sxrhecwyhqwdwwfawojn.supabase.co/storage/v1/object/public/lesson-media/lessons/esol-proper-nouns/04-people.png", "title": "People", "file_name": "04-people.png"}',
     null),
 
   -- 6 · Nouns you cannot see (1 min)
   (5, 'Nouns you cannot see', 'Establish', 1, 'screen1_continue',
-    '{"type": "image", "url": "/lessons/esol-proper-nouns/05-feelings.png", "title": "Nouns can also be things that you can''t see, such as emotions", "file_name": "05-feelings.png"}',
+    '{"type": "image", "url": "https://sxrhecwyhqwdwwfawojn.supabase.co/storage/v1/object/public/lesson-media/lessons/esol-proper-nouns/05-feelings.png", "title": "Nouns can also be things that you can''t see, such as emotions", "file_name": "05-feelings.png"}',
     null),
 
   -- 7 · Common nouns (1 min)
@@ -75,7 +75,7 @@ from new_lesson nl, (values
 
   -- 9 · Collective nouns (1 min)
   (8, 'Collective nouns', 'Establish', 1, 'screen1_continue',
-    '{"type": "image", "url": "/lessons/esol-proper-nouns/07-collective.png", "title": "A collective noun is the name for a group of people, objects or animals", "file_name": "07-collective.png"}',
+    '{"type": "image", "url": "https://sxrhecwyhqwdwwfawojn.supabase.co/storage/v1/object/public/lesson-media/lessons/esol-proper-nouns/07-collective.png", "title": "A collective noun is the name for a group of people, objects or animals", "file_name": "07-collective.png"}',
     null),
 
   -- 10 · Video: Nouns and proper nouns (8 min)
@@ -90,17 +90,17 @@ from new_lesson nl, (values
 
   -- 12 · Names of people and places (2 min)
   (11, 'Names of people and places', 'Establish', 2, 'screen1_continue',
-    '{"type": "image", "url": "/lessons/esol-proper-nouns/09-people-places.png", "title": "People''s names and names of places are proper nouns.\nThey always start with a capital letter.", "file_name": "09-people-places.png"}',
+    '{"type": "image", "url": "https://sxrhecwyhqwdwwfawojn.supabase.co/storage/v1/object/public/lesson-media/lessons/esol-proper-nouns/09-people-places.png", "title": "People''s names and names of places are proper nouns.\nThey always start with a capital letter.", "file_name": "09-people-places.png"}',
     null),
 
   -- 13 · Special buildings (1 min)
   (12, 'Special buildings', 'Establish', 1, 'screen1_continue',
-    '{"type": "image", "url": "/lessons/esol-proper-nouns/10-buildings.png", "title": "Names of special buildings are proper nouns and have capital letters", "file_name": "10-buildings.png"}',
+    '{"type": "image", "url": "https://sxrhecwyhqwdwwfawojn.supabase.co/storage/v1/object/public/lesson-media/lessons/esol-proper-nouns/10-buildings.png", "title": "Names of special buildings are proper nouns and have capital letters", "file_name": "10-buildings.png"}',
     null),
 
   -- 14 · Special days, months and days (1 min)
   (13, 'Special days, months and days', 'Establish', 1, 'screen1_continue',
-    '{"type": "image", "url": "/lessons/esol-proper-nouns/11-special-days.png", "title": "Special days, months of the year and days of the week have capital letters", "file_name": "11-special-days.png"}',
+    '{"type": "image", "url": "https://sxrhecwyhqwdwwfawojn.supabase.co/storage/v1/object/public/lesson-media/lessons/esol-proper-nouns/11-special-days.png", "title": "Special days, months of the year and days of the week have capital letters", "file_name": "11-special-days.png"}',
     null),
 
   -- 15 · More capital letters (2 min)

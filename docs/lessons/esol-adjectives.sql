@@ -8,8 +8,8 @@
 -- Run once in the SQL editor. Re-running inserts a second copy.
 -- Each row is: big screen, then touch screens. null means the touch screens
 -- show the same as the big screen.
--- The slides live in public/lessons/esol-adjectives/ and only work once that
--- folder has been pushed and the app republished.
+-- The slides are in the app's own media storage (lesson-media/lessons/esol-adjectives/),
+-- so they show straight away. Copies are kept in public/lessons/esol-adjectives/.
 -- ─────────────────────────────────────────────────────────────
 
 with new_lesson as (
@@ -37,37 +37,37 @@ select
 from new_lesson nl, (values
   -- 1 · What is your friend like? (2 min)
   (0, 'What is your friend like?', 'Launch', 2, 'screen1_continue',
-    '{"type":"image","url":"/lessons/esol-adjectives/slide-01.jpg","file_name":"slide-01.jpg","title":"What is your friend like?"}',
+    '{"type":"image","url":"https://sxrhecwyhqwdwwfawojn.supabase.co/storage/v1/object/public/lesson-media/lessons/esol-adjectives/slide-01.jpg","file_name":"slide-01.jpg","title":"What is your friend like?"}',
     null),
 
   -- 2 · What can you see? (3 min)
   (1, 'What can you see?', 'Launch', 3, 'screen1_continue',
-    '{"type":"image","url":"/lessons/esol-adjectives/slide-02.jpg","file_name":"slide-02.jpg","title":"What can you see? Write words on your table."}',
+    '{"type":"image","url":"https://sxrhecwyhqwdwwfawojn.supabase.co/storage/v1/object/public/lesson-media/lessons/esol-adjectives/slide-02.jpg","file_name":"slide-02.jpg","title":"What can you see? Write words on your table."}',
     null),
 
   -- 3 · Adjectives are describing words (1 min)
   (2, 'Adjectives are describing words', 'Establish', 1, 'screen1_continue',
-    '{"type":"image","url":"/lessons/esol-adjectives/01-title.png","file_name":"01-title.png"}',
+    '{"type":"image","url":"https://sxrhecwyhqwdwwfawojn.supabase.co/storage/v1/object/public/lesson-media/lessons/esol-adjectives/01-title.png","file_name":"01-title.png"}',
     null),
 
   -- 4 · The healthy boy (2 min)
   (3, 'The healthy boy', 'Establish', 2, 'screen1_continue',
-    '{"type":"image","url":"/lessons/esol-adjectives/02-boy.png","file_name":"02-boy.png"}',
+    '{"type":"image","url":"https://sxrhecwyhqwdwwfawojn.supabase.co/storage/v1/object/public/lesson-media/lessons/esol-adjectives/02-boy.png","file_name":"02-boy.png"}',
     null),
 
   -- 5 · Find the adjectives (2 min)
   (4, 'Find the adjectives', 'Establish', 2, 'screen1_continue',
-    '{"type":"image","url":"/lessons/esol-adjectives/03-04-jumper-pool.png","file_name":"03-04-jumper-pool.png"}',
+    '{"type":"image","url":"https://sxrhecwyhqwdwwfawojn.supabase.co/storage/v1/object/public/lesson-media/lessons/esol-adjectives/03-04-jumper-pool.png","file_name":"03-04-jumper-pool.png"}',
     null),
 
   -- 6 · Three words, one minute (1 min)
   (5, 'Three words, one minute', 'Establish', 1, 'screen1_continue',
-    '{"type":"image","url":"/lessons/esol-adjectives/slide-03.jpg","file_name":"slide-03.jpg","title":"Three words. One minute."}',
+    '{"type":"image","url":"https://sxrhecwyhqwdwwfawojn.supabase.co/storage/v1/object/public/lesson-media/lessons/esol-adjectives/slide-03.jpg","file_name":"slide-03.jpg","title":"Three words. One minute."}',
     null),
 
   -- 7 · The large old creepy house (1 min)
   (6, 'The large old creepy house', 'Establish', 1, 'screen1_continue',
-    '{"type":"image","url":"/lessons/esol-adjectives/05-house.png","file_name":"05-house.png"}',
+    '{"type":"image","url":"https://sxrhecwyhqwdwwfawojn.supabase.co/storage/v1/object/public/lesson-media/lessons/esol-adjectives/05-house.png","file_name":"05-house.png"}',
     null),
 
   -- 8 · Make it better (6 min)
@@ -77,37 +77,37 @@ from new_lesson nl, (values
 
   -- 9 · Shamim's sentences (2 min)
   (8, 'Shamim''s sentences', 'Establish', 2, 'screen1_continue',
-    '{"type":"image","url":"/lessons/esol-adjectives/06-08-lightning-tom-snow.png","file_name":"06-08-lightning-tom-snow.png"}',
+    '{"type":"image","url":"https://sxrhecwyhqwdwwfawojn.supabase.co/storage/v1/object/public/lesson-media/lessons/esol-adjectives/06-08-lightning-tom-snow.png","file_name":"06-08-lightning-tom-snow.png"}',
     null),
 
   -- 10 · One word for the lady (1 min)
   (9, 'One word for the lady', 'Establish', 1, 'screen1_continue',
-    '{"type":"image","url":"/lessons/esol-adjectives/slide-04.jpg","file_name":"slide-04.jpg","title":"One word. Tell your table."}',
+    '{"type":"image","url":"https://sxrhecwyhqwdwwfawojn.supabase.co/storage/v1/object/public/lesson-media/lessons/esol-adjectives/slide-04.jpg","file_name":"slide-04.jpg","title":"One word. Tell your table."}',
     null),
 
   -- 11 · The glamorous lady (1 min)
   (10, 'The glamorous lady', 'Establish', 1, 'screen1_continue',
-    '{"type":"image","url":"/lessons/esol-adjectives/09-lady.png","file_name":"09-lady.png"}',
+    '{"type":"image","url":"https://sxrhecwyhqwdwwfawojn.supabase.co/storage/v1/object/public/lesson-media/lessons/esol-adjectives/09-lady.png","file_name":"09-lady.png"}',
     null),
 
   -- 12 · Act the adjective (1 min)
   (11, 'Act the adjective', 'Establish', 1, 'screen1_continue',
-    '{"type":"image","url":"/lessons/esol-adjectives/10-dog.png","file_name":"10-dog.png"}',
+    '{"type":"image","url":"https://sxrhecwyhqwdwwfawojn.supabase.co/storage/v1/object/public/lesson-media/lessons/esol-adjectives/10-dog.png","file_name":"10-dog.png"}',
     null),
 
   -- 13 · Moods and personality (1 min)
   (12, 'Moods and personality', 'Establish', 1, 'screen1_continue',
-    '{"type":"image","url":"/lessons/esol-adjectives/11-remember.png","file_name":"11-remember.png"}',
+    '{"type":"image","url":"https://sxrhecwyhqwdwwfawojn.supabase.co/storage/v1/object/public/lesson-media/lessons/esol-adjectives/11-remember.png","file_name":"11-remember.png"}',
     null),
 
   -- 14 · What are they like? (2 min)
   (13, 'What are they like?', 'Establish', 2, 'screen1_continue',
-    '{"type":"image","url":"/lessons/esol-adjectives/slide-05.jpg","file_name":"slide-05.jpg","title":"What is each person like?"}',
+    '{"type":"image","url":"https://sxrhecwyhqwdwwfawojn.supabase.co/storage/v1/object/public/lesson-media/lessons/esol-adjectives/slide-05.jpg","file_name":"slide-05.jpg","title":"What is each person like?"}',
     null),
 
   -- 15 · Describing personality (2 min)
   (14, 'Describing personality', 'Establish', 2, 'screen1_continue',
-    '{"type":"image","url":"/lessons/esol-adjectives/12-personality.png","file_name":"12-personality.png"}',
+    '{"type":"image","url":"https://sxrhecwyhqwdwwfawojn.supabase.co/storage/v1/object/public/lesson-media/lessons/esol-adjectives/12-personality.png","file_name":"12-personality.png"}',
     null),
 
   -- 16 · Spot the adjective (4 min)
@@ -127,7 +127,7 @@ from new_lesson nl, (values
 
   -- 19 · Where does the adjective go? (3 min)
   (18, 'Where does the adjective go?', 'Apply', 3, 'screen1_continue',
-    '{"type":"image","url":"/lessons/esol-adjectives/two-patterns.png","file_name":"two-patterns.png"}',
+    '{"type":"image","url":"https://sxrhecwyhqwdwwfawojn.supabase.co/storage/v1/object/public/lesson-media/lessons/esol-adjectives/two-patterns.png","file_name":"two-patterns.png"}',
     null),
 
   -- 20 · Video: put the words in order (3 min)
@@ -137,7 +137,7 @@ from new_lesson nl, (values
 
   -- 21 · Think about your classmates (1 min)
   (20, 'Think about your classmates', 'Demonstrate', 1, 'screen1_continue',
-    '{"type":"image","url":"/lessons/esol-adjectives/13-classmates.png","file_name":"13-classmates.png"}',
+    '{"type":"image","url":"https://sxrhecwyhqwdwwfawojn.supabase.co/storage/v1/object/public/lesson-media/lessons/esol-adjectives/13-classmates.png","file_name":"13-classmates.png"}',
     null),
 
   -- 22 · My classmate (11 min)
@@ -152,6 +152,6 @@ from new_lesson nl, (values
 
   -- 24 · What is your friend like? Again (2 min)
   (23, 'What is your friend like? Again', 'Demonstrate', 2, 'screen1_continue',
-    '{"type":"image","url":"/lessons/esol-adjectives/slide-01.jpg","file_name":"slide-01.jpg","title":"What is your friend like?"}',
+    '{"type":"image","url":"https://sxrhecwyhqwdwwfawojn.supabase.co/storage/v1/object/public/lesson-media/lessons/esol-adjectives/slide-01.jpg","file_name":"slide-01.jpg","title":"What is your friend like?"}',
     null)
 ) as v(order_index, name, lead_phase, duration_mins, end_behaviour, host, touch);

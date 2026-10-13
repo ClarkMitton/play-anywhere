@@ -39,17 +39,17 @@ from new_lesson nl, (values
 
   -- 2 · A letter from the Phantom (2 min)
   (1, 'A letter from the Phantom', 'Launch', 2, 'screen1_continue',
-    '{"type":"image","url":"/lessons/phantom-of-the-opera/slide-01.jpg","file_name":"slide-01.jpg"}',
+    '{"type":"image","url":"https://sxrhecwyhqwdwwfawojn.supabase.co/storage/v1/object/public/lesson-media/lessons/phantom-of-the-opera/slide-01.jpg","file_name":"slide-01.jpg"}',
     null),
 
   -- 3 · Act it out (2 min)
   (2, 'Act it out', 'Establish', 2, 'screen1_continue',
-    '{"type":"image","url":"/lessons/phantom-of-the-opera/slide-02.jpg","file_name":"slide-02.jpg"}',
+    '{"type":"image","url":"https://sxrhecwyhqwdwwfawojn.supabase.co/storage/v1/object/public/lesson-media/lessons/phantom-of-the-opera/slide-02.jpg","file_name":"slide-02.jpg"}',
     null),
 
   -- 4 · Where is it? (1 min)
   (3, 'Where is it?', 'Establish', 1, 'screen1_continue',
-    '{"type":"image","url":"/lessons/phantom-of-the-opera/slide-03.jpg","file_name":"slide-03.jpg"}',
+    '{"type":"image","url":"https://sxrhecwyhqwdwwfawojn.supabase.co/storage/v1/object/public/lesson-media/lessons/phantom-of-the-opera/slide-03.jpg","file_name":"slide-03.jpg"}',
     null),
 
   -- 5 · Scene 1: The dressing room (8 min)
@@ -59,7 +59,7 @@ from new_lesson nl, (values
 
   -- 6 · Code word one (1 min)
   (5, 'Code word one', 'Apply', 1, 'screen1_continue',
-    '{"type":"image","url":"/lessons/phantom-of-the-opera/slide-04.jpg","file_name":"slide-04.jpg"}',
+    '{"type":"image","url":"https://sxrhecwyhqwdwwfawojn.supabase.co/storage/v1/object/public/lesson-media/lessons/phantom-of-the-opera/slide-04.jpg","file_name":"slide-04.jpg"}',
     null),
 
   -- 7 · Scene 2: The map (8 min)
@@ -84,7 +84,7 @@ from new_lesson nl, (values
 
   -- 11 · Back to the tables (1 min)
   (10, 'Back to the tables', 'Demonstrate', 1, 'screen1_continue',
-    '{"type":"image","url":"/lessons/phantom-of-the-opera/slide-05.jpg","file_name":"slide-05.jpg"}',
+    '{"type":"image","url":"https://sxrhecwyhqwdwwfawojn.supabase.co/storage/v1/object/public/lesson-media/lessons/phantom-of-the-opera/slide-05.jpg","file_name":"slide-05.jpg"}',
     null),
 
   -- 12 · Scene 4: The last riddle (6 min)

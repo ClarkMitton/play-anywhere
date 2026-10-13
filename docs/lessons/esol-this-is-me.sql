@@ -46,7 +46,7 @@ select
 from new_lesson nl, (values
   -- 1 · Hello! What's your name? (1 min)
   (0, 'Hello! What''s your name?', 'Launch', 1, 'screen1_continue',
-    '{"type":"image","url":"/lessons/esol-this-is-me/slide-01.jpg","file_name":"slide-01.jpg"}',
+    '{"type":"image","url":"https://sxrhecwyhqwdwwfawojn.supabase.co/storage/v1/object/public/lesson-media/lessons/esol-this-is-me/slide-01.jpg","file_name":"slide-01.jpg"}',
     null),
 
   -- 2 · Say hello to three people (2 min)
@@ -66,12 +66,12 @@ from new_lesson nl, (values
 
   -- 5 · Numbers 1 to 10 (2 min)
   (4, 'Numbers 1 to 10', 'Establish', 2, 'screen1_continue',
-    '{"type":"image","url":"/lessons/esol-this-is-me/slide-02.jpg","file_name":"slide-02.jpg"}',
+    '{"type":"image","url":"https://sxrhecwyhqwdwwfawojn.supabase.co/storage/v1/object/public/lesson-media/lessons/esol-this-is-me/slide-02.jpg","file_name":"slide-02.jpg"}',
     null),
 
   -- 6 · Listen: names and numbers (4 min)
   (5, 'Listen: names and numbers', 'Establish', 4, 'screen1_continue',
-    '{"type":"audio","url":"/lessons/esol-this-is-me/names-and-numbers.mp3","file_name":"names-and-numbers.mp3","title":"Listen.\nWrite the numbers you hear."}',
+    '{"type":"audio","url":"https://sxrhecwyhqwdwwfawojn.supabase.co/storage/v1/object/public/lesson-media/lessons/esol-this-is-me/names-and-numbers.mp3","file_name":"names-and-numbers.mp3","title":"Listen.\nWrite the numbers you hear."}',
     '{"type":"text_slide","text":"Listen\nWrite the numbers","size":"xl"}'),
 
   -- 7 · Video: real people answer (3 min)
@@ -86,7 +86,7 @@ from new_lesson nl, (values
 
   -- 9 · Three questions (3 min)
   (8, 'Three questions', 'Establish', 3, 'screen1_continue',
-    '{"type":"image","url":"/lessons/esol-this-is-me/slide-03.jpg","file_name":"slide-03.jpg"}',
+    '{"type":"image","url":"https://sxrhecwyhqwdwwfawojn.supabase.co/storage/v1/object/public/lesson-media/lessons/esol-this-is-me/slide-03.jpg","file_name":"slide-03.jpg"}',
     null),
 
   -- 10 · Which answer? (4 min)
@@ -106,7 +106,7 @@ from new_lesson nl, (values
 
   -- 13 · In the morning (2 min)
   (12, 'In the morning', 'Apply', 2, 'screen1_continue',
-    '{"type":"image","url":"/lessons/esol-this-is-me/slide-04.jpg","file_name":"slide-04.jpg"}',
+    '{"type":"image","url":"https://sxrhecwyhqwdwwfawojn.supabase.co/storage/v1/object/public/lesson-media/lessons/esol-this-is-me/slide-04.jpg","file_name":"slide-04.jpg"}',
     null),
 
   -- 14 · Video: in the morning (4 min)
@@ -116,12 +116,12 @@ from new_lesson nl, (values
 
   -- 15 · Always or sometimes? (3 min)
   (14, 'Always or sometimes?', 'Apply', 3, 'screen1_continue',
-    '{"type":"image","url":"/lessons/esol-this-is-me/slide-05.jpg","file_name":"slide-05.jpg"}',
+    '{"type":"image","url":"https://sxrhecwyhqwdwwfawojn.supabase.co/storage/v1/object/public/lesson-media/lessons/esol-this-is-me/slide-05.jpg","file_name":"slide-05.jpg"}',
     null),
 
   -- 16 · Draw it. Say it. (3 min)
   (15, 'Draw it. Say it.', 'Apply', 3, 'screen1_continue',
-    '{"type":"image","url":"/lessons/esol-this-is-me/slide-04.jpg","file_name":"slide-04.jpg","title":"Draw one. Your table says it."}',
+    '{"type":"image","url":"https://sxrhecwyhqwdwwfawojn.supabase.co/storage/v1/object/public/lesson-media/lessons/esol-this-is-me/slide-04.jpg","file_name":"slide-04.jpg","title":"Draw one. Your table says it."}',
     null),
 
   -- 17 · About me (11 min)
@@ -136,6 +136,6 @@ from new_lesson nl, (values
 
   -- 19 · Hello again (2 min)
   (18, 'Hello again', 'Demonstrate', 2, 'screen1_continue',
-    '{"type":"image","url":"/lessons/esol-this-is-me/slide-01.jpg","file_name":"slide-01.jpg"}',
+    '{"type":"image","url":"https://sxrhecwyhqwdwwfawojn.supabase.co/storage/v1/object/public/lesson-media/lessons/esol-this-is-me/slide-01.jpg","file_name":"slide-01.jpg"}',
     null)
 ) as v(order_index, name, lead_phase, duration_mins, end_behaviour, host, touch);

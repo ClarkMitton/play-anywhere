@@ -38,6 +38,7 @@ What proves itself here is collected in [WAYS-OF-WORKING.md](WAYS-OF-WORKING.md)
 
 ### Even better if (build)
 
+- Every picture was broken when Clark first opened the lesson, as in every lesson before it. The lesson pointed at files inside the app, which only exist after a publish. The pictures for all five lessons are now in the app's media storage and the lessons point there. `fix-picture-links.sql` repoints anything already in the database.
 - 24 steps is a lot. Ten are one or two minute slides, but watch whether the first twenty minutes feel like a slide show.
 - Slides 3 and 4 share one screen, and slides 6, 7 and 8 share one screen, to keep the step count down. Shamim may prefer one slide each.
 - Her clip art of the lady (a showgirl in a leotard) was swapped for a photo. Worth telling her.

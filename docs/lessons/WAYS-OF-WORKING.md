@@ -69,9 +69,9 @@ these was in the Us vs AI and Phantom of the Opera builds.
 
 1. **The brief, agreed in chat first** (see "Before building"). Offer objectives to pick from. If Clark drops one, build to what was chosen and say what the lesson does not reach.
 2. **`docs/lessons/<slug>.sql`.** Make it with a small script, not by hand: single quotes in the JSON are easy to break. Check every step against `contentSchema` in `src/lib/sessionSchema.ts` before saving. Tutor notes (`teacher_says`, `watch_for`) for every step, with the technique named.
-3. **`public/lessons/<slug>/`:** the slide pictures (`slide-01.jpg` upward) and `printables.html` (page one the answer sheet, then one page per envelope).
+3. **The pictures and sound, uploaded to the app's media storage** at `lesson-media/lessons/<slug>/`, and the lesson pointing at them by their full storage address. Check each one loads before handing over. Keep a copy in `public/lessons/<slug>/`, with `printables.html` if there are packs (page one the answer sheet, then one page per envelope).
 4. **A WWW entry** in [WWW.md](WWW.md), "in the build" filled in, "in the room" blank.
-5. **Commit and push** to the connected branch, additive only (see AGENTS.md). Do not hand over the SQL before pushing. Pictures and sound files are only found once pushed and republished, so a lesson run before then shows blank slides. If slides are blank, check the push first.
+5. **Commit and push** to the connected branch, additive only (see AGENTS.md).
 6. **Tell Clark what to do:** run the SQL, push, print the packs, watch the clips.
 
 ## Escape-room lessons
@@ -136,13 +136,20 @@ Nobody should be a passenger during a video. Decide which of two ways it is bein
 - **Give each listen a narrower job:** just listen, then listen for names, then write the numbers.
 - **Put the task on the touch screens** in large text while the sound plays.
 - **Listen to the track yourself and note the answers.** The lesson cannot hear it for you.
-- **Sound files can sit in `public/lessons/<slug>/`** next to the slides, or be uploaded in the designer.
+- **Sound files go in the media storage** next to the slides (`lesson-media/lessons/<slug>/`), or are uploaded in the designer.
 
 ## Pre-Entry lessons
 
 - **Nobody should have to read to take part.** Model it, act it out, use fingers and gestures, and read every question and option aloud.
 - **Show a personal picture to the whole deck's audience in mind.** A photo of someone in the shower is fine in a textbook and wrong on a big screen in this room. Use an object, not a person, for washing and dressing.
 - **Give waiting learners something to say.** A queue at a touch screen is speaking practice: ask the person next to you.
+
+## Pictures that always load
+
+- **Never point a lesson at a file inside the app** (`/lessons/...`). It only exists after a publish, and five lessons in a row showed broken pictures because of it.
+- **Upload to the media storage and use the full address.** It works the moment it is uploaded, on every screen, published or not.
+- **Open one picture address in a browser** before handing the lesson over. If it does not load there, it will not load in the room.
+- **[fix-picture-links.sql](fix-picture-links.sql)** repoints any lesson or session still using the old addresses. Safe to run again.
 
 ## Screens
 

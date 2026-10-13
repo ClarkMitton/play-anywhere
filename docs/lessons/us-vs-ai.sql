@@ -36,7 +36,7 @@ select
 from new_lesson nl, (values
   -- 1 · Us vs AI (1 min)
   (0, 'Us vs AI', 'Launch', 1, 'screen1_continue',
-    '{"type": "image", "url": "/lessons/us-vs-ai/slide-01.jpg", "file_name": "slide-01.jpg"}',
+    '{"type": "image", "url": "https://sxrhecwyhqwdwwfawojn.supabase.co/storage/v1/object/public/lesson-media/lessons/us-vs-ai/slide-01.jpg", "file_name": "slide-01.jpg"}',
     null),
 
   -- 2 · Video: Me vs ChatGPT (2 min)
@@ -56,7 +56,7 @@ from new_lesson nl, (values
 
   -- 5 · AI is a family (2 min)
   (4, 'AI is a family', 'Establish', 2, 'screen1_continue',
-    '{"type": "image", "url": "/lessons/us-vs-ai/slide-02.jpg", "file_name": "slide-02.jpg"}',
+    '{"type": "image", "url": "https://sxrhecwyhqwdwwfawojn.supabase.co/storage/v1/object/public/lesson-media/lessons/us-vs-ai/slide-02.jpg", "file_name": "slide-02.jpg"}',
     null),
 
   -- 6 · True or false? (2 min)
@@ -71,7 +71,7 @@ from new_lesson nl, (values
 
   -- 8 · What is an LLM? (1 min)
   (7, 'What is an LLM?', 'Establish', 1, 'screen1_continue',
-    '{"type": "image", "url": "/lessons/us-vs-ai/slide-03.jpg", "file_name": "slide-03.jpg"}',
+    '{"type": "image", "url": "https://sxrhecwyhqwdwwfawojn.supabase.co/storage/v1/object/public/lesson-media/lessons/us-vs-ai/slide-03.jpg", "file_name": "slide-03.jpg"}',
     null),
 
   -- 9 · Be the LLM (2 min)
@@ -81,7 +81,7 @@ from new_lesson nl, (values
 
   -- 10 · It predicts the next word (1 min)
   (9, 'It predicts the next word', 'Establish', 1, 'screen1_continue',
-    '{"type": "image", "url": "/lessons/us-vs-ai/slide-04.jpg", "file_name": "slide-04.jpg"}',
+    '{"type": "image", "url": "https://sxrhecwyhqwdwwfawojn.supabase.co/storage/v1/object/public/lesson-media/lessons/us-vs-ai/slide-04.jpg", "file_name": "slide-04.jpg"}',
     null),
 
   -- 11 · Be the LLM again (2 min)
@@ -101,7 +101,7 @@ from new_lesson nl, (values
 
   -- 14 · Ask AI to draw a watch (1 min)
   (13, 'Ask AI to draw a watch', 'Apply', 1, 'screen1_continue',
-    '{"type": "image", "url": "/lessons/us-vs-ai/slide-05.jpg", "file_name": "slide-05.jpg"}',
+    '{"type": "image", "url": "https://sxrhecwyhqwdwwfawojn.supabase.co/storage/v1/object/public/lesson-media/lessons/us-vs-ai/slide-05.jpg", "file_name": "slide-05.jpg"}',
     null),
 
   -- 15 · Case file: why ten past ten? (6 min)
@@ -111,12 +111,12 @@ from new_lesson nl, (values
 
   -- 16 · Why ten past ten? (1 min)
   (15, 'Why ten past ten?', 'Apply', 1, 'screen1_continue',
-    '{"type": "image", "url": "/lessons/us-vs-ai/slide-06.jpg", "file_name": "slide-06.jpg"}',
+    '{"type": "image", "url": "https://sxrhecwyhqwdwwfawojn.supabase.co/storage/v1/object/public/lesson-media/lessons/us-vs-ai/slide-06.jpg", "file_name": "slide-06.jpg"}',
     null),
 
   -- 17 · Fix the instruction (1 min)
   (16, 'Fix the instruction', 'Demonstrate', 1, 'screen1_continue',
-    '{"type": "image", "url": "/lessons/us-vs-ai/slide-07.jpg", "file_name": "slide-07.jpg"}',
+    '{"type": "image", "url": "https://sxrhecwyhqwdwwfawojn.supabase.co/storage/v1/object/public/lesson-media/lessons/us-vs-ai/slide-07.jpg", "file_name": "slide-07.jpg"}',
     null),
 
   -- 18 · Rewrite it, then break it (6 min)
@@ -131,6 +131,6 @@ from new_lesson nl, (values
 
   -- 20 · You write the instructions (1 min)
   (19, 'You write the instructions', 'Demonstrate', 1, 'screen1_continue',
-    '{"type": "image", "url": "/lessons/us-vs-ai/slide-08.jpg", "file_name": "slide-08.jpg"}',
+    '{"type": "image", "url": "https://sxrhecwyhqwdwwfawojn.supabase.co/storage/v1/object/public/lesson-media/lessons/us-vs-ai/slide-08.jpg", "file_name": "slide-08.jpg"}',
     null)
 ) as v(order_index, name, lead_phase, duration_mins, end_behaviour, host, touch);
