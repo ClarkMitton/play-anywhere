@@ -284,7 +284,7 @@ export function HazardHotspotsRenderer({
           </Button>
         </div>
         <div className="flex-1 min-h-0 w-full flex items-center justify-center">
-          renderPicture({found: {mine}, showCircles: true, tap: {!done}, maxW: "calc(100vw - 2rem)", maxH: "calc(100vh - 7rem)", })
+          {renderPicture({ found: mine, showCircles: true, tap: !done, maxW: "calc(100vw - 2rem)", maxH: "calc(100vh - 7rem)" })}
         </div>
       </div>
     );
@@ -323,17 +323,18 @@ export function HazardHotspotsRenderer({
                   {k === "s1" ? "Screen 1" : "Screen 2"}
                   {!(k === "s1" ? state.d1 : state.d2) && !state.revealed && " · still searching…"}
                 </div>
-                renderPicture({found: {state[k]}
-                  showCircles: {k === "s1" ? state.d1 : state.d2}
-                  tap: {false}
+                {renderPicture({
+                  found: state[k],
+                  showCircles: k === "s1" ? state.d1 : state.d2,
+                  tap: false,
                   maxW: "calc(50vw - 2rem)",
                   maxH: "calc(100vh - 9rem)",
-                })
+                })}
               </div>
             ))}
           </>
         ) : (
-          renderPicture({found: {[]}, showCircles: {false}, tap: {false}, maxW: "calc(100vw - 2rem)", maxH: "calc(100vh - 7rem)", })
+          renderPicture({ found: [], showCircles: false, tap: false, maxW: "calc(100vw - 2rem)", maxH: "calc(100vh - 7rem)" })
         )}
       </div>
     </div>
