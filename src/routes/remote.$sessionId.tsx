@@ -94,7 +94,18 @@ function RemotePage() {
           .eq("lesson_id", s.lesson_id)
           .is("session_id", null)
           .order("order_index");
-        if (!cancelled && sl) setSlots(sl as unknown as SlotRow[]);
+        // Same shared word-cloud key the Host stamps, so screens and Host agree.
+        const stamp = (c: ContentDef, id: string): ContentDef =>
+          c?.type === "word_cloud" ? { ...c, cloud_key: id } : c;
+        if (!cancelled && sl)
+          setSlots(
+            (sl as unknown as SlotRow[]).map((r) => ({
+              ...r,
+              host_content: stamp(r.host_content, r.id),
+              screen1_content: stamp(r.screen1_content, r.id),
+              screen2_content: stamp(r.screen2_content, r.id),
+            })),
+          );
       }
     })();
     return () => {
