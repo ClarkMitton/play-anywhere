@@ -72,7 +72,7 @@ function TestMode() {
     // test-mode header drive prev/next without going through the host iframe.
     const { data: slotRows } = await supabase
       .from("slots")
-      .select("host_content, screen1_content, screen2_content")
+      .select("id, host_content, screen1_content, screen2_content")
       .eq("lesson_id", selectedLessonId)
       .is("session_id", null)
       .order("order_index");
