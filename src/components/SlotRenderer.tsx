@@ -2170,7 +2170,10 @@ function WordCloudInput({ content, screen, sessionId, slotId }: {
   );
 }
 
-function cloudKey(content: { title?: string; prompt?: string }): string {
+function cloudKey(content: { title?: string; prompt?: string; cloud_key?: string }): string {
+  // Host stamps a shared cloud_key so all three screens agree even when their
+  // titles/prompts differ.
+  if (content.cloud_key) return `cloud|${content.cloud_key}`;
   return contentKey(`cloud|${content.title ?? ""}|${content.prompt ?? ""}`);
 }
 

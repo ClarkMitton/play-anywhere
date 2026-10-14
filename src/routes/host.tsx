@@ -344,9 +344,18 @@ function HostScreen() {
 
   // ── Session actions ─────────────────────────────
 
+  // Word clouds on the three screens can carry different titles/prompts, so a
+  // key derived from each screen's own text would not match. Stamp one shared
+  // key (the slot id) onto every word_cloud so screens and Host agree.
+  const stampCloud = (c: SlotContent, id: string): SlotContent =>
+    (c as { type?: string })?.type === "word_cloud" ? ({ ...c, cloud_key: id } as SlotContent) : c;
   const slotState = (s: SlotDef | undefined) =>
     s
-      ? { host: s.host_content, screen1: s.screen1_content, screen2: s.screen2_content }
+      ? {
+          host: stampCloud(s.host_content, s.id),
+          screen1: stampCloud(s.screen1_content, s.id),
+          screen2: stampCloud(s.screen2_content, s.id),
+        }
       : {
           host: { type: "waiting" as const },
           screen1: { type: "waiting" as const },
