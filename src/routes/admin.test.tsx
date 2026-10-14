@@ -33,6 +33,7 @@ type TestSession = {
 };
 
 type SlotRow = {
+  id?: string;
   host_content: unknown;
   screen1_content: unknown;
   screen2_content: unknown;
