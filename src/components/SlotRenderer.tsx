@@ -2178,7 +2178,9 @@ function cloudKey(content: { title?: string; prompt?: string; cloud_key?: string
   // Host stamps a shared cloud_key so all three screens agree even when their
   // titles/prompts differ.
   if (content.cloud_key) return `cloud|${content.cloud_key}`;
-  return contentKey(`cloud|${content.title ?? ""}|${content.prompt ?? ""}`);
+  // The Host copy often has only a title while the touch screens have title and
+  // prompt, so key on one field that both copies share.
+  return contentKey(`cloud|${(content.title || content.prompt || "").trim()}`);
 }
 
 type CloudWord = { word: string; count: number };
