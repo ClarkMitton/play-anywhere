@@ -13,7 +13,7 @@ import { sounds } from "@/lib/audio";
 import { StatusDot } from "@/components/StatusDot";
 import { SlotRenderer, type SlotContent } from "@/components/SlotRenderer";
 import { SessionEndScreen } from "@/components/SessionEndScreen";
-import { HostTimerOverlay } from "@/components/HostTimerOverlay";
+import { HostTimerOverlay, hostTimer } from "@/components/HostTimerOverlay";
 import { Button } from "@/components/ui/button";
 import { QRCodeSVG } from "qrcode.react";
 
@@ -112,6 +112,27 @@ function SlotNavBar({
       >
         Next slide →
       </Button>
+      <div className="flex items-center gap-1 ml-1 pl-2 border-l border-border">
+        <span className="text-xs" aria-hidden>⏱</span>
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={() => hostTimer({ add: 10 })}
+          className="h-8 px-2 text-xs rounded-full"
+          title="Add 10 seconds to the timer"
+        >
+          +10s
+        </Button>
+        <Button
+          size="sm"
+          variant="ghost"
+          onClick={() => hostTimer({ clear: true })}
+          className="h-8 px-2 text-xs rounded-full"
+          title="Clear the timer"
+        >
+          ✕
+        </Button>
+      </div>
       <Button
         size="sm"
         variant="destructive"

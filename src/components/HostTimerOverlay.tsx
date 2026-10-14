@@ -63,6 +63,21 @@ export function HostTimerOverlay({ channel, slotIndex }: Props) {
     // No cleanup API for individual listeners; channel teardown handles it.
   }, [channel]);
 
+  // Local controls on the Host's own nav bar (broadcasts don't echo back).
+  useEffect(() => {
+    const onLocal = (e: Event) => {
+      const d = (e as CustomEvent<{ add?: number; clear?: boolean }>).detail ?? {};
+      if (d.clear) return setEndsAt(null);
+      const add = Math.floor(d.add ?? 0);
+      if (add <= 0) return;
+      const base =
+        endsAtRef.current && endsAtRef.current > Date.now() ? endsAtRef.current : Date.now();
+      setEndsAt(base + add * 1000);
+    };
+    window.addEventListener("host-timer", onLocal);
+    return () => window.removeEventListener("host-timer", onLocal);
+  }, []);
+
   const finished = endsAt !== null && endsAt - now <= 0;
 
   // Sound the alarm once per timer, at the moment it runs out. Keyed on endsAt
@@ -106,4 +121,9 @@ export function HostTimerOverlay({ channel, slotIndex }: Props) {
       </div>
     </div>
   );
+}
+
+/** Called by the Host nav bar: adjust the on-screen timer locally. */
+export function hostTimer(detail: { add?: number; clear?: boolean }) {
+  window.dispatchEvent(new CustomEvent("host-timer", { detail }));
 }
