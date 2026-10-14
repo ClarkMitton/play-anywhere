@@ -576,9 +576,12 @@ function ConfidenceCheckerInput({ content, screen, sessionId, slotId }: {
 
   const resetForm = () => { setScore(null); setThoughts([]); setNewThought(""); };
 
+  const [thoughtError, setThoughtError] = useState<string | null>(null);
   const addThought = () => {
     const t = newThought.trim();
     if (!t || thoughts.length >= 5) return;
+    if (!checkProfanity(t).ok) { setThoughtError(PROFANITY_MESSAGE); return; }
+    setThoughtError(null);
     setThoughts(p => [...p, t]);
     setNewThought("");
   };
@@ -704,6 +707,7 @@ function ConfidenceCheckerInput({ content, screen, sessionId, slotId }: {
               <button onClick={addThought} className="px-4 py-3 border border-border rounded-xl text-sm hover:border-[color:var(--cyan)]">+</button>
             </div>
           )}
+          {thoughtError && <div className="text-sm text-destructive">{thoughtError}</div>}
         </div>
       )}
       <Button onClick={handleSubmit} disabled={!score || submitting}
