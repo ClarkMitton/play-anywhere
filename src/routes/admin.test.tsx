@@ -9,6 +9,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { generateCode } from "@/lib/codes";
 import { Button } from "@/components/ui/button";
 
+// Same shared word-cloud key the Host stamps, so screens and Host agree.
+function stampCloud(c: unknown, slot: { id?: string }): unknown {
+  const t = c as { type?: string } | null;
+  return t?.type === "word_cloud" && slot.id ? { ...(t as object), cloud_key: slot.id } : c;
+}
+
 export const Route = createFileRoute("/admin/test")({
   head: () => ({ meta: [{ title: "Test Mode · Admin" }] }),
   // ?lesson=<id> opens with that lesson already chosen. The tutor plan links
@@ -75,9 +81,9 @@ function TestMode() {
     const initialState = first
       ? {
           slot: {
-            host: first.host_content,
-            screen1: first.screen1_content,
-            screen2: first.screen2_content,
+            host: stampCloud(first.host_content, first),
+            screen1: stampCloud(first.screen1_content, first),
+            screen2: stampCloud(first.screen2_content, first),
           },
           indices: { host: 0, screen1: 0, screen2: 0 },
         }
@@ -120,9 +126,9 @@ function TestMode() {
           current_slot_index: clamped,
           state: {
             slot: {
-              host: slot.host_content,
-              screen1: slot.screen1_content,
-              screen2: slot.screen2_content,
+              host: stampCloud(slot.host_content, slot),
+              screen1: stampCloud(slot.screen1_content, slot),
+              screen2: stampCloud(slot.screen2_content, slot),
             },
             indices: { host: clamped, screen1: clamped, screen2: clamped },
           } as never,
