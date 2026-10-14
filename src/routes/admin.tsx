@@ -300,9 +300,10 @@ function LessonsTab() {
 
   const toggleFeatured = async (lesson: Lesson) => {
     const next = !lesson.featured;
-    if (next) {
-      // Enforce only one featured lesson at a time
-      await supabase.from("lessons").update({ featured: false }).neq("id", lesson.id);
+    // Up to 5 featured lessons at once.
+    if (next && lessons.filter((l) => l.featured).length >= 5) {
+      window.alert("You can feature up to 5 lessons. Unfeature one first.");
+      return;
     }
     await supabase.from("lessons").update({ featured: next }).eq("id", lesson.id);
     loadLessons();
