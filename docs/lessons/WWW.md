@@ -12,6 +12,62 @@ What proves itself here is collected in [WAYS-OF-WORKING.md](WAYS-OF-WORKING.md)
 
 ---
 
+## Salon: Who Keeps Us Safe? (Hayley, session 2)
+
+- **Built:** 15 October 2026
+- **For:** Hayley, Level 1 Hairdressing (16 to 19), session 2 of the health and safety unit (VTCT UV10477, Follow health and safety in the salon)
+- **Length:** 60 minutes, 24 steps, about 35 minutes at the whiteboard tables, two whole-class moves
+- **Source:** `Hayley/HS Acts.ppt`, `Hayley/Health and safety hazards and hygiene.pptx`, `Hayley/health and safety fill in the gaps handout.doc`, `Hayley/health Safety Acts Handout.docx`, the UV10477 unit specification, and two YouTube clips (BBC London, "Could your barber be putting you at risk?", 2:50; Christian Weaver, "The Law in 60 Seconds: Health and Safety at Work", 1:33)
+- **Lesson file:** [salon-who-keeps-us-safe.sql](salon-who-keeps-us-safe.sql)
+- **Slides:** 14, rebuilt in Canva ("Who Keeps the Salon Safe?" in Clark's Canva), in `public/lessons/salon-who-keeps-us-safe/` and the media storage
+- **Table packs:** none. Clark asked for whiteboard tables and no printing.
+
+### WWW in the build
+
+- **Built on what session 1 had already done.** Session 1's transcript was read first, then mapped against the unit specification. It had covered hazards, hazard and risk, five laws and COSHH. This session fills the gaps: the employer's responsibilities (1f, on the external paper, never touched), safe and hygienic working (1c, 1g), and four laws not yet met (Workplace Regulations, Manual Handling, PUWER, Environmental Protection Act). Fire and emergencies are saved for session 3.
+- **The brief was agreed before building.** Clark chose the thread (who keeps the salon safe on day one, the employer or me), the product (a Day One induction board), three objectives, Canva slides and no printing.
+- **One line down the table holds the lesson together.** Learners split their table into EMPLOYER and ME at the start and fill both sides all lesson. The final board is built from it.
+- **Hayley's slides kept their shape.** Her "the employer must… what are your duties? / Let's check" pattern became predict-then-check on the tables. Her fill-the-gaps sheet became a timed race on screen.
+- **A real case opens and closes the judging.** Tables judge the BBC barbershop before any teaching, vote again with the law behind them, then judge another table's board as inspectors.
+- **Both transcripts were read before use.** The caption capture trick from ESOL Adjectives no longer worked, so the player's own caption request was intercepted inside the page instead.
+- **Checked before anyone runs it.** All 24 steps passed the app's content rules, the SQL ran against a real database engine, and every slide loads from the media storage.
+
+### Even better if (build)
+
+- Canva's AI rewrote nearly every slide when generating the deck. It swapped in different laws (including the Fire Safety Order, which belongs in session 3), replaced the gap-fill and changed the board task. Every text box was put back by hand. Next time, check the wording before looking at the design.
+- Slide body text is about 27 to 34 pixels on a 1920 wide slide. Check it can be read from the back of the room.
+- The BBC clip has a first-hand description of an infection and photos of dirty razors. Fine for this group, but warn them.
+- Steps 12 to 17 are six slides in a row. Each has a different job (thumbs up, predict the bin, check your partner), but watch the pace.
+- The board and judging timers move on by themselves. A tutor who wants more time has to pause.
+
+### WWW in the room
+
+_To fill in after the lesson has been taught._
+
+-
+
+### Even better if (room)
+
+-
+
+---
+
+## Health & Safety in the Salon (Hayley, session 1)
+
+- **Built:** 30 September 2026, straight into the app (no SQL file; lesson id `296bd558-ff19-47e7-975c-cc089368e179`)
+- **For:** Hayley, Level 1 Hairdressing
+- **Length:** 71 minutes, 18 steps
+- **What it covered:** spot the hazards (tap-the-picture), hazard and risk, a carousel of five laws (Health and Safety at Work Act, COSHH, PPE, Electricity at Work, RIDDOR), a COSHH video and Wordwall, the Saturday Shift game in Canva Code, a mini risk assessment and a buzzer round.
+- **Logged on 15 October 2026** while building session 2, so the next session can see what has been done.
+
+### WWW in the room
+
+_To fill in after the lesson has been taught._
+
+-
+
+---
+
 ## ESOL Adjectives
 
 - **Built:** 13 October 2026
