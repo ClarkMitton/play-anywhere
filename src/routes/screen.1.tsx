@@ -126,21 +126,29 @@ export function ScreenJoin({ role, autoCode }: { role: "screen1" | "screen2"; au
       const { data } = await supabase.from("sessions").select("*").eq("id", sessionId).single();
       if (!cancelled && data) setSession(data as SessionRow);
     })();
+    const apply = (next: SessionRow) =>
+      setSession((prev) => {
+        // A poll returning the row we already have must not re-render the slot.
+        if (prev && JSON.stringify(prev) === JSON.stringify(next)) return prev;
+        if (prev?.status === "waiting" && next.status === "active") sounds.launch();
+        else if (prev && JSON.stringify(prev.state) !== JSON.stringify(next.state))
+          sounds.slotAdvance();
+        return next;
+      });
     const ch = sessionChannel(sessionId);
     channelRef.current = ch;
     ch.on(
       "postgres_changes",
       { event: "UPDATE", schema: "public", table: "sessions", filter: `id=eq.${sessionId}` },
-      (payload) => {
-        setSession((prev) => {
-          const next = payload.new as SessionRow;
-          if (prev?.status === "waiting" && next.status === "active") sounds.launch();
-          else if (prev && JSON.stringify(prev.state) !== JSON.stringify(next.state))
-            sounds.slotAdvance();
-          return next;
-        });
-      },
+      (payload) => apply(payload.new as SessionRow),
     );
+    // Realtime is a websocket, and some networks (college ones especially) drop
+    // or block it. Then the screen never hears Next. Re-read the row every 2s
+    // as a fallback so the slide still changes, just a moment later.
+    const poll = window.setInterval(async () => {
+      const { data } = await supabase.from("sessions").select("*").eq("id", sessionId).single();
+      if (!cancelled && data) apply(data as SessionRow);
+    }, 2000);
     ch.on("broadcast", { event: "host_visibility" }, ({ payload }: { payload: { visible: boolean } }) => {
       setHostPaused(!payload.visible);
     });
@@ -152,6 +160,7 @@ export function ScreenJoin({ role, autoCode }: { role: "screen1" | "screen2"; au
     return () => {
       cancelled = true;
       window.clearInterval(keepAlive);
+      window.clearInterval(poll);
       supabase.removeChannel(ch);
     };
   }, [sessionId, connectedColumn, markConnected]);

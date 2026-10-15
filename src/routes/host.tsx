@@ -278,18 +278,23 @@ function HostScreen() {
     };
   }, [activeSessionId]);
 
-  // Realtime can occasionally miss a join update while screens already show
-  // “Waiting for Host”; poll as a small fallback while in the lobby.
+  // Realtime can miss updates, and some networks (college ones especially)
+  // drop or block its websocket. Poll as a fallback in the lobby and while a
+  // lesson runs, so a slide moved from the preview or the remote still shows.
   useEffect(() => {
-    if (!activeSessionId || activeSessionStatus !== "waiting") return;
+    if (!activeSessionId || (activeSessionStatus !== "waiting" && activeSessionStatus !== "active"))
+      return;
     const sessionId = activeSessionId;
     let cancelled = false;
     const refreshSession = async () => {
       const { data } = await supabase.from("sessions").select("*").eq("id", sessionId).single();
-      if (!cancelled && data) setSession(data as SessionRow);
+      if (!cancelled && data)
+        setSession((prev) =>
+          prev && JSON.stringify(prev) === JSON.stringify(data) ? prev : (data as SessionRow),
+        );
     };
     refreshSession();
-    const poll = window.setInterval(refreshSession, 3000);
+    const poll = window.setInterval(refreshSession, activeSessionStatus === "active" ? 2000 : 3000);
     return () => {
       cancelled = true;
       window.clearInterval(poll);
