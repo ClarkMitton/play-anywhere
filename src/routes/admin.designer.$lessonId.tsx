@@ -167,7 +167,7 @@ type SaveStatus = "saved" | "saving" | "unsaved";
 // ─────────────────────────────────────────────
 
 export const Route = createFileRoute("/admin/designer/$lessonId")({
-  validateSearch: (search: Record<string, unknown>) => ({
+  validateSearch: (search: Record<string, unknown>): { agentChat?: string; agentSource?: string } => ({
     agentChat: typeof search.agentChat === "string" ? search.agentChat : undefined,
     agentSource: typeof search.agentSource === "string" ? search.agentSource : undefined,
   }),

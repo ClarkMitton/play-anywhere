@@ -33,7 +33,7 @@ import {
 } from "@/lib/lessonAgent";
 
 export const Route = createFileRoute("/admin/agent")({
-  validateSearch: (search: Record<string, unknown>) => ({
+  validateSearch: (search: Record<string, unknown>): { lesson?: string; chat?: string } => ({
     lesson: typeof search.lesson === "string" ? search.lesson : undefined,
     chat: typeof search.chat === "string" ? search.chat : undefined,
   }),
