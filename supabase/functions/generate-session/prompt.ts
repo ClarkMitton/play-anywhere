@@ -34,7 +34,7 @@ export function isEntryLevel(level: string): boolean {
 }
 
 // ─── NEW: the physical room ──────────────────────────────────
-const ROOM_BLOCK = `
+export const ROOM_BLOCK = `
 ═══ THE ROOM YOU ARE WRITING FOR ═══
 This is not a slide deck. It is a physical immersive learning room with three
 live screens plus a teacher phone remote. All three screens show DIFFERENT
@@ -199,7 +199,7 @@ is for, and what to use instead when it is the wrong fit.
 ═══════════════════════════════════════════════════════════════`;
 
 // ─── PORTED: style rules ────────────────────────────────────
-const STYLE_BLOCK = `
+export const STYLE_BLOCK = `
 CRITICAL: You MUST write EVERYTHING in British English (e.g. "analyse" not "analyze", "recognise" not "recognize", "organise" not "organize", "summarise" not "summarize", "practise" not "practice" when used as a verb, "behaviour" not "behavior", "colour" not "color", "centre" not "center", "programme" not "program", "favourite" not "favorite", "specialise" not "specialize").
 
 STYLE RULE: Never use em dashes in any generated text. Use commas, colons or full stops instead.
@@ -218,7 +218,7 @@ LEARNING OUTCOME REQUIREMENTS (for teaching_notes.objectives):
 - Write 3 outcomes unless the brief supplies its own.`;
 
 // ─── PORTED and adapted: LEAD, expressed in this room's tools ──
-const LEAD_BLOCK = `
+export const LEAD_BLOCK = `
 ═══ THE LEAD FRAMEWORK ═══
 Every slot carries a lead_phase. Work through the four phases in order.
 
@@ -272,7 +272,7 @@ const MEDIA_BLOCK = `
 ═══════════════════════════════════════════════════════════════`;
 
 // ─── NEW: safety-critical content ───────────────────────────
-const SAFETY_BLOCK = `
+export const SAFETY_BLOCK = `
 ═══ SAFETY-CRITICAL AND REGULATED CONTENT ═══
 This applies whenever the topic touches health and safety, safeguarding, food
 hygiene, medication, electrical work, working at height, machinery or any other
@@ -296,7 +296,7 @@ of work, the awarding body specification, or the employer's site rules. So:
 ═══════════════════════════════════════════════════════════════`;
 
 // ─── PORTED verbatim (field names adapted) ──────────────────
-const INCLUSION_BLOCK = `
+export const INCLUSION_BLOCK = `
 ═══ INCLUSIVE REPRESENTATION & BIAS PREVENTION — APPLIES TO EVERY FIELD ═══
 Generative AI is documented to reproduce social bias in teaching materials: stereotyped occupations, Western-default content, and lower expectations for disadvantaged learners. Bradford College serves one of the UK's youngest and most diverse student communities. Follow ALL of these rules; each states the harm it prevents.
 

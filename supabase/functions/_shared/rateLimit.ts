@@ -49,14 +49,18 @@ export function isAllowedOrigin(req: Request): boolean {
 }
 
 // deno-lint-ignore no-explicit-any
-export async function isOverDailyCap(supabase: any): Promise<boolean> {
+export async function isOverDailyCap(
+  supabase: any,
+  eventType = "generate_session",
+  cap = DAILY_CAP,
+): Promise<boolean> {
   const today = new Date().toISOString().split("T")[0];
   const { count } = await supabase
     .from("usage_events")
     .select("*", { count: "exact", head: true })
-    .eq("event_type", "generate_session")
+    .eq("event_type", eventType)
     .gte("created_at", `${today}T00:00:00.000Z`);
-  return (count ?? 0) >= DAILY_CAP;
+  return (count ?? 0) >= cap;
 }
 
 // deno-lint-ignore no-explicit-any
@@ -64,9 +68,10 @@ export async function recordUsage(
   supabase: any,
   ip: string,
   meta: Record<string, unknown>,
+  eventType = "generate_session",
 ): Promise<void> {
   const { error } = await supabase
     .from("usage_events")
-    .insert({ event_type: "generate_session", ip, meta });
+    .insert({ event_type: eventType, ip, meta });
   if (error) console.error("usage_events insert failed:", error.message);
 }

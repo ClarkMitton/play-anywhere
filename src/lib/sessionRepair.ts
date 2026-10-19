@@ -80,12 +80,18 @@ function isAllowedImageUrl(url: unknown): boolean {
 // Pre-repair, operating on raw model output
 // ─────────────────────────────────────────────
 
+export type RepairOptions = {
+  /** Keep embeds as given. Only for callers whose links came from the teacher (the lesson agent). */
+  keepEmbeds?: boolean;
+};
+
 function repairSlot(
   slot: Record<string, any>,
   index: number,
   brief: Brief,
   warn: (m: string) => void,
   needMedia: (m: NeededMedia) => void,
+  opts: RepairOptions = {},
 ): void {
   const entry = isEntryLevel(brief.level);
 
@@ -217,7 +223,7 @@ function repairSlot(
     }
 
     // Only the teacher may supply an embed.
-    if (c.type === "embed") {
+    if (c.type === "embed" && !opts.keepEmbeds) {
       slot[screen] = placeholder("Replace with the website or tool you want to show");
       warn(`removed an embedded website on ${screen}; add it yourself if you want one`);
       continue;
@@ -372,7 +378,11 @@ export function reconcileDurations(
 // Entry point
 // ─────────────────────────────────────────────
 
-export function repairAndValidate(raw: unknown, brief: Brief): RepairResult {
+export function repairAndValidate(
+  raw: unknown,
+  brief: Brief,
+  opts: RepairOptions = {},
+): RepairResult {
   const warnings: RepairWarning[] = [];
 
   if (!isObj(raw)) {
@@ -395,6 +405,7 @@ export function repairAndValidate(raw: unknown, brief: Brief): RepairResult {
       brief,
       (message) => warnings.push({ slotIndex: i, message }),
       (m) => needed.push(m),
+      opts,
     );
 
     // Alternatives get the same treatment. A tutor picking one must not be
@@ -418,6 +429,7 @@ export function repairAndValidate(raw: unknown, brief: Brief): RepairResult {
             brief,
             () => {},
             (m) => needed.push(m),
+            opts,
           );
           return { ...alt, host: shim.host, screen1: shim.screen1, screen2: shim.screen2 };
         });

@@ -196,6 +196,14 @@ const wordCloud = z.object({
   max_words: z.number().int().min(1).max(10).optional(),
 });
 
+// A shared board for longer written answers. Learners type on the touch
+// screens and the Host shows the board.
+const padlet = z.object({
+  type: z.literal("padlet"),
+  question: z.string().min(1),
+  title: z.string().optional(),
+});
+
 const rotationTimer = z.object({
   type: z.literal("rotation_timer"),
   label: z.string().optional(),
@@ -252,6 +260,7 @@ export const contentSchema = z.discriminatedUnion("type", [
   questionRound,
   wordCloud,
   whiteboard,
+  padlet,
   rotationTimer,
   hazardHotspots,
 ]);
@@ -370,7 +379,7 @@ export const generatedSessionSchema = z
       safety_note: z.string().nullable().default(null),
     }),
     media_requests: z.array(mediaRequestSchema).default([]),
-    slots: z.array(generatedSlotSchema).min(3).max(24),
+    slots: z.array(generatedSlotSchema).min(3).max(40),
   })
   .superRefine((session, ctx) => {
     // A "final" confidence check renders a start-versus-now comparison. Without
