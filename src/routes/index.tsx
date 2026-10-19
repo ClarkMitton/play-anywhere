@@ -13,6 +13,10 @@ export const Route = createFileRoute("/")({
     meta: [
       { title: "Immersive Learning · Bradford College" },
       { name: "description", content: "Launcher for immersive lessons across Host and Touch Screens." },
+      { property: "og:title", content: "Immersive Learning · Bradford College" },
+      { property: "og:description", content: "Launch Bradford College immersive lessons across the host and touch screens." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: Launcher,

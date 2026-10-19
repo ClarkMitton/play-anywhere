@@ -82,7 +82,14 @@ type ResponseRow = {
 // ─────────────────────────────────────────────
 export const Route = createFileRoute("/admin")({
   head: () => ({
-    meta: [{ title: "Admin · Immersive Learning" }],
+    meta: [
+      { title: "Lesson admin · Bradford College Immersive Learning" },
+      { name: "description", content: "Manage Bradford College immersive lessons, agent drafts and session reports." },
+      { property: "og:title", content: "Lesson admin · Bradford College Immersive Learning" },
+      { property: "og:description", content: "Manage immersive lessons, agent drafts and session reports." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
   }),
   component: AdminPage,
 });
