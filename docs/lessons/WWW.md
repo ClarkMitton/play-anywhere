@@ -12,6 +12,38 @@ What proves itself here is collected in [WAYS-OF-WORKING.md](WAYS-OF-WORKING.md)
 
 ---
 
+## The Five Parties: Who Wins Your Vote?
+
+- **Built:** 19 October 2026
+- **For:** Level 2 citizenship, 15 learners aged 16 to 18, last lesson on a Friday
+- **Length:** 120 minutes with a 10 minute break, 31 steps, three whole-class moves
+- **Source:** the teacher's Canva deck (8 slides, "The Five Largest Political Parties in the UK Parliament") and their Canva comparison page (healthcare, education, immigration and public spending for each party), plus five learning objectives they chose
+- **Lesson file:** [five-uk-parties.sql](five-uk-parties.sql)
+- **Slides:** the 8 Canva slides, 4 policy cards and 2 leader slides, in `public/lessons/five-uk-parties/` and the media storage
+- **Table packs:** none. Whiteboard tables yes, no printing.
+
+### WWW in the build
+
+- **Facts were checked before building.** Labour had a new leader the slides did not show: Andy Burnham has been Prime Minister since July. The leaders were confirmed against Parliament's members list, and the Greens' "variable" seats became 5 MPs.
+- **The leaders use free photos.** Four are Parliament's official portraits (CC BY 3.0, credited on the slide). Zack Polanski is not an MP, so his photo is a CC0 one from Wikimedia Commons.
+- **A Canva site that cannot be embedded became picture cards.** Canva blocks its sites from being shown inside other pages, and the app no longer has the proxy that got round that. Its four rows were rebuilt word for word as portrait cards for the touch screens, in the deck's colours.
+- **The touch screens are a reference library during table work.** While the rotation timer runs on the big screen, the touch screens show the spending card and one runner per table goes to read it.
+- **Learners choose the local issue.** A word cloud and a vote on what matters to 16 to 18 year olds in Bradford set what each table works on after the break.
+- **Assigned parties keep it balanced.** A wheel gives each table its party, so nobody argues for their own politics, and the pitch vote judges how well a pitch fits its voter, not the party.
+- **Checked before anyone runs it.** All 31 steps passed the app's content rules, the SQL ran against a real database engine, and all 14 pictures load from the media storage.
+
+### Even better if (build)
+
+- Steps 7 to 11 are five party slides in a row, held together by one watching task. Watch the pace.
+- The leader facts will go out of date fast: the Green leader was standing in a by-election. Check them the day before.
+- With 15 learners at two touch screens, about eight people share each screen for the research sprints. Have the ones at the front read aloud.
+
+### WWW in the room
+
+_To fill in after the lesson has been taught._
+
+---
+
 ## Salon: Who Keeps Us Safe? (Hayley, session 2)
 
 - **Built:** 15 October 2026
