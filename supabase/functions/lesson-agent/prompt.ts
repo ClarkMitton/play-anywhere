@@ -8,7 +8,7 @@ import {
   ROOM_BLOCK,
   SAFETY_BLOCK,
   STYLE_BLOCK,
-} from "../generate-session/prompt.ts";
+} from "../_shared/lessonPromptBlocks.ts";
 
 export type Resource = {
   id: string;

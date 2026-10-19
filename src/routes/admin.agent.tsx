@@ -34,7 +34,14 @@ export const Route = createFileRoute("/admin/agent")({
   validateSearch: (search: Record<string, unknown>) => ({
     lesson: typeof search.lesson === "string" ? search.lesson : undefined,
   }),
-  head: () => ({ meta: [{ title: "Lesson agent · Immersive Learning" }] }),
+  head: () => ({ meta: [
+    { title: "Lesson builder · Bradford College Immersive Learning" },
+    { name: "description", content: "Plan and build Bradford College immersive lessons from your teaching resources." },
+    { property: "og:title", content: "Lesson builder · Bradford College Immersive Learning" },
+    { property: "og:description", content: "Plan and build immersive lessons from your teaching resources." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
   component: AgentPage,
 });
 
@@ -427,7 +434,7 @@ function DropZone({ onFiles }: { onFiles: (f: FileList) => void }) {
 function UsageChip({ session, today }: { session: { calls: number; prompt_tokens: number; completion_tokens: number }; today: AgentToday | null }) {
   const k = (n: number) => (n >= 1000 ? `${(n / 1000).toFixed(1)}k` : String(n));
   return (
-    <div className="text-[10px] text-muted-foreground text-right leading-relaxed" title="Estimated at Google's list price for Gemini 2.5 Pro. Lovable's credit charge may differ.">
+    <div className="text-[10px] text-muted-foreground text-right leading-relaxed" title="Rough estimate at Gemini 3.8 Flash list prices. Image descriptions use cheaper Flash Lite; historical totals may use older models. Lovable's credit charge may differ.">
       <div>
         This chat: {session.calls} calls · {k(session.prompt_tokens)} in / {k(session.completion_tokens)} out · ≈ ${estimateUsd(session).toFixed(2)}
       </div>

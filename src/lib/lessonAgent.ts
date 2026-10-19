@@ -257,7 +257,7 @@ export async function loadLessonForAgent(lessonId: string) {
 }
 
 /** Rough cost so the page can show one; prices are per million tokens and set in one place. */
-export const PRICE_PER_MILLION = { input: 1.25, output: 10 };
+export const PRICE_PER_MILLION = { input: 0.75, output: 3.75 };
 export function estimateUsd(u: { prompt_tokens: number; completion_tokens: number }): number {
   return (u.prompt_tokens * PRICE_PER_MILLION.input + u.completion_tokens * PRICE_PER_MILLION.output) / 1_000_000;
 }
