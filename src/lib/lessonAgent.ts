@@ -31,6 +31,7 @@ type AgentReply<T> =
   | { ok: false; error: string; issues?: string[] };
 
 async function callAgent<T>(body: Record<string, unknown>): Promise<AgentReply<T>> {
+  try {
   const { data, error } = await supabase.functions.invoke("lesson-agent", { body });
   if (error) {
     const context = (error as { context?: Response }).context;
@@ -42,9 +43,15 @@ async function callAgent<T>(body: Record<string, unknown>): Promise<AgentReply<T
         // fall through
       }
     }
-    return { ok: false, error: error.message ?? "The agent did not answer." };
+    return { ok: false, error: "The lesson builder connection stopped before the reply was complete. Your chat is still saved; try Build again." };
+  }
+  if (!data || typeof data !== "object" || typeof data.ok !== "boolean") {
+    return { ok: false, error: "The lesson builder returned an incomplete reply. Your chat is still saved; try Build again." };
   }
   return data as AgentReply<T>;
+  } catch {
+    return { ok: false, error: "The lesson builder connection stopped before the reply was complete. Your chat is still saved; try Build again." };
+  }
 }
 
 /** What the server needs to know about each resource. Pictures go as descriptions, not pixels. */

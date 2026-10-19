@@ -15,7 +15,8 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { preflight, json } from "../_shared/cors.ts";
+import { preflight, json, corsHeaders } from "../_shared/cors.ts";
+import { readChatCompletion, streamJsonResponse } from "./streaming.ts";
 import {
   getClientIp,
   isAllowedOrigin,
@@ -47,7 +48,7 @@ async function callModel(apiKey: string, body: Record<string, any>): Promise<{ t
   const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",
     headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-    body: JSON.stringify(body),
+    body: JSON.stringify({ ...body, stream: true, stream_options: { include_usage: true } }),
   });
   if (!res.ok) {
     const detail = await res.text();
@@ -55,16 +56,7 @@ async function callModel(apiKey: string, body: Record<string, any>): Promise<{ t
     if (res.status === 429) throw new Error("The AI service is busy. Wait a moment and try again.");
     throw new Error(`AI gateway returned ${res.status}: ${detail.slice(0, 400)}`);
   }
-  const payload = await res.json();
-  const text = payload?.choices?.[0]?.message?.content;
-  if (typeof text !== "string" || !text.trim()) throw new Error("The AI returned an empty reply.");
-  return {
-    text,
-    usage: {
-      prompt_tokens: Number(payload?.usage?.prompt_tokens) || 0,
-      completion_tokens: Number(payload?.usage?.completion_tokens) || 0,
-    },
-  };
+  return await readChatCompletion(res);
 }
 
 function parseLoosely(text: string): unknown | null {
@@ -141,7 +133,9 @@ async function todayTotals(supabase: any) {
 serve(async (req) => {
   const pre = preflight(req);
   if (pre) return pre;
+  if (!isAllowedOrigin(req)) return json({ ok: false, error: "This origin is not allowed." }, 403);
 
+  return streamJsonResponse(async () => {
   try {
     if (!isAllowedOrigin(req)) return json({ ok: false, error: "This origin is not allowed." }, 403);
     const ip = getClientIp(req);
@@ -250,4 +244,5 @@ serve(async (req) => {
     console.error("lesson-agent failed:", message);
     return json({ ok: false, error: message }, 500);
   }
+  }, corsHeaders);
 });
