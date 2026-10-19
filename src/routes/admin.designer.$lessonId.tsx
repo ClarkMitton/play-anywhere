@@ -167,7 +167,18 @@ type SaveStatus = "saved" | "saving" | "unsaved";
 // ─────────────────────────────────────────────
 
 export const Route = createFileRoute("/admin/designer/$lessonId")({
-  head: () => ({ meta: [{ title: "Stage Designer · Immersive Learning" }] }),
+  validateSearch: (search: Record<string, unknown>) => ({
+    agentChat: typeof search.agentChat === "string" ? search.agentChat : undefined,
+    agentSource: typeof search.agentSource === "string" ? search.agentSource : undefined,
+  }),
+  head: () => ({ meta: [
+    { title: "Stage Designer · Bradford College Immersive Learning" },
+    { name: "description", content: "Edit and arrange your immersive lesson screens and activities." },
+    { property: "og:title", content: "Stage Designer · Bradford College Immersive Learning" },
+    { property: "og:description", content: "Edit and arrange immersive lesson screens and activities." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
   component: DesignerPage,
 });
 
@@ -718,6 +729,7 @@ function DesignerHeader({
   onSync: () => void;
 }) {
   const navigate = useNavigate();
+  const { agentChat, agentSource } = Route.useSearch();
   const statusLabel =
     saveStatus === "saving" ? "Saving…" : saveStatus === "saved" ? "Saved" : "Unsaved";
   const statusColour =
@@ -736,6 +748,10 @@ function DesignerHeader({
         >
           ← Admin
         </Link>
+        {agentChat && <Button variant="outline" size="sm" onClick={async () => {
+          await onSave();
+          navigate({ to: "/admin/agent", search: { chat: agentChat, lesson: agentSource } });
+        }}>← Back to agent chat</Button>}
         <div className="h-4 w-px bg-border" />
         <div>
           <div className="text-[10px] uppercase tracking-[0.4em] text-[color:var(--cyan)]">

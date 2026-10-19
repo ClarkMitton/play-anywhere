@@ -9,6 +9,8 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
+import { ArrowLeft, History, Plus } from "lucide-react";
+import { readAgentHistory, writeAgentConversation, type AgentConversation } from "@/lib/agentHistory";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -33,6 +35,7 @@ import {
 export const Route = createFileRoute("/admin/agent")({
   validateSearch: (search: Record<string, unknown>) => ({
     lesson: typeof search.lesson === "string" ? search.lesson : undefined,
+    chat: typeof search.chat === "string" ? search.chat : undefined,
   }),
   head: () => ({ meta: [
     { title: "Lesson builder · Bradford College Immersive Learning" },
@@ -71,7 +74,7 @@ function kindOf(file: File): AgentResource["kind"] | null {
 }
 
 function AgentPage() {
-  const { lesson: lessonId } = Route.useSearch();
+  const { lesson: lessonId, chat: chatId } = Route.useSearch();
   const navigate = useNavigate();
   const [folder, setFolder] = useState(() => newFolder());
   const [resources, setResources] = useState<AgentResource[]>([]);
@@ -84,40 +87,56 @@ function AgentPage() {
   const [session, setSession] = useState({ calls: 0, prompt_tokens: 0, completion_tokens: 0 });
   const [today, setToday] = useState<AgentToday | null>(null);
   const [restored, setRestored] = useState(false);
+  const [conversationId, setConversationId] = useState("");
+  const [history, setHistory] = useState<AgentConversation[]>([]);
+  const [showHistory, setShowHistory] = useState(false);
+  const [showDraft, setShowDraft] = useState(true);
+  const [createdLessonIds, setCreatedLessonIds] = useState<string[]>([]);
+  const chatRef = useRef<HTMLDivElement | null>(null);
   const resourcesRef = useRef(resources);
   resourcesRef.current = resources;
   const bottomRef = useRef<HTMLDivElement | null>(null);
 
-  // Restore an unfinished conversation after mount (browser storage only).
+  // Browser-only history: preserve resources, drafts and the original conversation.
   useEffect(() => {
-    const saved = loadSaved(lessonId);
-    if (saved) {
-      setFolder(saved.folder);
-      setMessages(saved.messages ?? []);
-      setResources((saved.resources ?? []).filter((r) => r.status === "ready"));
-      setDraft(saved.draft ?? null);
-    }
+    const all = readAgentHistory(localStorage);
+    setHistory(all);
+    const saved = chatId ? all.find((c) => c.id === chatId) : all.find((c) => c.sourceLessonId === lessonId);
+    const legacy = !saved && !chatId ? loadSaved(lessonId) : null;
+    setConversationId(saved?.id ?? crypto.randomUUID());
+    setFolder(saved?.folder ?? legacy?.folder ?? newFolder());
+    setMessages(saved?.messages ?? legacy?.messages ?? []);
+    setResources((saved?.resources ?? legacy?.resources ?? []).filter((r) => r.status === "ready"));
+    setDraft(saved?.draft ?? legacy?.draft ?? null);
+    setInput(saved?.input ?? "");
+    setCreatedLessonIds(saved?.createdLessonIds ?? []);
+    setShowDraft(true);
+    setSession({ calls: 0, prompt_tokens: 0, completion_tokens: 0 });
     setRestored(true);
-  }, [lessonId]);
+  }, [lessonId, chatId]);
+
+  const conversation = (ids = createdLessonIds): AgentConversation => ({
+    id: conversationId, updatedAt: new Date().toISOString(),
+    title: draft?.session.lesson.title ?? messages.find((m) => m.role === "user")?.content.slice(0, 80) ?? "New conversation",
+    folder, messages, draft, input, sourceLessonId: lessonId, createdLessonIds: ids,
+    resources: resources.filter((r) => r.status === "ready").map(({ previewDataUrl: _p, ...r }) => r),
+  });
 
   useEffect(() => {
-    if (!restored) return;
+    if (!restored || !conversationId || (!messages.length && !resources.length && !draft && !input)) return;
     try {
-      const keep: Saved = {
-        folder,
-        messages,
-        draft,
-        resources: resources.map(({ previewDataUrl: _p, ...r }) => r),
-      };
-      localStorage.setItem(storageKey(lessonId), JSON.stringify(keep));
+      setHistory(writeAgentConversation(localStorage, conversation()));
     } catch {
-      // storage full or blocked: the page still works, it just will not remember
+      toast.error("Your browser could not save this chat. Keep this page open to avoid losing it.");
     }
-  }, [restored, folder, messages, resources, draft, lessonId]);
+  }, [restored, conversationId, folder, messages, resources, draft, input, lessonId, createdLessonIds]);
 
   useEffect(() => {
+    setCurrent(null);
     if (!lessonId) return;
-    loadLessonForAgent(lessonId).then(setCurrent);
+    let cancelled = false;
+    loadLessonForAgent(lessonId).then((value) => { if (!cancelled) setCurrent(value); });
+    return () => { cancelled = true; };
   }, [lessonId]);
 
   useEffect(() => {
@@ -264,6 +283,7 @@ function AgentPage() {
         const checked = validateAgentBuild(res.data);
         if (checked.ok) {
           setDraft(checked.draft);
+          setShowDraft(true);
           toast.success(`Built ${checked.draft.session.slots.length} steps. Check them below.`);
           return;
         }
@@ -285,12 +305,14 @@ function AgentPage() {
     try {
       const id = await saveAgentLesson(draft);
       try {
+        setHistory(writeAgentConversation(localStorage, conversation([...createdLessonIds, id])));
+        setCreatedLessonIds((ids) => [...ids, id]);
         localStorage.removeItem(storageKey(lessonId));
       } catch {
-        // nothing to clear
+        toast.error("Lesson created, but this browser could not save its chat.");
       }
       toast.success("Lesson created");
-      navigate({ to: "/admin/designer/$lessonId", params: { lessonId: id } });
+      navigate({ to: "/admin/designer/$lessonId", params: { lessonId: id }, search: { agentChat: conversationId, agentSource: lessonId } });
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Could not save the lesson");
     } finally {
@@ -299,7 +321,11 @@ function AgentPage() {
   };
 
   const startOver = () => {
-    if (!confirm("Clear this conversation, the resources list and the draft? Uploaded files stay in storage.")) return;
+    if (busy || uploading) return;
+    setConversationId(crypto.randomUUID());
+    setCreatedLessonIds([]);
+    setInput("");
+    setShowDraft(true);
     setMessages([]);
     setResources([]);
     setDraft(null);
@@ -324,8 +350,26 @@ function AgentPage() {
             {lessonId ? "Change a lesson with the agent" : "Build with the agent"}
           </h1>
         </div>
-        <UsageChip session={session} today={today} />
+        <div className="flex flex-wrap items-center gap-2">
+          <Button variant="outline" size="sm" onClick={() => setShowHistory((v) => !v)}><History className="size-4" /> Saved chats</Button>
+          <Button variant="outline" size="sm" onClick={startOver} disabled={!!busy || uploading}><Plus className="size-4" /> New chat</Button>
+          <UsageChip session={session} today={today} />
+        </div>
       </header>
+
+      {showHistory && <section className="border-y border-border py-3 space-y-2">
+        <h2 className="font-semibold">Saved chats · this browser</h2>
+        {!history.length && <p className="text-sm text-muted-foreground">No saved conversations yet.</p>}
+        <ul className="max-h-64 overflow-y-auto space-y-2">
+          {history.map((c) => <li key={c.id} className="flex flex-wrap items-center justify-between gap-2 border-b border-border pb-2">
+            <div className="min-w-0"><p className="text-sm break-words">{c.title}</p><p className="text-xs text-muted-foreground">{new Date(c.updatedAt).toLocaleString()} · {c.messages.length} messages</p></div>
+            <Button variant="outline" size="sm" disabled={!!busy || uploading} onClick={() => {
+              setRestored(false); setShowHistory(false);
+              navigate({ to: "/admin/agent", search: { chat: c.id, lesson: c.sourceLessonId } });
+            }}>Open chat</Button>
+          </li>)}
+        </ul>
+      </section>}
 
       {lessonId && (
         <div className="rounded-lg border border-[color:var(--cyan)]/40 bg-[color:var(--cyan)]/5 px-4 py-2 text-sm">
@@ -333,7 +377,7 @@ function AgentPage() {
         </div>
       )}
 
-      <div className="grid gap-4 lg:grid-cols-[minmax(280px,380px)_1fr]">
+      <div ref={chatRef} className="grid gap-4 lg:grid-cols-[minmax(280px,380px)_1fr]">
         {/* Resources */}
         <section className="rounded-xl border border-border p-3 space-y-3 h-fit">
           <h2 className="text-xs uppercase tracking-widest text-muted-foreground">Resources</h2>
@@ -400,15 +444,17 @@ function AgentPage() {
                 {draft ? "Build again" : "Build lesson"}
               </Button>
               <span className="text-[10px] text-muted-foreground">Ctrl+Enter sends</span>
-              <button onClick={startOver} className="ml-auto text-[10px] uppercase tracking-widest text-muted-foreground hover:text-destructive">
-                Start over
-              </button>
+
             </div>
           </div>
         </section>
       </div>
 
-      {draft && <DraftView draft={draft} onCreate={create} saving={busy === "saving"} />}
+      {draft && showDraft && <DraftView draft={draft} onCreate={create} saving={!!busy || uploading} onBack={() => {
+        setShowDraft(false);
+        chatRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }} />}
+      {draft && !showDraft && <Button variant="outline" onClick={() => setShowDraft(true)}>Review current draft</Button>}
     </div>
   );
 }
@@ -480,7 +526,7 @@ function Cell({ c }: { c: AnyContent }) {
   );
 }
 
-function DraftView({ draft, onCreate, saving }: { draft: AgentDraft; onCreate: () => void; saving: boolean }) {
+function DraftView({ draft, onCreate, saving, onBack }: { draft: AgentDraft; onCreate: () => void; saving: boolean; onBack: () => void }) {
   const { session } = draft;
   const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
   return (
@@ -494,9 +540,12 @@ function DraftView({ draft, onCreate, saving }: { draft: AgentDraft; onCreate: (
             {draft.ambientUrl ? " · background music on" : ""}
           </p>
         </div>
+        <div className="flex flex-wrap gap-2">
+        <Button variant="outline" onClick={onBack} disabled={saving}><ArrowLeft className="size-4" /> Back to chat</Button>
         <Button onClick={onCreate} disabled={saving} className="h-11 px-6 uppercase tracking-widest">
-          {saving ? "Saving…" : "Create lesson"}
+          {saving ? "Please wait…" : "Create lesson"}
         </Button>
+        </div>
       </div>
       {draft.warnings.length > 0 && (
         <details className="text-xs text-muted-foreground">
