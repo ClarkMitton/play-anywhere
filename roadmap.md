@@ -5,3 +5,7 @@
 - [x] Preserve separate agent chats and drafts, allow review-to-chat editing, and return from created lessons.
 - [x] Verify saved-chat recovery and review navigation (browser recovery/reload/back/review passed; history tests passed).
 - [x] Remove Generate with AI from the lesson list, leaving the agent builder (browser confirmed).
+
+# Agent timeout
+- [x] Inspect lesson-agent failures and keep long AI builds connected without changing models or lesson rules.
+- [ ] Test streaming handling, deploy the existing agent function, and verify a real lesson build through the app.
