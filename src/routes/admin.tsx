@@ -367,14 +367,6 @@ function LessonsTab() {
               Build with the agent
             </Button>
           </Link>
-          <Link to="/admin/generate">
-            <Button
-              variant="outline"
-              className="h-11 px-6 uppercase tracking-widest border-[color:var(--cyan)] text-[color:var(--cyan)] hover:bg-[color:var(--cyan)]/10"
-            >
-              Generate with AI
-            </Button>
-          </Link>
           <Button
             onClick={() => setCreateOpen(true)}
             className="h-11 px-6 uppercase tracking-widest"
