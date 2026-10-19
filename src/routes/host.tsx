@@ -55,6 +55,8 @@ type LessonMeta = {
   title: string;
   ms_form_url: string | null;
   slot_count: number;
+  /** Looping background track, from the lesson's ai_notes.ambient_url. */
+  ambient_url?: string;
 };
 
 type SlotDef = {
@@ -145,6 +147,39 @@ function SlotNavBar({
   );
 }
 
+/** Quiet looping track under a lesson. Stands aside while a clip or sound file plays. */
+const AMBIENT_VOLUME = 0.22;
+const MEDIA_TYPES = new Set(["youtube", "video", "audio"]);
+
+function ambientUrlOf(notes: unknown): string | undefined {
+  const u = (notes as { ambient_url?: unknown } | null)?.ambient_url;
+  return typeof u === "string" && u ? u : undefined;
+}
+
+function AmbientMusic({ url, hostType }: { url?: string; hostType?: string }) {
+  const ref = useRef<HTMLAudioElement | null>(null);
+  const wanted = !!url && !(hostType && MEDIA_TYPES.has(hostType));
+
+  useEffect(() => {
+    const a = ref.current;
+    if (!a) return;
+    if (!wanted) { a.pause(); return; }
+    a.volume = AMBIENT_VOLUME;
+    const start = () => { a.play().catch(() => {}); };
+    start();
+    // Browsers hold sound back until the page has been touched once.
+    window.addEventListener("pointerdown", start, { once: true });
+    window.addEventListener("keydown", start, { once: true });
+    return () => {
+      window.removeEventListener("pointerdown", start);
+      window.removeEventListener("keydown", start);
+    };
+  }, [wanted, url]);
+
+  if (!url) return null;
+  return <audio ref={ref} src={url} loop preload="auto" />;
+}
+
 function HostScreen() {
   const { session: sessionParam, preview } = Route.useSearch();
   const inPreview = preview === "1";
@@ -225,7 +260,7 @@ function HostScreen() {
     let cancelled = false;
     (async () => {
       const [{ data: lesson }, { data: slotRows }] = await Promise.all([
-        supabase.from("lessons").select("title, ms_form_url").eq("id", session.lesson_id!).single(),
+        supabase.from("lessons").select("title, ms_form_url, ai_notes").eq("id", session.lesson_id!).single(),
         supabase
           .from("slots")
           .select("id, order_index, name, screen_delay_secs, host_content, screen1_content, screen2_content")
@@ -241,6 +276,7 @@ function HostScreen() {
           title: (lesson as { title: string; ms_form_url: string | null }).title,
           ms_form_url: (lesson as { title: string; ms_form_url: string | null }).ms_form_url,
           slot_count: loadedSlots.length,
+          ambient_url: ambientUrlOf((lesson as { ai_notes?: unknown }).ai_notes),
         });
       }
     })();
@@ -544,6 +580,7 @@ function HostScreen() {
             End session
           </Button>
         </div>
+        <AmbientMusic url={lessonMeta?.ambient_url} hostType={(hostContent as { type?: string }).type} />
         {/* Top 60% — host content */}
         <div className="relative" style={{ flex: "0 0 60%" }}>
           <SlotRenderer
@@ -594,6 +631,7 @@ function HostScreen() {
     const content = session.state?.slot?.host ?? { type: "waiting" };
     return (
       <div className="relative">
+        <AmbientMusic url={lessonMeta?.ambient_url} hostType={(content as { type?: string }).type} />
         <SlotRenderer
           content={content}
           screen="host"

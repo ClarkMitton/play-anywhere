@@ -306,3 +306,26 @@ _To fill in after the lesson has been taught._
 ### Even better if (room)
 
 -
+
+---
+
+## Phantom of the Opera: Language Escape Room
+
+- **Built:** 19 October 2026
+- **For:** ESOL Entry 2, language practice
+- **Length:** about 41 minutes, 17 steps
+- **Source:** Clark's Canva sheets (`Library/1-15.png`), the trailer from the first Phantom lesson and the chandelier crash clip
+- **Lesson file:** [phantom-language-escape-room.sql](phantom-language-escape-room.sql)
+- **Pictures and music:** `lesson-media/lessons/phantom-escape-room/` (copies in `public/lessons/phantom-of-the-opera/img/`)
+
+### WWW in the build
+
+- **Whiteboard over the sheet.** Each challenge sheet is the whiteboard background on the touch screens, so learners write the answers on the sheet itself. The Host shows the sheet and then their sent drawings.
+- **Clip bookends.** The trailer opens, the full chandelier crash closes. Neither is trimmed.
+- **Ambient music.** A quiet looping organ track plays on the Host under the picture steps and pauses for clips. Lesson-level setting `ai_notes.ambient_url`.
+
+### Even better if (build)
+
+- The music is a generated organ drone, not a recording. Swap `ambient_url` for a real royalty-free track when there is one.
+- The clue letters (AVS, EC, HIR, ST, NIE, NOW) need an answer sheet. The final answer is not in the lesson.
+- No confidence check or lock on the clues, as asked.
