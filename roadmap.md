@@ -8,4 +8,4 @@
 
 # Agent timeout
 - [x] Inspect lesson-agent failures and keep long AI builds connected without changing models or lesson rules.
-- [ ] Test streaming handling, deploy the existing agent function, and verify a real lesson build through the app.
+- [x] Test streaming handling (6 tests plus canonical prompt test passed), deploy lesson-agent, and verify a real 12-step, 45-minute build, save, and Designer readback through the app.
