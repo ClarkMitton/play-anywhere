@@ -361,3 +361,22 @@ _To fill in after the lesson has been taught._
 - The music is a generated organ drone, not a recording. Swap `ambient_url` for a real royalty-free track when there is one.
 - The clue letters (AVS, EC, HIR, ST, NIE, NOW) need an answer sheet. The final answer is not in the lesson.
 - No confidence check or lock on the clues, as asked.
+
+---
+
+## Phantom of the Opera: Language Escape Room (Level 1)
+
+- **Built:** 22 October 2026
+- **For:** ESOL Level 1
+- **Length:** about 41 minutes, 17 steps, the same shape as the Entry 2 version
+- **Source:** Clark's Level 1 Canva sheets (`Library/Level1/1-15.png`), the same trailer and chandelier clips
+- **Lesson file:** [phantom-language-escape-room-level-1.sql](phantom-language-escape-room-level-1.sql)
+- **Pictures:** `lesson-media/lessons/phantom-level-1/` (copies in `public/lessons/phantom-level-1/`); music loop shared from `phantom-escape-room/`
+
+### WWW in the build
+
+- **One shape, two levels.** Same running order, clips and music as Entry 2, so a tutor can run either from the same plan. The challenges step up: matching meanings, odd one out with a reason, and four tenses.
+
+### Even better if (build)
+
+- The first clue reads VAS here and AVS in the Entry 2 set. Worth making them match if the answer is meant to be the same.
