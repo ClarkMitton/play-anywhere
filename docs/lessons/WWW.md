@@ -380,3 +380,28 @@ _To fill in after the lesson has been taught._
 ### Even better if (build)
 
 - The first clue reads VAS here and AVS in the Entry 2 set. Worth making them match if the answer is meant to be the same.
+
+---
+
+## Fact and Opinion: Tina Turner (Fiona, Functional Skills Level 1)
+
+- **Built:** 22 October 2026
+- **For:** Functional Skills Level 1 English, Fiona's group. Fiona is new to the room and to digital tools, so the build keeps her own slides and adds only what helps.
+- **Length:** about 151 minutes as timed, 34 steps (adjust to the real session)
+- **Source:** Fiona's PowerPoint (`FIONA FRIDAY FACT AND OPINION 25th October.pptx`, slides from her PDF), her Wordwall, Tina Turner clip and Forms
+- **Lesson file:** [fiona-fact-and-opinion.sql](fiona-fact-and-opinion.sql)
+- **Pictures:** `lesson-media/lessons/fiona-fact-opinion/` (copies in `public/lessons/fiona-fact-opinion/`)
+
+### WWW in the build
+
+- **Her slides, her order.** Every slide is on the big screen as she made it. The room is added around it, not instead of it.
+- **Touch screens as scaffolding.** Sentence starters and a checklist for the table task, the opinion warning words while she teaches them, a writing frame, and step-by-step Teams help during laptop tasks.
+- **A table task where the slides already asked for one.** Slides 7 and 9 ask tables to write facts and opinions; that became one "fact or opinion builder" plus swap and check, placed after slide 14 so it follows the teaching.
+- **Mentimeter replaced by the room.** A six-question fact-or-opinion round on the touch screens, straight after the Wordwall so learners only make one trip.
+- **Traffic lights built in.** Start and end checks on a 1 to 3 scale, so the big screen shows the change.
+
+### Even better if (build)
+
+- Edpuzzle and Forms need laptops and Teams logins; they cannot run on the shared screens.
+- The Forms QR codes are copied from her slides and were not test-scanned.
+- Document 2 for the exit ticket was not in the pack.
