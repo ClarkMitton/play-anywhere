@@ -30,6 +30,7 @@ What proves itself here is collected in [WAYS-OF-WORKING.md](WAYS-OF-WORKING.md)
 - **The touch screens are a reference library during table work.** While the rotation timer runs on the big screen, the touch screens show the spending card and one runner per table goes to read it.
 - **Learners choose the local issue.** A word cloud and a vote on what matters to 16 to 18 year olds in Bradford set what each table works on after the break.
 - **Assigned parties keep it balanced.** A wheel gives each table its party, so nobody argues for their own politics, and the pitch vote judges how well a pitch fits its voter, not the party.
+- **Real party logos, not AI scenes.** On 23 October the AI photos on the five party slides (steps 7 to 11) were swapped for each party's official logo on a light panel, keeping the deck's red divider. Same file names, so no SQL change.
 - **Checked before anyone runs it.** All 31 steps passed the app's content rules, the SQL ran against a real database engine, and all 14 pictures load from the media storage.
 
 ### Even better if (build)
