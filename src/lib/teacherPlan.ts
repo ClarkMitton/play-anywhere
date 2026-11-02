@@ -393,9 +393,25 @@ export function describeForTeacher(content: ContentDef | null | undefined): Teac
     }
 
     case "whiteboard":
+    
       return {
         title: "Whiteboard",
         summary: "Each touch screen has its own drawing board.",
+        items: [str(c.title)].filter(Boolean),
+        preview: str(c.image_url)
+          ? {
+              kind: "image",
+              url: str(c.image_url),
+              caption: "Learners draw on top of this picture",
+            }
+          : undefined,
+        doing: ["Learners draw on the touch screens."],
+      };
+
+    case "spot_difference":
+      return {
+        title: "Spot the Difference",
+        summary: `${Number(c.total_differences ?? 0)} differences to find independently on each touch screen.`,
         items: [str(c.title)].filter(Boolean),
         preview: str(c.image_url)
           ? {

@@ -265,6 +265,7 @@ export function ScreenJoin({ role, autoCode }: { role: "screen1" | "screen2"; au
 function contentForRole(session: SessionRow, role: "screen1" | "screen2"): SlotContent {
   const slot = session.state?.slot;
   if (slot?.host?.type === "hazard_hotspots") return slot.host;
+  if (slot?.host?.type === "spot_difference") return slot.host;
   return (role === "screen1" ? slot?.screen1 : slot?.screen2) ?? { type: "waiting" };
 }
 

@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 import { RotationTimerRenderer, type RotationTimerContent } from "@/components/RotationTimer";
 import { HazardHotspotsRenderer, type HazardHotspotsContent } from "@/components/HazardHotspots";
+import { SpotDifferenceRenderer } from "@/components/SpotDifference";
+import type { SpotDifferenceContent } from "@/lib/spotDifference";
 
 // ─────────────────────────────────────────────
 // CONFETTI — celebratory burst (wheel result, confidence improvement)
@@ -79,6 +81,7 @@ export type SlotContent =
   | { type: "whiteboard"; title?: string; image_url?: string; file_name?: string }
   | RotationTimerContent
   | HazardHotspotsContent
+  | SpotDifferenceContent
   | { type: string; [k: string]: unknown };
 
 type QuestionContent = Extract<SlotContent,
@@ -251,6 +254,9 @@ export function SlotRenderer({
 
     case "hazard_hotspots":
       return <HazardHotspotsRenderer content={content as HazardHotspotsContent} screen={screen} sessionId={sessionId} />;
+
+    case "spot_difference":
+      return <SpotDifferenceRenderer content={content as SpotDifferenceContent} screen={screen} sessionId={sessionId} slotId={slotId} />;
 
     case "host_timer": {
       if (screen !== "host") return <Waiting screen={screen} />;

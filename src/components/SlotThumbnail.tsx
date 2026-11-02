@@ -156,6 +156,12 @@ function ThumbContent({
       );
     }
 
+    case "spot_difference": {
+      const url = String((role === "host" ? c.reference_url : c.comparison_url) ?? "");
+      if (!url) return <Label icon="◎" label="Spot the Difference" />;
+      return <img src={url} alt={role === "host" ? "Reference image" : "Comparison image"} className="absolute inset-0 w-full h-full object-contain bg-background" loading="lazy" />;
+    }
+
     case "host_timer":
     case "countdown_timer":
       return (

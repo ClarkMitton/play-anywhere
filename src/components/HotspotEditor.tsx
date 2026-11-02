@@ -16,12 +16,16 @@ export function HotspotEditorDialog({
   hotspots,
   onClose,
   onSave,
+  noun = "hazard",
+  expectedTotal,
 }: {
   open: boolean;
   url: string;
   hotspots: Hotspot[];
   onClose: () => void;
   onSave: (hotspots: Hotspot[]) => void;
+  noun?: "hazard" | "difference";
+  expectedTotal?: number;
 }) {
   const [draft, setDraft] = useState<Hotspot[]>(hotspots);
   const [selected, setSelected] = useState<string | null>(null);
@@ -40,7 +44,8 @@ export function HotspotEditorDialog({
   }
 
   const toPct = (clientX: number, clientY: number) => {
-    const rect = imgRef.current!.getBoundingClientRect();
+    const rect = imgRef.current?.getBoundingClientRect();
+    if (!rect) return { x: 0, y: 0 };
     return {
       x: Math.min(100, Math.max(0, ((clientX - rect.left) / rect.width) * 100)),
       y: Math.min(100, Math.max(0, ((clientY - rect.top) / rect.height) * 100)),
@@ -78,14 +83,14 @@ export function HotspotEditorDialog({
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="max-w-[min(1200px,95vw)] w-[95vw] bg-card border-border">
         <DialogHeader>
-          <DialogTitle>Mark the hazards</DialogTitle>
+          <DialogTitle>Mark the {noun}s</DialogTitle>
         </DialogHeader>
         <p className="text-xs text-muted-foreground -mt-2">
-          Click the picture to add a hazard. Drag a circle to move it. Learners find a hazard by
+          Click the picture to add a {noun}. Drag a circle to move it. Learners find a {noun} by
           tapping inside its circle.
         </p>
-        <div className="flex gap-4 min-h-0" style={{ maxHeight: "70vh" }}>
-          <div className="flex-1 min-w-0 flex items-start justify-center bg-black rounded-lg overflow-hidden">
+        <div className="flex flex-col md:flex-row gap-4 min-h-0 overflow-y-auto" style={{ maxHeight: "70vh" }}>
+          <div className="flex-1 min-w-0 flex items-start justify-center bg-background rounded-lg overflow-hidden">
             <div
               className="relative select-none"
               onPointerMove={handlePointerMove}
@@ -113,19 +118,19 @@ export function HotspotEditorDialog({
                     transform: "translate(-50%, -50%)",
                   }}
                 >
-                  <span className="bg-black/70 text-white rounded px-1">{i + 1}</span>
+                  <span className="bg-background/70 text-foreground rounded px-1">{i + 1}</span>
                 </div>
               ))}
             </div>
           </div>
 
-          <div className="w-72 shrink-0 flex flex-col gap-2 overflow-y-auto">
+          <div className="w-full md:w-72 shrink-0 flex flex-col gap-2 overflow-y-auto">
             <div className="text-[10px] uppercase tracking-widest text-muted-foreground">
-              Hazards ({draft.length})
+              {noun === "difference" ? "Differences" : "Hazards"} ({draft.length}{expectedTotal !== undefined ? ` / ${expectedTotal}` : ""})
             </div>
             {draft.length === 0 && (
               <p className="text-xs text-muted-foreground">
-                No hazards yet. Click the picture to add one.
+                No {noun}s yet. Click the picture to add one.
               </p>
             )}
             {draft.map((h, i) => (
@@ -142,19 +147,19 @@ export function HotspotEditorDialog({
                     }}
                     value={h.label}
                     onChange={(e) => update(h.id, { label: e.target.value })}
-                    placeholder="e.g. Trailing cable"
+                    placeholder={noun === "difference" ? "e.g. Missing window" : "e.g. Trailing cable"}
                     className="h-8 text-xs bg-background/60"
                   />
-                  <button
+                  <Button variant="ghost" size="icon"
                     onClick={(e) => {
                       e.stopPropagation();
                       setDraft((d) => d.filter((x) => x.id !== h.id));
                     }}
                     className="text-muted-foreground hover:text-destructive text-lg leading-none px-1"
-                    aria-label="Remove hazard"
+                    aria-label={`Remove ${noun}`}
                   >
                     ×
-                  </button>
+                  </Button>
                 </div>
                 <div className="flex items-center gap-2 pl-7">
                   <span className="text-[10px] uppercase tracking-widest text-muted-foreground">
@@ -177,17 +182,17 @@ export function HotspotEditorDialog({
         <div className="flex items-center justify-end gap-3 pt-2">
           {unlabelled > 0 && (
             <span className="text-xs text-[color:var(--orange)] mr-auto">
-              {unlabelled} hazard{unlabelled === 1 ? " needs" : "s need"} a label
+              {unlabelled} {noun}{unlabelled === 1 ? " needs" : "s need"} a label
             </span>
           )}
           <Button variant="outline" onClick={onClose}>
             Cancel
           </Button>
           <Button
-            disabled={unlabelled > 0}
+            disabled={unlabelled > 0 || (expectedTotal !== undefined && draft.length !== expectedTotal)}
             onClick={() => onSave(draft.map((h) => ({ ...h, label: h.label.trim() })))}
           >
-            Save hazards
+            Save {noun}s
           </Button>
         </div>
       </DialogContent>

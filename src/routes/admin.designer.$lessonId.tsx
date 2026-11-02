@@ -25,6 +25,7 @@ import { extractEmbedUrl } from "@/lib/sessionSchema";
 import { rotationTotalSecs } from "@/components/RotationTimer";
 import type { Hotspot } from "@/components/HazardHotspots";
 import { HotspotEditorDialog } from "@/components/HotspotEditor";
+import { differenceScreens } from "@/lib/spotDifference";
 
 // ─────────────────────────────────────────────
 // Constants
@@ -70,6 +71,7 @@ const CONTENT_TYPES_HOST = [
   { value: "countdown_timer", label: "Countdown Timer (all screens)" },
   { value: "rotation_timer", label: "Rotation Timer (carousel)" },
   { value: "hazard_hotspots", label: "Spot the Hazard (tap image)" },
+  { value: "spot_difference", label: "Spot the Difference" },
   { value: "host_timer", label: "Host Timer (Host only)" },
 ];
 const CONTENT_TYPES_SCREEN1 = [
@@ -90,6 +92,7 @@ const CONTENT_TYPES_SCREEN1 = [
   { value: "countdown_timer", label: "Countdown Timer" },
   { value: "rotation_timer", label: "Rotation Timer (carousel)" },
   { value: "hazard_hotspots", label: "Spot the Hazard (tap image)" },
+  { value: "spot_difference", label: "Spot the Difference" },
 ];
 // Interactive question types. Authored via the question modal; on insert they
 // populate Host (live results, with a Reveal button) + TS2 (student answering).
@@ -1634,12 +1637,20 @@ function SlotEditorPanel({
         : slot.screen2_content;
 
   const setContentType = (type: string) => {
+    if (type === "spot_difference") {
+      onUpdate(differenceScreens({ type, reference_url: "", comparison_url: "", total_differences: 1, hotspots: [] }));
+      return;
+    }
     if (activeScreen === "host") onUpdate({ host_content: { ...screenContent, type } });
     else if (activeScreen === "screen1") onUpdate({ screen1_content: { ...screenContent, type } });
     else onUpdate({ screen2_content: { ...screenContent, type } });
   };
 
   const onContentUpdate = (patch: Record<string, unknown>) => {
+    if (screenContent.type === "spot_difference") {
+      onUpdate(differenceScreens({ ...screenContent, ...patch }));
+      return;
+    }
     // Spot the Hazard only works with identical content on all three screens:
     // hotspots are matched by id, and a touch screen with none marks every tap
     // a miss. The Mirror switch is a one-time copy, so hazards marked after
@@ -2605,6 +2616,9 @@ function ContentTypeForm({
     case "hazard_hotspots":
       return <HazardHotspotsForm content={content} lessonId={lessonId} onChange={onChange} />;
 
+    case "spot_difference":
+      return <SpotDifferenceForm content={content} lessonId={lessonId} onChange={onChange} />;
+
     default:
       return null;
   }
@@ -2701,6 +2715,33 @@ function RotationTimerForm({
 // ─────────────────────────────────────────────
 // HAZARD HOTSPOTS FORM
 // ─────────────────────────────────────────────
+
+function SpotDifferenceForm({ content, lessonId, onChange }: {
+  content: ContentDef; lessonId: string; onChange: (patch: Record<string, unknown>) => void;
+}) {
+  const [editorOpen, setEditorOpen] = useState(false);
+  const hotspots = Array.isArray(content.hotspots) ? content.hotspots as Hotspot[] : [];
+  const total = Number(content.total_differences ?? 1);
+  const comparison = String(content.comparison_url ?? "");
+  return <div className="space-y-3">
+    <Label htmlFor="difference-title">Title (optional)</Label>
+    <Input id="difference-title" value={String(content.title ?? "")} onChange={(e) => onChange({ title: e.target.value })} placeholder="Spot the Difference" />
+    <FileUploadField label="Original / reference image (Host)" accept="image/png,image/jpeg,image/webp" lessonId={lessonId} maxSizeMb={50}
+      currentFileName={content.reference_file_name ? String(content.reference_file_name) : undefined}
+      onUpload={(url, file_name) => onChange({ reference_url: url, reference_file_name: file_name })} />
+    <FileUploadField label="Comparison image (both side screens)" accept="image/png,image/jpeg,image/webp" lessonId={lessonId} maxSizeMb={50}
+      currentFileName={content.comparison_file_name ? String(content.comparison_file_name) : undefined}
+      onUpload={(url, file_name) => onChange({ comparison_url: url, comparison_file_name: file_name })} />
+    <Label htmlFor="difference-total">Total number of differences</Label>
+    <Input id="difference-total" type="number" min={1} step={1} value={total} onChange={(e) => onChange({ total_differences: Math.max(1, Math.floor(Number(e.target.value) || 1)) })} />
+    <Button variant="outline" className="w-full whitespace-normal h-auto min-h-10 py-2" disabled={!comparison} onClick={() => setEditorOpen(true)}>
+      {hotspots.length ? `Edit differences (${hotspots.length} / ${total})` : "Mark the differences"}
+    </Button>
+    {hotspots.length !== total && <p role="status" className="text-sm text-destructive">{hotspots.length} of {total} difference locations marked.</p>}
+    <HotspotEditorDialog open={editorOpen} url={comparison} hotspots={hotspots} noun="difference" expectedTotal={total}
+      onClose={() => setEditorOpen(false)} onSave={(next) => { onChange({ hotspots: next }); setEditorOpen(false); }} />
+  </div>;
+}
 
 function HazardHotspotsForm({
   content,
