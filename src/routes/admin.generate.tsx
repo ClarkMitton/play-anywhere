@@ -33,7 +33,14 @@ import { writeGeneratedSession } from "@/lib/sessionWriter";
 import { DEPARTMENTS, LEVELS, type Brief, type GeneratedSession } from "@/lib/sessionSchema";
 
 export const Route = createFileRoute("/admin/generate")({
-  head: () => ({ meta: [{ title: "Generate a session · Immersive Learning" }] }),
+  head: () => ({ meta: [
+    { title: "Generate a session · Immersive Learning" },
+    { name: "description", content: "Review AI-authored drafts for Bradford College immersive teaching sessions." },
+    { property: "og:title", content: "Generate a session · Immersive Learning" },
+    { property: "og:description", content: "Review AI-authored drafts for Bradford College immersive teaching sessions." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
   component: GeneratePage,
 });
 

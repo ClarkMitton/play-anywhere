@@ -24,6 +24,10 @@ export const Route = createFileRoute("/host")({
     meta: [
       { title: "Host · Immersive Learning" },
       { name: "description", content: "Host display for Bradford College Immersive Learning." },
+      { property: "og:title", content: "Host · Immersive Learning" },
+      { property: "og:description", content: "Host display for Bradford College Immersive Learning." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   validateSearch: (search: Record<string, unknown>) => ({

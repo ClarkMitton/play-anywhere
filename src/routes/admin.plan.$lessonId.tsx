@@ -26,7 +26,14 @@ import {
 } from "@/lib/planExport";
 
 export const Route = createFileRoute("/admin/plan/$lessonId")({
-  head: () => ({ meta: [{ title: "Lesson plan · Immersive Learning" }] }),
+  head: () => ({ meta: [
+    { title: "Lesson plan · Immersive Learning" },
+    { name: "description", content: "Review and print a Bradford College immersive teaching plan." },
+    { property: "og:title", content: "Lesson plan · Immersive Learning" },
+    { property: "og:description", content: "Review and print a Bradford College immersive teaching plan." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
   // ?view=teacher swaps in the plain-English version for sharing with visiting staff.
   validateSearch: (search: Record<string, unknown>): { view?: "teacher" } =>
     search.view === "teacher" ? { view: "teacher" } : {},

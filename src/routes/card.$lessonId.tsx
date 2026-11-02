@@ -15,7 +15,14 @@ import { totalMinutes, type PlanLesson, type PlanSlot } from "@/lib/planExport";
 import { activityFor, startTimes } from "@/lib/teacherPlan";
 
 export const Route = createFileRoute("/card/$lessonId")({
-  head: () => ({ meta: [{ title: "Lesson card · Immersive Learning" }] }),
+  head: () => ({ meta: [
+    { title: "Lesson card · Immersive Learning" },
+    { name: "description", content: "Review and share the running order of a Bradford College immersive lesson." },
+    { property: "og:title", content: "Lesson card · Immersive Learning" },
+    { property: "og:description", content: "Review and share the running order of a Bradford College immersive lesson." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
   component: CardPage,
 });
 

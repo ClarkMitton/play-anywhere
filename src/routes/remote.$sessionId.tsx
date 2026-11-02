@@ -17,7 +17,14 @@ import type { RealtimeChannel } from "@supabase/supabase-js";
 
 
 export const Route = createFileRoute("/remote/$sessionId")({
-  head: () => ({ meta: [{ title: "Host Remote · Immersive Learning" }] }),
+  head: () => ({ meta: [
+    { title: "Host Remote · Immersive Learning" },
+    { name: "description", content: "Control Bradford College lesson slides and live activities remotely." },
+    { property: "og:title", content: "Host Remote · Immersive Learning" },
+    { property: "og:description", content: "Control Bradford College lesson slides and live activities remotely." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
   component: RemotePage,
 });
 

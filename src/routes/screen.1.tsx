@@ -14,7 +14,14 @@ import { SessionEndScreen } from "@/components/SessionEndScreen";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 
 export const Route = createFileRoute("/screen/1")({
-  head: () => ({ meta: [{ title: "Student Touch Screen 1 · Immersive Learning" }] }),
+  head: () => ({ meta: [
+    { title: "Student Touch Screen 1 · Immersive Learning" },
+    { name: "description", content: "Join and take part in Bradford College lessons on student screen one." },
+    { property: "og:title", content: "Student Touch Screen 1 · Immersive Learning" },
+    { property: "og:description", content: "Join and take part in Bradford College lessons on student screen one." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
   validateSearch: (search: Record<string, unknown>) => ({
     code: typeof search.code === "string" ? search.code : undefined,
   }),
