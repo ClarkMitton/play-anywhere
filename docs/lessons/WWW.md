@@ -12,6 +12,46 @@ What proves itself here is collected in [WAYS-OF-WORKING.md](WAYS-OF-WORKING.md)
 
 ---
 
+## ESOL Daily Routines
+
+- **Built:** 2 November 2026
+- **For:** Shamim Nizami, ESOL Pre-Entry
+- **Length:** 60 minutes, 17 steps, about 25 minutes acting, drawing and writing on the whiteboard tables, two whole-class moves
+- **Source:** `Shamim/Daily Routines/Daily Routines ESOL Pre-Entry.pptx` (13 slides), the Wordwall "Daily routine key words" (Find the match, 12 words) and one YouTube video (Woodward English, "Daily Routines in English for Adults", 4 minutes 27 seconds)
+- **Lesson file:** [esol-daily-routines.sql](esol-daily-routines.sql)
+- **Slides:** Shamim's 13 slides rebuilt as six pictures, in `public/lessons/esol-daily-routines/` and the media storage
+- **Table packs:** none. Clark asked for no printing, with a whiteboard table activity.
+
+### WWW in the build
+
+- **Built straight from Clark's request.** Clark said the earlier Shamim sessions had worked well and asked for the same again, so the brief came from them: whiteboard tables yes, no printing. The thread and objectives were chosen here, following the earlier ESOL lessons, and are written in the lesson notes.
+- **The whole transcript was read, and every scene was looked at.** The caption trick from Salon session 2 worked first time. Looking at stills showed 0:36 to 0:56 is a woman and a shirtless man in the shower and someone getting dressed against a window, so the video plays in three parts that skip those 20 seconds, and the tutor acts the two actions instead.
+- **The PowerPoint is the spine, in Shamim's order.** Her four morning clocks become predict and reveal on the tables. Her five day slides become a picture dictation (Table task 1): the tutor reads her sentences and tables draw the clock and the action, then see her slides as the answers.
+- **Act, then read.** Two act-along clips use the video's own pattern (each line said twice with a gap) for repeating with actions, before learners see any of Shamim's words.
+- **One trip to the touch screens** for the Wordwall and a five-question round (true or false, gap fill, odd one out), and the third clip's watching task is set while learners are still at the screens, so they walk back as it plays.
+- **The last task is the learner's own day** (Table task 2): a line on the table from sun to moon, four clocks and four sentences, then another table reads it and asks a What time question. The opening question closes the lesson.
+- **Checked before anyone runs it.** All 17 steps passed the app's content rules, the SQL ran against a real database engine, and all six pictures load from the media storage.
+
+### Even better if (build)
+
+- The objectives were not offered to Clark to choose from this time. Worth a quick look before teaching.
+- No Canva pictures were made. Shamim's own slides carried the lesson, but the clip art title slide is small and was scaled up.
+- The Wordwall has drink, relax and night, which the slides do not teach. The tutor mimes them first.
+- Shamim's slide 3 was only a link to a Games4esl lesson plan and is left out. Slide 2 said "wakes at", now "wakes up at".
+- The shared board (`padlet`) is still missing from the app's content rules, so that step was not checked by them.
+
+### WWW in the room
+
+_To fill in after the lesson has been taught._
+
+-
+
+### Even better if (room)
+
+-
+
+---
+
 ## The Five Parties: Who Wins Your Vote?
 
 - **Built:** 19 October 2026
