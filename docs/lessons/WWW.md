@@ -104,7 +104,7 @@ _To fill in after the lesson has been taught._
 - **A real case opens and closes the judging.** Tables judge the BBC barbershop before any teaching, vote again with the law behind them, then judge another table's board as inspectors.
 - **Both transcripts were read before use.** The caption capture trick from ESOL Adjectives no longer worked, so the player's own caption request was intercepted inside the page instead.
 - **Checked before anyone runs it.** All 24 steps passed the app's content rules, the SQL ran against a real database engine, and every slide loads from the media storage.
-- **Fire extinguishers added on 2 November 2026** (now 29 steps, 75 minutes). Clark asked for 15 minutes on extinguisher types at the end, one activity on the tables. Five steps before the closing question: predict (water on a burning hairdryer?), Hayley's extinguisher slides on one slide, her fire-fighting handout as a grid drawn on the table from memory, a check slide, and a wheel of salon fires where tables race to write the colour band. The two new slides were drawn with shapes in the same Canva deck, so no AI credits were used. `salon-who-keeps-us-safe-fire.sql` adds the block to the copy already in the database, and refuses to run twice.
+- **Fire extinguishers added on 2 November 2026** (now 29 steps, 75 minutes). Clark asked for 15 minutes on extinguisher types at the end, one activity on the tables. Five steps before the closing question: predict (water on a burning hairdryer?), Hayley's extinguisher slides on one slide, the table from her fire-fighting worksheet drawn on the whiteboard table from memory (nothing printed), a check slide, and a wheel of salon fires where tables race to write the colour band. The two new slides were drawn with shapes in the same Canva deck, so no AI credits were used. `salon-who-keeps-us-safe-fire.sql` adds the block to the copy already in the database, and refuses to run twice.
 
 ### Even better if (build)
 
@@ -113,7 +113,7 @@ _To fill in after the lesson has been taught._
 - The BBC clip has a first-hand description of an infection and photos of dirty razors. Fine for this group, but warn them.
 - Steps 12 to 17 are six slides in a row. Each has a different job (thumbs up, predict the bin, check your partner), but watch the pace.
 - The board and judging timers move on by themselves. A tutor who wants more time has to pause.
-- Hayley's fire-fighting handout labels foam yellow. Foam is cream; yellow is wet chemical. The tutor note says so. Worth telling her.
+- Hayley's fire-fighting worksheet labels foam yellow. Foam is cream; yellow is wet chemical. The tutor note says so. Worth telling her.
 - With the fire block the lesson runs 75 minutes, and the class is at the tables for the last 20 without moving. Watch energy at the end.
 
 ### WWW in the room
