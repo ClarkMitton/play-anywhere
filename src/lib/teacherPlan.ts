@@ -393,7 +393,6 @@ export function describeForTeacher(content: ContentDef | null | undefined): Teac
     }
 
     case "whiteboard":
-    
       return {
         title: "Whiteboard",
         summary: "Each touch screen has its own drawing board.",
@@ -405,7 +404,10 @@ export function describeForTeacher(content: ContentDef | null | undefined): Teac
               caption: "Learners draw on top of this picture",
             }
           : undefined,
-        doing: ["Learners draw on the touch screens."],
+        doing: [
+          "Learners draw or write on a touch screen. Clear wipes the board.",
+          "They press Send to big screen to show their drawing, labelled Screen 1 or Screen 2.",
+        ],
       };
 
     case "spot_difference":
@@ -413,16 +415,16 @@ export function describeForTeacher(content: ContentDef | null | undefined): Teac
         title: "Spot the Difference",
         summary: `${Number(c.total_differences ?? 0)} differences to find independently on each touch screen.`,
         items: [str(c.title)].filter(Boolean),
-        preview: str(c.image_url)
+        preview: str(c.reference_url)
           ? {
               kind: "image",
-              url: str(c.image_url),
-              caption: "Learners draw on top of this picture",
+              url: str(c.reference_url),
+              caption: "Original reference image on the host",
             }
           : undefined,
         doing: [
-          "Learners draw or write on a touch screen. Clear wipes the board.",
-          "They press Send to big screen to show their drawing, labelled Screen 1 or Screen 2.",
+          "Each group taps all differences in the comparison image independently.",
+          "Send to Host Screen is available once every difference has been found.",
         ],
       };
 

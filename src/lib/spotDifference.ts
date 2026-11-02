@@ -26,6 +26,6 @@ export function canSubmitDifferences(content: SpotDifferenceContent, found: stri
 }
 
 /** One definition for all roles; the renderer selects reference vs comparison. */
-export function differenceScreens(content: Record<string, unknown>) {
+export function differenceScreens(content: { type: string; [key: string]: unknown }) {
   return { host_content: { ...content }, screen1_content: { ...content }, screen2_content: { ...content } };
 }
