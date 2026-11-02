@@ -410,6 +410,24 @@ export function describeForTeacher(content: ContentDef | null | undefined): Teac
         ],
       };
 
+    case "spot_difference":
+      return {
+        title: "Spot the Difference",
+        summary: `${Number(c.total_differences ?? 0)} differences to find independently on each touch screen.`,
+        items: [str(c.title)].filter(Boolean),
+        preview: str(c.reference_url)
+          ? {
+              kind: "image",
+              url: str(c.reference_url),
+              caption: "Original reference image on the host",
+            }
+          : undefined,
+        doing: [
+          "Each group taps all differences in the comparison image independently.",
+          "Send to Host Screen is available once every difference has been found.",
+        ],
+      };
+
     default:
       return { title: "Activity", summary: "", items: [], doing: [] };
   }

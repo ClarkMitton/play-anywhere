@@ -16,7 +16,14 @@ function stampCloud(c: unknown, slot: { id?: string }): unknown {
 }
 
 export const Route = createFileRoute("/admin/test")({
-  head: () => ({ meta: [{ title: "Test Mode · Admin" }] }),
+  head: () => ({ meta: [
+    { title: "Test Mode · Admin" },
+    { name: "description", content: "Test Bradford College lesson activities on the host and both student screens." },
+    { property: "og:title", content: "Test Mode · Admin" },
+    { property: "og:description", content: "Test Bradford College lesson activities on the host and both student screens." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
   // ?lesson=<id> opens with that lesson already chosen. The tutor plan links
   // here so a tutor can walk through their own lesson before teaching it.
   validateSearch: (search: Record<string, unknown>): { lesson?: string } =>

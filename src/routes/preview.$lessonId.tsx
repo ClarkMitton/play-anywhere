@@ -23,7 +23,14 @@ import {
 } from "@/lib/teacherPlan";
 
 export const Route = createFileRoute("/preview/$lessonId")({
-  head: () => ({ meta: [{ title: "Lesson preview · Immersive Learning" }] }),
+  head: () => ({ meta: [
+    { title: "Lesson preview · Immersive Learning" },
+    { name: "description", content: "Preview Bradford College lesson activities across the host and both touch screens." },
+    { property: "og:title", content: "Lesson preview · Immersive Learning" },
+    { property: "og:description", content: "Preview Bradford College lesson activities across the host and both touch screens." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
   component: PreviewPage,
 });
 

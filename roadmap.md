@@ -1,4 +1,6 @@
 # Lesson builder
+- [x] Add Spot the Difference setup, independent side-screen finds and completion-only host submissions.
+- [x] Verify uploads, saved setup and the three-screen submission flow: both images uploaded, three locations persisted, incomplete submission blocked, independent progress, separate host results and reload recovery verified; four tests passed and temporary data/files removed.
 - [x] Repair interrupted build responses: deployed streaming, 9 tests passed, live six-step review reached; simulated broken reply shows recovery message and enables rebuilding. Long resource-heavy builds remain unverified.
 - [x] Review latest builder and choose lower-cost effective models.
 - [x] Deploy and verify lesson-agent: live chat/build/describe succeeded; browser reached validated 3-step review without saving.

@@ -296,6 +296,12 @@ export function describeContent(content: ContentDef | null | undefined): {
       };
     }
 
+    case "spot_difference":
+      return {
+        label: "Spot the Difference",
+        detail: [`${Number(c.total_differences ?? 0)} differences; original on Host, identical comparison on both side screens.`, "Each screen submits separately after finding every difference."],
+      };
+
     case "whiteboard":
       return {
         label: "Whiteboard",
