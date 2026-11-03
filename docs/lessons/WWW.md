@@ -12,6 +12,45 @@ What proves itself here is collected in [WAYS-OF-WORKING.md](WAYS-OF-WORKING.md)
 
 ---
 
+## ESOL Adjectives 2: Who is it?
+
+- **Built:** 3 November 2026
+- **For:** Shamim Nizami, ESOL Entry 2, following on from ESOL Adjectives
+- **Length:** 60 minutes, 16 steps, about 30 minutes writing and drawing on the whiteboard tables, two whole-class moves
+- **Source:** `Shamim/Shamim adjectives 2.txt`: one YouTube video (ESLvideo.com, "Describing People ~ Who is it?", 2 minutes) and two Wordwalls (a group sort and a quiz, both called "Describing People - Adjectives")
+- **Lesson file:** [esol-adjectives-2.sql](esol-adjectives-2.sql)
+- **Slides:** seven, made in Canva ("Who Is It?" in Clark's Canva), in `public/lessons/esol-adjectives-2/` and the media storage
+- **Table packs:** none. Whiteboard tables yes, no printing.
+
+### WWW in the build
+
+- **It follows on from the first lesson.** ESOL Adjectives was about personality. This one starts by sorting the adjectives learners already know into personality and appearance, which is exactly what Shamim's group sort Wordwall does, and then moves to appearance.
+- **Three patterns, one at a time:** is + adjective, has + hair in the order length, style, colour, and is wearing. Each gets its own slide and a quick check where learners stand (fingers, unscrambling on the table, describing the tutor's clothes).
+- **The video is a real game.** Its transcript and every photo grid were read, and the ten answers worked out from stills, because the video never shows them.
+- **An information gap for the product.** Each table describes a secret person from a line-up of eight, and another table has to find them. The writing has a real reader, and a wrong guess shows which sentence was unclear.
+- **Strangers, never classmates.** Appearance is personal, so every description is of a photo, and the tutor models "wearing" on their own clothes.
+- **The Canva deck came back close to the brief.** The people match the mix asked for, slide by slide: a woman in a hijab, a Sikh man in a turban, an older woman, a wheelchair user, Black, South Asian, East Asian, Middle Eastern and white people. Three things were fixed by hand: "nair" for "hair" twice, the missing clothing labels, and the model sentences on the last slide.
+- **Checked before anyone runs it.** All 16 steps passed the app's content rules, the SQL ran against a real database engine, and all seven slides load from the media storage.
+
+### Even better if (build)
+
+- Shamim's quiz Wordwall was left out. Question 5 shows a man dressed as a woman, labelled "The 'woman' is…", with ugly as the answer, and ugly is an option on three other photos of real people. Learners play it themselves, so the tutor could not skip it. Worth telling Shamim why. Her group sort also has ugly in it, and the tutor note says to name it as unkind.
+- The video's answers for 9 (Frank) and 10 (Ash) are best guesses from stills. Check them by eye.
+- The line-up slide goes when the timer starts in the last task. The tutor has to go back a step between rounds.
+- The objectives were chosen here, not offered to Clark to choose.
+
+### WWW in the room
+
+_To fill in after the lesson has been taught._
+
+-
+
+### Even better if (room)
+
+-
+
+---
+
 ## ESOL Daily Routines
 
 - **Built:** 2 November 2026
