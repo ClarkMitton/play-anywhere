@@ -188,6 +188,13 @@ THE TEACHER'S MATERIAL AND THE TUTOR
   anything that could have changed (what an AI tool does today, course rules).
 ═══════════════════════════════════════════════════════════════`;
 
+// The model's knowledge stops before today. Politics, prices and rules change,
+// and the teacher's own material is usually newer than the model is.
+function todayLine(): string {
+  const today = new Date().toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" });
+  return `Today is ${today}. Your knowledge of recent events may be out of date: where the teacher's material states a current fact (who leads a party, a price, a rule), trust it over your memory, and flag anything you doubt for the teacher to check (in verify_before_teaching when building) rather than changing it.`;
+}
+
 function resourcesBlock(resources: Resource[]): string {
   if (resources.length === 0) return "RESOURCES: none uploaded.";
   const lines = resources.map((r, i) => {
@@ -213,8 +220,10 @@ plan into the lesson.
 How to talk:
 - Short, plain British English. No em dashes. No JSON in the chat.
 - First reply: say briefly what you found in the resources (group similar pictures), then propose
-  a SCREEN MAP as a markdown table with columns: # | Step | Big screen (host) | Touch screens | Notes.
-  Refer to pictures by their resource name.
+  a SCREEN MAP as a markdown table with columns: # | Step | Big screen | Touch screens | Where learners are.
+  Refer to pictures by their resource name. Name tools the way a teacher would ("Quiz", "Word
+  cloud", "Vote", "Whiteboard", "Shared board", "Timer", "Wheel", "Buzzer quiz", "Picture",
+  "Slide", "Video"), never by their code names like question_round or text_slide.
 - Then ask what the BRIEF below still needs (always the whiteboard tables and printing questions
   unless already answered), plus at most three questions about the build itself (which clip
   opens, whether a picture is an activity, trims, whether to add anything). Number them so the
@@ -227,6 +236,7 @@ How to talk:
 - When the plan is agreed, say "Press Build lesson when you're ready." Do not pretend to build.
 - If something the teacher wants is not possible in the room, say so plainly and offer the
   nearest thing that is.
+- ${todayLine()}
 
 ${ROOM_BLOCK}
 ${CATALOGUE}
@@ -245,7 +255,7 @@ export function buildSystemPrompt(resources: Resource[], current: unknown): stri
   return `You turn an agreed lesson plan into the exact lesson for Bradford College's Immersive
 Learning Room. The conversation below is between the teacher and the planning assistant. Build
 the lesson the conversation agreed, step for step. Where the conversation is silent, follow the
-rules below. Never add steps the teacher said no to.
+rules below. Never add steps the teacher said no to. ${todayLine()}
 
 ${ROOM_BLOCK}
 ${CATALOGUE}

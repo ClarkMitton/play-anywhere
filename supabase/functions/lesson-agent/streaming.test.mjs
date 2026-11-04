@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readChatCompletion, streamJsonResponse } from './streaming.ts';
+import { readChatCompletion, streamEventsResponse, streamJsonResponse } from './streaming.ts';
 
 function response(frames) {
   const encoder = new TextEncoder();
@@ -33,4 +33,23 @@ test('waiting response emits heartbeat and finishes with parseable JSON', async 
 test('failed work returns a readable error rather than broken JSON', async () => {
   const res = streamJsonResponse(async () => { throw new Error('Connection interrupted'); }, {});
   assert.deepEqual(await res.json(), { ok: false, error: 'Connection interrupted' });
+});
+test('each piece of text is passed on as it arrives', async () => {
+  const pieces = [];
+  await readChatCompletion(response([
+    'data: {"choices":[{"delta":{"content":"Hel"}}]}\n\n',
+    'data: {"choices":[{"delta":{"content":"lo"},"finish_reason":"stop"}]}\n\n',
+  ]), (p) => pieces.push(p));
+  assert.deepEqual(pieces, ['Hel', 'lo']);
+});
+test('live reply sends events then exactly one result line', async () => {
+  const res = streamEventsResponse(async (emit) => { emit({ type: 'delta', text: 'Hi' }); emit({ type: 'progress', steps: 2 }); return Response.json({ ok: true, reply: 'Hi' }); }, {});
+  assert.equal(res.headers.get('content-type'), 'application/x-ndjson');
+  const lines = (await res.text()).trim().split('\n').map((l) => JSON.parse(l)).filter((e) => e.type !== 'ping');
+  assert.deepEqual(lines, [{ type: 'delta', text: 'Hi' }, { type: 'progress', steps: 2 }, { type: 'result', ok: true, reply: 'Hi' }]);
+});
+test('a failed live reply still ends with a readable result', async () => {
+  const res = streamEventsResponse(async () => { throw new Error('Connection interrupted'); }, {});
+  const last = JSON.parse((await res.text()).trim().split('\n').pop());
+  assert.deepEqual(last, { type: 'result', ok: false, error: 'Connection interrupted' });
 });

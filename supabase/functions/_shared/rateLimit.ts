@@ -27,7 +27,7 @@ export function getClientIp(req: Request): string {
   );
 }
 
-export function isRateLimited(ip: string): boolean {
+export function isRateLimited(ip: string, max = RATE_LIMIT_MAX): boolean {
   const now = Date.now();
   const entry = rateLimitMap.get(ip);
   if (!entry || now > entry.resetAt) {
@@ -35,7 +35,7 @@ export function isRateLimited(ip: string): boolean {
     return false;
   }
   entry.count++;
-  return entry.count > RATE_LIMIT_MAX;
+  return entry.count > max;
 }
 
 // Comma-separated list, e.g. "https://myroom.lovable.app,http://localhost:5173".

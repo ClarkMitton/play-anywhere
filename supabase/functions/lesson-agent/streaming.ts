@@ -1,7 +1,13 @@
 type Usage = { prompt_tokens: number; completion_tokens: number };
 
-/** Consume provider SSE, keeping usage and rejecting unfinished lessons. */
-export async function readChatCompletion(response: Response): Promise<{ text: string; usage: Usage }> {
+/**
+ * Consume provider SSE, keeping usage and rejecting unfinished lessons.
+ * onDelta sees each piece of text as it arrives, so the page can show it.
+ */
+export async function readChatCompletion(
+  response: Response,
+  onDelta?: (piece: string) => void,
+): Promise<{ text: string; usage: Usage }> {
   if (!response.body) throw new Error("The AI connection ended before a reply arrived.");
   const reader = response.body.getReader();
   const decoder = new TextDecoder();
@@ -21,7 +27,10 @@ export async function readChatCompletion(response: Response): Promise<{ text: st
     }
     for (const choice of payload.choices ?? []) {
       if (choice.delta?.refusal || choice.finish_reason === "content_filter") throw new Error("The AI declined this request.");
-      if (typeof choice.delta?.content === "string") text += choice.delta.content;
+      if (typeof choice.delta?.content === "string") {
+        text += choice.delta.content;
+        if (choice.delta.content) onDelta?.(choice.delta.content);
+      }
       if (choice.finish_reason === "stop") completed = true;
       if (choice.finish_reason === "length") throw new Error("The AI reply was incomplete. Your chat is still saved; try a smaller lesson.");
     }
@@ -42,6 +51,49 @@ export async function readChatCompletion(response: Response): Promise<{ text: st
   if (!completed) throw new Error("The AI connection ended before the lesson was complete. Your chat is still saved; try Build again.");
   if (!text.trim()) throw new Error("The AI returned an empty reply.");
   return { text, usage };
+}
+
+export type AgentEvent =
+  | { type: "delta"; text: string }
+  | { type: "progress"; steps: number }
+  | { type: "ping" };
+
+/**
+ * The live reply the page asks for with stream: true. One JSON object per
+ * line: deltas and progress while the model works, pings to keep the line
+ * open, then exactly one {"type":"result", ...} line with the same body the
+ * plain JSON reply would have carried. A reply that ends without a result
+ * line was cut off, and the page treats it as a failure, never as a lesson.
+ */
+export function streamEventsResponse(
+  work: (emit: (event: AgentEvent) => void) => Promise<Response>,
+  headers: HeadersInit,
+  heartbeatMs = 5000,
+): Response {
+  let timer: ReturnType<typeof setInterval> | undefined;
+  let cancelled = false;
+  const encoder = new TextEncoder();
+  const stream = new ReadableStream<Uint8Array>({
+    start(controller) {
+      const send = (value: unknown) => {
+        if (!cancelled) controller.enqueue(encoder.encode(JSON.stringify(value) + "\n"));
+      };
+      timer = setInterval(() => send({ type: "ping" }), heartbeatMs);
+      void (async () => {
+        try {
+          const result = await work(send);
+          send({ type: "result", ...(await result.json()) });
+        } catch (error) {
+          send({ type: "result", ok: false, error: error instanceof Error ? error.message : "The agent stopped unexpectedly." });
+        } finally {
+          clearInterval(timer);
+          if (!cancelled) controller.close();
+        }
+      })();
+    },
+    cancel() { cancelled = true; clearInterval(timer); },
+  });
+  return new Response(stream, { headers: { ...Object.fromEntries(new Headers(headers)), "Content-Type": "application/x-ndjson", "Cache-Control": "no-cache, no-transform" } });
 }
 
 /** Whitespace is valid before JSON and keeps a waiting browser connected. */

@@ -16,7 +16,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { preflight, json, corsHeaders } from "../_shared/cors.ts";
-import { readChatCompletion, streamJsonResponse } from "./streaming.ts";
+import { readChatCompletion, streamEventsResponse, streamJsonResponse, type AgentEvent } from "./streaming.ts";
 import {
   getClientIp,
   isAllowedOrigin,
@@ -34,6 +34,7 @@ import {
 
 const EVENT = "lesson_agent";
 const DAILY_CALLS = 400;
+const BURST_PER_MINUTE = 40;
 // The planning and building model can be changed without a code change.
 const MODEL = Deno.env.get("LESSON_AGENT_MODEL") ?? "google/gemini-2.5-pro";
 const DESCRIBE_MODEL = Deno.env.get("LESSON_AGENT_DESCRIBE_MODEL") ?? "google/gemini-2.5-flash";
@@ -43,8 +44,12 @@ const MAX_MESSAGES = 40;
 
 type Usage = { prompt_tokens: number; completion_tokens: number };
 
-// deno-lint-ignore no-explicit-any
-async function callModel(apiKey: string, body: Record<string, any>): Promise<{ text: string; usage: Usage }> {
+async function callModel(
+  apiKey: string,
+  // deno-lint-ignore no-explicit-any
+  body: Record<string, any>,
+  onDelta?: (piece: string) => void,
+): Promise<{ text: string; usage: Usage }> {
   const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",
     headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
@@ -56,7 +61,7 @@ async function callModel(apiKey: string, body: Record<string, any>): Promise<{ t
     if (res.status === 429) throw new Error("The AI service is busy. Wait a moment and try again.");
     throw new Error(`AI gateway returned ${res.status}: ${detail.slice(0, 400)}`);
   }
-  return await readChatCompletion(res);
+  return await readChatCompletion(res, onDelta);
 }
 
 function parseLoosely(text: string): unknown | null {
@@ -135,11 +140,24 @@ serve(async (req) => {
   if (pre) return pre;
   if (!isAllowedOrigin(req)) return json({ ok: false, error: "This origin is not allowed." }, 403);
 
-  return streamJsonResponse(async () => {
+  // deno-lint-ignore no-explicit-any
+  let body: any;
   try {
-    if (!isAllowedOrigin(req)) return json({ ok: false, error: "This origin is not allowed." }, 403);
+    body = await req.json();
+  } catch {
+    return json({ ok: false, error: "The request could not be read." }, 400);
+  }
+  // The page asks for a live reply; older pages still get one JSON object.
+  if (body?.stream === true) return streamEventsResponse((emit) => handle(req, body, emit), corsHeaders);
+  return streamJsonResponse(() => handle(req, body), corsHeaders);
+});
+
+// deno-lint-ignore no-explicit-any
+async function handle(req: Request, body: any, emit?: (event: AgentEvent) => void): Promise<Response> {
+  try {
     const ip = getClientIp(req);
-    if (isRateLimited(ip)) return json({ ok: false, error: "Too many requests in a row. Wait a minute." }, 429);
+    // A college shares one address, and one lesson takes several calls.
+    if (isRateLimited(ip, BURST_PER_MINUTE)) return json({ ok: false, error: "Too many requests in a row. Wait a minute." }, 429);
 
     const apiKey = Deno.env.get("LOVABLE_API_KEY");
     if (!apiKey) return json({ ok: false, error: "LOVABLE_API_KEY is not set on this project." }, 500);
@@ -152,7 +170,6 @@ serve(async (req) => {
       return json({ ok: false, error: "The daily limit for the lesson agent has been reached." }, 429);
     }
 
-    const body = await req.json();
     const mode = String(body?.mode ?? "");
     const started = Date.now();
     // deno-lint-ignore no-explicit-any
@@ -191,7 +208,7 @@ serve(async (req) => {
         model,
         temperature: 0.5,
         messages: [{ role: "system", content: system }, ...messages],
-      });
+      }, emit ? (piece) => emit({ type: "delta", text: piece }) : undefined);
       usage = reply.usage;
       result = { reply: reply.text };
     } else if (mode === "build") {
@@ -203,16 +220,28 @@ serve(async (req) => {
       if (fixes.length) {
         user += `\n\nA previous build was rejected. Fix exactly these problems:\n${fixes.map((f: string) => `- ${f}`).join("\n")}`;
       }
+      let written = "";
+      let steps = 0;
+      const onBuildDelta = emit
+        ? (piece: string) => {
+          written += piece;
+          const now = (written.match(/"lead_phase"/g) ?? []).length;
+          if (now > steps) {
+            steps = now;
+            emit({ type: "progress", steps });
+          }
+        }
+        : undefined;
       let reply = await callModel(apiKey, {
         model,
         temperature: 0.3,
         response_format: { type: "json_object" },
         messages: [{ role: "system", content: system }, { role: "user", content: user }],
-      });
+      }, onBuildDelta);
       usage = { ...reply.usage };
       let data = parseLoosely(reply.text);
       let issues = data ? shapeIssues(data) : ["the reply could not be read as JSON"];
-      if (issues.length) {
+      if (issues.length && !emit) {
         reply = await callModel(apiKey, {
           model,
           temperature: 0.2,
@@ -244,5 +273,4 @@ serve(async (req) => {
     console.error("lesson-agent failed:", message);
     return json({ ok: false, error: message }, 500);
   }
-  }, corsHeaders);
-});
+}
