@@ -116,6 +116,15 @@ function ThumbContent({
     case "video":
       return <Label icon="⟳" label="Video" tint="oklch(0.4 0.18 300)" />;
 
+    case "audio_image": {
+      const url = String(c.image_url ?? "");
+      if (!url) return <Label icon="🔊" label="Audio & Image" />;
+      return <div className="absolute inset-0 bg-background">
+        <img src={url} alt="" className="h-full w-full object-contain" loading="lazy" />
+        <span className={`absolute top-1 left-1/2 -translate-x-1/2 rounded-sm bg-background/90 px-2 py-0.5 text-foreground ${lg ? "text-xs" : "text-[7px]"}`}>▶ ■ ↺</span>
+      </div>;
+    }
+
     case "audio":
       return <Label icon="🔊" label="Audio" tint="oklch(0.4 0.14 200)" />;
 

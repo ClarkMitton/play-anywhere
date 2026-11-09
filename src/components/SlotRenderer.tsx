@@ -8,6 +8,7 @@ import { RotationTimerRenderer, type RotationTimerContent } from "@/components/R
 import { HazardHotspotsRenderer, type HazardHotspotsContent } from "@/components/HazardHotspots";
 import { SpotDifferenceRenderer } from "@/components/SpotDifference";
 import type { SpotDifferenceContent } from "@/lib/spotDifference";
+import { AudioImageRenderer, type AudioImageContent } from "@/components/AudioImage";
 
 // ─────────────────────────────────────────────
 // CONFETTI — celebratory burst (wheel result, confidence improvement)
@@ -82,6 +83,7 @@ export type SlotContent =
   | RotationTimerContent
   | HazardHotspotsContent
   | SpotDifferenceContent
+  | AudioImageContent
   | { type: string; [k: string]: unknown };
 
 type QuestionContent = Extract<SlotContent,
@@ -188,6 +190,9 @@ export function SlotRenderer({
       if (!c.url) return <Waiting screen={screen} />;
       return <AudioPlayer key={c.url} url={c.url} title={(c.title ?? "").trim()} withSound={screen === "host"} />;
     }
+
+    case "audio_image":
+      return <AudioImageRenderer key={`${slotId ?? ""}:${content.image_url}:${content.audio_url}`} content={content as AudioImageContent} />;
 
     case "image": {
       const c = content as Extract<SlotContent, { type: "image" }>;
