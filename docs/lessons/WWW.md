@@ -12,6 +12,47 @@ What proves itself here is collected in [WAYS-OF-WORKING.md](WAYS-OF-WORKING.md)
 
 ---
 
+## ESOL Jobs
+
+- **Built:** 9 November 2026
+- **For:** Shamim Nizami, ESOL Pre-Entry
+- **Length:** 60 minutes, 16 steps, about 30 minutes guessing, acting and writing on the whiteboard tables, two whole-class moves
+- **Source:** `Shamim/Pre Entry Jobs/`: Shamim's PowerPoint `Jobs updated.pptx` (16 slides, 12 jobs), the Wordwall "Jobs pre-entry" (a 10-question picture quiz) and two YouTube clips (Solutions vox pops "What is your job?", 1 minute 38 seconds; Test-English "What is your job? A1 listening test", 2 minutes 4 seconds)
+- **Lesson file:** [esol-jobs.sql](esol-jobs.sql)
+- **Slides:** Shamim's slides rebuilt as six pictures with her photos and wording, in `public/lessons/esol-jobs/` and the media storage
+- **Table packs:** none. Whiteboard tables yes, no printing, as asked.
+
+### WWW in the build
+
+- **Clark chose before anything was built:** two objectives (name jobs from pictures; say what someone can do), both videos cut down, 60 minutes. The objectives were offered to pick from, which the last two Shamim lessons missed.
+- **Both transcripts were read in full,** and that decided how each clip is used. The first 30 seconds of the vox pops is six people saying "I'm a ...", perfect for Pre-Entry; the rest is too fast and is cut. The listening test never names the jobs, so it becomes "guess the job" from a place word (school, kitchen, hospital). Only the three speakers whose jobs Shamim teaches are played.
+- **Shamim's PowerPoint is the spine, in her order.** Her first five jobs as predict then reveal, her "Now you try" matching as Table task 1 written on the table, her last three jobs acted out. Her three worksheet slides needed printing, so each became a table task instead.
+- **The last task turns her slides round.** Her slides go from "can" to the job; in the Secret job task tables write the "can" sentences and another table works out the job. The writing has a real reader.
+- **The odd-one-out question sets up the next clip:** "kitchen" is not a job, and the clip that follows is about listening for places like kitchen.
+- **One trip to the touch screens** for the Wordwall (on the touch screens, never the big screen) and a five-question round.
+- **No Canva credits spent.** Shamim's own photos carried the slides.
+- **Checked before anyone runs it.** All 16 steps passed the app's content rules, the SQL ran against a real database engine, and all six slides load from the media storage.
+
+### Even better if (build)
+
+- Shamim's pictures are old stock photos. The people are a fair mix of women and men, with a Black woman as the doctor, but they look dated, and her mechanic is small clip art that goes soft when enlarged. A Canva set would look fresher, at the cost of no longer being her pictures.
+- The Wordwall has four jobs the slides do not teach (electrician, vet, postman/woman, factory worker). The tutor acts them when they come up.
+- The second clip shows only a name and a flag, so there is nothing to look at while it plays. That suits listening for a key word but may lose attention.
+- The model for the last task has to be written on the board, because the slide goes when the timer starts.
+- The shared board (`padlet`) is still missing from the app's content rules, so that step was not checked by them.
+
+### WWW in the room
+
+_To fill in after the lesson has been taught._
+
+-
+
+### Even better if (room)
+
+-
+
+---
+
 ## ESOL Adjectives 2: Who is it?
 
 - **Built:** 3 November 2026
