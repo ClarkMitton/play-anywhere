@@ -1,4 +1,5 @@
 # Lesson builder
+- [ ] Add Audio & Image selection and top-centre playback controls; verify saved setup and playback.
 - [x] Add Spot the Difference setup, independent side-screen finds and completion-only host submissions.
 - [x] Verify uploads, saved setup and the three-screen submission flow: both images uploaded, three locations persisted, incomplete submission blocked, independent progress, separate host results and reload recovery verified; four tests passed and temporary data/files removed.
 - [x] Repair interrupted build responses: deployed streaming, 9 tests passed, live six-step review reached; simulated broken reply shows recovery message and enables rebuilding. Long resource-heavy builds remain unverified.
