@@ -12,6 +12,48 @@ What proves itself here is collected in [WAYS-OF-WORKING.md](WAYS-OF-WORKING.md)
 
 ---
 
+## Our First Flat: Rooms, Furniture and Cleaning
+
+- **Built:** 9 November 2026
+- **For:** Kim, Preparing for Adulthood, Entry 1 (picture-led, everything read aloud), typical group 8 to 12
+- **Length:** 60 minutes, 15 steps, about 39 minutes at the whiteboard tables, two whole-class moves
+- **Source:** `Kim/Skills Flat Preparing for Adulthood.pdf` (Book 1), pages 4 to 13: the four rooms with a spider diagram each, 15 equipment pictures, "where might we find our equipment?". Books 2 to 4 (budgeting, safety, shopping and routines) were read and left out
+- **Lesson file:** [kim-first-flat.sql](kim-first-flat.sql)
+- **Pictures:** twelve, in `public/lessons/kim-first-flat/` and the media storage
+- **Table packs:** none. Whiteboard tables yes, no printing, as asked.
+
+### WWW in the build
+
+- **Two designs were offered first and Clark picked A.** A was the room-by-room tour and B the "flat inspector" detective version. Clark said "go A" without picking objectives, so the four objectives recommended in the offer were used: name the rooms, say what goes in each, match cleaning equipment to its job and room, spot what a room is missing.
+- **Kim's own photos carry the lesson.** The four room photos and the equipment pictures are hers, from Book 1. The words and the layouts are added on top.
+- **A hook found in the photos.** Her bathroom has no toilet, sink, mirror or towel. "Would you live here? What is missing?" opens the question, and the last step answers it.
+- **The tables become the rooms.** Four tables are marked LIVING ROOM, KITCHEN, BEDROOM and BATHROOM, learners write a spider diagram on each (Kim's own activity), then move on and add what the last table missed in a different colour.
+- **Hotspots and drawing on a picture.** One trip to the touch screens covers four steps: tap eight things in the living room photo, tap the four things we clean with among nine, draw lines on a matching board, and draw the missing things onto the bathroom photo. A picture is made for each, with no Canva credits.
+- **Act it out before the names.** The tutor mimes sleeping, cooking, washing and relaxing, and learners guess rooms 1 to 4 with their fingers before they see the words.
+- **Nothing is printed, nothing needs reading.** Drawing counts as writing, reasons can be spoken, and the confidence check uses faces.
+- **Checked before anyone runs it.** All 15 steps passed the app's content rules, every JSON block in the SQL parses, and all twelve pictures were opened from the media storage.
+
+### Even better if (build)
+
+- The living room hotspot circles were placed by eye on the picture. Tap each one in the preview and move any that miss.
+- Cleaning kit and appliances are mixed in Kim's equipment pictures. The lesson treats cleaning as the focus and leaves the washing machine, air fryer, oven, ironing board and fire extinguisher for a follow-up.
+- The room photos are expensive show homes. A Preparing for Adulthood group may need an ordinary flat. Worth asking Kim whether she has her own flat's photos.
+- The station rotation shows the room photos on the touch screens, so tables must be able to see them. If not, the tutor says the room name.
+- Nobody is shown in the pictures, so there was no mix of people to check. The cleaning and furniture pictures are objects only.
+- The kitchen photo has no fridge or sink, and the bedroom has no wardrobe. Use that as another "what is missing?" moment.
+
+### WWW in the room
+
+_To fill in after the lesson has been taught._
+
+-
+
+### Even better if (room)
+
+-
+
+---
+
 ## ESOL Jobs
 
 - **Built:** 9 November 2026

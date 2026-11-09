@@ -138,6 +138,16 @@ Nobody should be a passenger during a video. Decide which of two ways it is bein
 - **Listen to the track yourself and note the answers.** The lesson cannot hear it for you.
 - **Sound files go in the media storage** next to the slides (`lesson-media/lessons/<slug>/`), or are uploaded in the designer.
 
+## Hotspots and drawing on a picture
+
+- **Hotspot: tap to find.** Learners tap an object on a photo and a green ring and its name appear. Each touch screen finds every hotspot for itself, and a wrong tap shows a cross. Good for naming things: "tap what you find in the living room", "tap only what we clean with".
+- **Put circles where you can check them.** Lay circles on the photo before building and look at them. Keep them from overlapping, and keep the radius under the size of the object.
+- **Use odd-ones-out among the targets.** A cupboard of nine with four cleaning things makes learners decide, not just tap.
+- **Two hotspots must not use the same picture,** because the found state is shared by picture address.
+- **Whiteboard over a picture.** Learners draw on top of a photo and send it to the big screen. Use it for matching (draw a line from a picture to its room), for "what is missing? draw it in", and for floor plans. Drawing counts as writing, so it works for Entry 1 and Pre-Entry.
+- **Make the picture yourself when the lesson needs a shape the source does not have:** a floor plan, a matching board, a cupboard grid. It costs no Canva credits. Put words on in the lesson, big, with a dark bar and white text.
+- **Tables as stations.** Write a different room name on each whiteboard table in marker, rotate the tables with the rotation timer, and have each group add to the last group's work in a different colour. Set the rounds to the number of tables.
+
 ## Pre-Entry lessons
 
 - **Nobody should have to read to take part.** Model it, act it out, use fingers and gestures, and read every question and option aloud.
