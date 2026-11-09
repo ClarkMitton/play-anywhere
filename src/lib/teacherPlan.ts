@@ -196,6 +196,15 @@ export function describeForTeacher(content: ContentDef | null | undefined): Teac
         doing: ["The video starts by itself. Sound plays on the big screen only."],
       };
 
+    case "audio_image":
+      return {
+        title: "Audio & Image",
+        summary: "A picture with a sound file, controlled on the screen showing it.",
+        items: [str(c.audio_file_name)].filter(Boolean),
+        preview: { kind: "image", url: str(c.image_url), caption: str(c.title) },
+        doing: ["Press Play, Pause, Stop or Replay above the picture. Move on when ready."],
+      };
+
     case "audio":
       return {
         title: "Listening",
