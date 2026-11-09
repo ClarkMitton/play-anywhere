@@ -57,6 +57,7 @@ const CONTENT_TYPES_HOST = [
   { value: "waiting", label: "Waiting (standby)" },
   { value: "text_slide", label: "Text Slide" },
   { value: "image", label: "Image" },
+  { value: "audio_image", label: "Audio & Image" },
   { value: "youtube", label: "YouTube" },
   { value: "video", label: "Video file (loops)" },
   { value: "audio", label: "Audio (listening)" },
@@ -78,6 +79,7 @@ const CONTENT_TYPES_SCREEN1 = [
   { value: "waiting", label: "Waiting (standby)" },
   { value: "text_slide", label: "Text Slide" },
   { value: "image", label: "Image" },
+  { value: "audio_image", label: "Audio & Image" },
   { value: "youtube", label: "YouTube" },
   { value: "video", label: "Video file (loops)" },
   { value: "audio", label: "Audio (listening)" },
@@ -1944,6 +1946,28 @@ function ContentTypeForm({
             holding video. A Canva video cannot loop as an embed: in Canva choose Share, Download,
             MP4 Video, then upload the file here.
           </p>
+        </div>
+      );
+
+    case "audio_image":
+      return (
+        <div className="space-y-3">
+          <FileUploadField
+            label="Image file"
+            accept="image/png,image/jpeg,image/webp,image/gif"
+            currentFileName={content.image_file_name ? String(content.image_file_name) : undefined}
+            lessonId={lessonId}
+            maxSizeMb={50}
+            onUpload={(image_url, image_file_name) => onChange({ image_url, image_file_name })}
+          />
+          <FileUploadField
+            label="Sound file (MP3, M4A or WAV)"
+            accept="audio/mpeg,audio/mp4,audio/x-m4a,audio/wav,.mp3,.m4a,.wav"
+            currentFileName={content.audio_file_name ? String(content.audio_file_name) : undefined}
+            lessonId={lessonId}
+            maxSizeMb={50}
+            onUpload={(audio_url, audio_file_name) => onChange({ audio_url, audio_file_name })}
+          />
         </div>
       );
 

@@ -1,4 +1,5 @@
 # Architecture rules
+- Designer-authored Audio & Image stores both media URLs in each screen's content and uses a dedicated manual audio player; playback stays local and never advances slides, so creators can combine it with other screen activities.
 - Designer-authored Spot the Difference uses one shared definition for all three roles, selects reference/comparison images at render time, and keys independent live results by session and slot; completion is checked against marked locations so incomplete or inconsistent setups cannot submit. Keep it separate from canonical AI generation files because images and coordinates are user-managed.
 - Existing lesson-agent deployments import teaching blocks from `_shared/lessonPromptBlocks.ts`; keep its exported values identical to the canonical generator blocks because deployment excludes sibling function folders.
 - Agent conversations retain independent browser-local history, resources and drafts after creation; designer return links identify the conversation so rebuilding never overwrites the created lesson.
