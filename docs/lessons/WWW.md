@@ -12,6 +12,51 @@ What proves itself here is collected in [WAYS-OF-WORKING.md](WAYS-OF-WORKING.md)
 
 ---
 
+## ESOL Comparatives, Weeks 1 and 2
+
+- **Built:** 10 November 2026
+- **For:** Shamim Nizami, ESOL Entry 2, two 60-minute sessions a week apart
+- **Length:** 2 x 60 minutes, 16 steps each. Week 1 about 30 minutes writing on the whiteboard tables, Week 2 about 32. Two whole-class moves each week
+- **Source:** `Shamim/Comparatives and Superlatives/Comparatives and superlatives.ppt` (slides 2 to 8, comparatives only), the Ellii video "Comparative Adjectives" (4 minutes 51 seconds), two Wordwalls by lgillies ("Comparatives" spin the wheel and "Team 1 - comparatives" picture quiz) and the British Council LearnEnglish page "Comparative adjectives" (A1-A2)
+- **Lesson files:** [esol-comparatives-week-1.sql](esol-comparatives-week-1.sql), [esol-comparatives-week-2.sql](esol-comparatives-week-2.sql)
+- **Slides:** Shamim's slides rebuilt as nine pictures, two "from the video" pattern and answer slides, and five Canva photos made into five more, in `public/lessons/esol-comparatives/` and the media storage
+- **Table packs:** none. Whiteboard tables yes, no printing, as asked.
+
+### WWW in the build
+
+- **The brief was agreed before building.** Clark chose tables with no printing, the split (-er in Week 1, more and irregulars in Week 2) and the products (photo pairs, then city or countryside). He left the objectives to me, so all four offered were used, two in Week 1 and three in Week 2.
+- **The two weeks climb.** Week 1: what a comparative is, Shamim's four -er spelling rules, than. Week 2 opens with a one-minute -er race from Week 1, then more for long words, good/better and bad/worse, then choosing between -er and more, then arguing a case.
+- **One video across two weeks.** The Ellii video's first half (0:32 to 1:47) is only -er, so it plays in Week 1. Its second half (more, irregulars, examples) and its silent practice section play in Week 2. The transcript was read in full and the practice words read from still frames.
+- **Every source has a job.** Both Wordwalls are -er only, so they go in Week 1. The British Council's test 2 is all about city, countryside and nature, so it sits in Week 2 right before the city or countryside argument. Test 1 was read and left out.
+- **The Wordwalls and the BC test were opened and read,** so the tutor notes say what is in each one, including a deliberately wrong option ("funnyer") and a misspelling in the quiz ("grandaughter").
+- **A trap on purpose.** Week 2's sort has "good" in it, which fits neither column. "Quiet" was taken out because it breaks the simple rule (two syllables, but quieter).
+- **The pictures stay up during the product tasks.** Both final tasks need the photos on screen, so the tutor starts a timer over the slide from the remote instead of using the rotation timer, which hides the slide.
+- **Close the loop each week.** "Which house do you like?" opens and closes Week 1; "City or countryside?" with a hands-up count opens and closes Week 2.
+- **Pictures load straight away.** All 14 were uploaded to the media storage and each address was opened before handing over.
+- **Checked before anyone runs it.** All 32 steps passed the app's content rules and both SQL files ran against a real database engine.
+
+### Even better if (build)
+
+- Shamim's slide 6 is titled "Irregular comparatives" but is about more with long words. Her title is kept and the tutor note says "long words". Worth telling her.
+- Her superlatives slides (9 to 16) are not used. They would make a natural Week 3.
+- Shamim's examples use names (Sadia, Shamaila). The spin-the-wheel note steers learners away from comparing classmates' bodies (taller, older), which the wheel invites.
+- The video's practice words show for about ten seconds each. The tutor has to pause by hand.
+- The British Council test keeps its own score and needs Try again between groups.
+- The objectives were not chosen by Clark, who asked me to decide.
+- The holder deck "ESOL Comparatives - picture stills" is still in Clark's Canva.
+
+### WWW in the room
+
+_To fill in after the lesson has been taught._
+
+-
+
+### Even better if (room)
+
+-
+
+---
+
 ## Our First Flat: Rooms, Furniture and Cleaning
 
 - **Built:** 9 November 2026

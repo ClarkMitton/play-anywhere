@@ -96,6 +96,7 @@ Only if the brief said yes to the whiteboard tables. Printed packs only if it sa
 - **Give the tutor an answer sheet** as page one of the pack.
 - **Use the rotation timer for two rounds:** do the task, then move and check or challenge another table's work.
 - **Put the brief and the success criteria on the big screen** while tables work.
+- **Keep a picture on screen during a table task** by leaving the slide up and starting a timer over it from the remote (Timer, Add Timer). The rotation timer hides the slide, so use it only when the task does not need a picture.
 - **A lesson can run with no printing.** Have the tutor write the model on the board, since a slide disappears when the timer starts, and swap picture cards for "draw it, your table says it".
 - **Capture the product at the end** on a shared board, so there is evidence of the learning.
 
