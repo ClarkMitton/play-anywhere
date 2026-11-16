@@ -12,6 +12,45 @@ What proves itself here is collected in [WAYS-OF-WORKING.md](WAYS-OF-WORKING.md)
 
 ---
 
+## Patient Zero: Micro-organisms, Cross Infection and Patient Safety
+
+- **Built:** 16 November 2026
+- **For:** Dental nursing, Unit 202 Principles of Infection Prevention & Control (Level 2), about 15 learners. The brief said learners do not like this content.
+- **Length:** 90 minutes, 28 steps. About 60 minutes at the whiteboard tables. Four whole-class moves
+- **Source:** the four cross infection decks in `Dentistry/` (Transmission of Micro-organisms, Prevention of Transmission, Infection Control in the Decontamination Room, Legislations), plus a Michigan Engineering clip on dental aerosols (20s to 66s)
+- **Lesson file:** [dental-patient-zero.sql](dental-patient-zero.sql)
+- **Slides:** 17 slides in the teacher's wording over five Canva AI photos, a hotspot crime scene photo, and a voicemail, in `public/lessons/dental-patient-zero/` and the media storage
+- **Table packs:** none. Whiteboard tables yes, no printing, as asked.
+
+### WWW in the build
+
+- **A story, not a deck.** Clark chose "Patient Zero" from three ideas: three patients at Northgate Dental have the same infection, the inspectors come Friday, and learners are the infection control team. Every step is part of the case.
+- **Transmission happens before it is taught.** One learner is secretly Patient Zero from the door (glitter on one table's pens, or on one handshake). The reveal at the end, and a word cloud of "how did it reach you?", closes the loop the voicemail opened.
+- **The first lesson to use Audio & Image.** The hook is a voicemail from the practice manager over the "Practice closed" photo, made with a British Windows voice and a phone-line filter. It costs no Canva credits, and the tutor can swap in their own recording.
+- **A trap on purpose.** The wheel puts different patients in the chair (Hep B, HIV, a healthy teenager, your best friend) and tables plan the precautions each time, until they notice the answer never changes. That is universal precautions, found before it is named.
+- **The crime scene was asked for, then checked.** Canva AI was asked for a surgery with six named mistakes, and all six came out clearly (red mop, food and drink, an overfilled sharps bin, a phone on the tray, gloves on the chair, a blood spill). The circles were drawn on the photo and checked before building.
+- **The teacher's own tasks became the table tasks:** draw the decontamination room layout, and the exam question "explain transmission if gloves are not changed", peer-marked against the four tips from her slide.
+- **One trip to the touch screens covers three games:** a question round, the hotspot race (each screen is a team), and a buzzer round matching each breach to a law.
+- **Checked before anyone runs it.** All 28 steps passed the app's content rules, the SQL ran against a real database engine, and all 19 media files load from storage.
+
+### Even better if (build)
+
+- Spot the Difference was planned but left out. It needs two matching photos, and Canva AI cannot make a matched pair. Photographing the college's own clinic room set up properly, then set up badly, would make a strong one.
+- The four decks are more than 90 minutes of content. The legislation was cut to a slide and a buzzer round (no research task), and impressions and repairs to one slide.
+- The one-line meanings under each law and the breach-to-law answers were written for this lesson. The teacher should check them.
+- The voicemail is a computer voice. A real recording from a member of staff would sound better.
+- No disabled person appears in the five photos.
+
+### WWW in the room
+
+-
+
+### Even better if (room)
+
+-
+
+---
+
 ## ESOL Comparatives, Weeks 1 and 2
 
 - **Built:** 10 November 2026
