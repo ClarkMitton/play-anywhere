@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="UTF-8" />
+<title>Designing an Immersive Room Session: Guide for Copilot and Staff</title>
+<style>
+  @page { size: A4 portrait; margin: 16mm 16mm 18mm; }
+  * { box-sizing: border-box; }
+  body { font-family: "Segoe UI", Arial, sans-serif; color: #17202a; font-size: 10.6pt; line-height: 1.45; margin: 0; }
+  h1 { font-size: 24pt; margin: 0 0 4pt; }
+  h2 { font-size: 15pt; margin: 20pt 0 6pt; padding-bottom: 3pt; border-bottom: 2.5pt solid #0e7490; page-break-after: avoid; break-after: avoid; }
+  h3 { font-size: 12pt; margin: 13pt 0 4pt; color: #0e7490; page-break-after: avoid; break-after: avoid; }
+  h4 { font-size: 10.8pt; margin: 9pt 0 3pt; page-break-after: avoid; break-after: avoid; }
+  p { margin: 0 0 6pt; }
+  ul, ol { margin: 0 0 7pt; padding-left: 17pt; }
+  li { margin-bottom: 2.5pt; }
+  table { width: 100%; border-collapse: collapse; margin: 4pt 0 9pt; font-size: 9.6pt; page-break-inside: auto; }
+  tr { page-break-inside: avoid; break-inside: avoid; }
+  th, td { border: 0.75pt solid #c9d1d8; padding: 4pt 5pt; vertical-align: top; text-align: left; }
+  th { background: #eef6f8; font-weight: 700; }
+  .eyebrow { font-size: 8.5pt; letter-spacing: 2.5pt; text-transform: uppercase; color: #0e7490; font-weight: 700; }
+  .lede { font-size: 12pt; color: #36424d; margin-bottom: 10pt; }
+  .box { border: 1pt solid #a5f3fc; background: #ecfeff; border-radius: 6pt; padding: 8pt 10pt; margin: 6pt 0 10pt; page-break-inside: avoid; break-inside: avoid; }
+  .box.warn { border-color: #fed7aa; background: #fff7ed; }
+  .box.green { border-color: #bbf7d0; background: #f0fdf4; }
+  .box p:last-child, .box ul:last-child { margin-bottom: 0; }
+  .template { font-family: Consolas, "Courier New", monospace; font-size: 8.9pt; line-height: 1.38; white-space: pre-wrap; border: 1pt solid #c9d1d8; background: #f8fafb; border-radius: 6pt; padding: 8pt 10pt; margin: 4pt 0 10pt; }
+  .pb { page-break-before: always; break-before: page; }
+  .toc li { margin-bottom: 1.5pt; }
+  .small { font-size: 9pt; color: #5f6b76; }
+  .tag { display: inline-block; font-size: 7.5pt; font-weight: 700; letter-spacing: .5pt; padding: 0 4pt; border-radius: 3pt; background: #fde68a; color: #78350f; vertical-align: 1pt; }
+</style>
+</head>
+<body>
+
+<div class="eyebrow">Bradford College · Immersive Learning Room</div>
+<h1>Designing an Immersive Room Session</h1>
+<p class="lede">A guide for staff and for the Copilot notebook that helps them. It holds everything we have learned about building sessions for the room, the planning document, every tool the room has, and the exact format the lesson agent in our platform needs to build the session.</p>
+
+<div class="box">
+<p><b>Who this is for.</b> Any member of staff who wants to run a session in the Immersive Learning Room, whatever their confidence with technology. You do not need to know how the room works before you start. The Copilot notebook asks you questions one at a time, suggests ideas, and at the end gives you a Lesson Brief. You paste that Lesson Brief into the lesson agent on our platform, add your pictures and slides, and it builds the session for you.</p>
+</div>
+
+<h3>Contents</h3>
+<ol class="toc">
+  <li>Instructions for Copilot (read this first)</li>
+  <li>The journey: from idea to a session in the room</li>
+  <li>The room, in plain words</li>
+  <li>The standard every session must meet</li>
+  <li>The toolbox: everything the screens can do</li>
+  <li>Where are the learners? Planning the room</li>
+  <li>Table tasks, videos, listening, pictures and slides</li>
+  <li>Session shapes that work (ideas to start from)</li>
+  <li>Different levels and different learners</li>
+  <li>Safety-critical and regulated topics</li>
+  <li>The planning document</li>
+  <li>The Lesson Brief: the format the lesson agent needs</li>
+  <li>A complete worked example</li>
+  <li>Using the Lesson Brief in the platform</li>
+  <li>Checklists</li>
+  <li>Glossary and common questions</li>
+</ol>
+
+<!-- ═══════════════════════════════════ 1 -->
+<h2 class="pb">1. Instructions for Copilot (read this first)</h2>
+<p>You are the <b>Immersive Room Session Designer</b> for Bradford College. Staff come to you to design a session for the Immersive Learning Room. Your job is to coach them through the design, one step at a time, using only the ways of working in this guide, and to finish by producing a <b>Lesson Brief</b> in the exact format in Section 12.</p>
+
+<h3>1.1 How to talk</h3>
+<ul>
+  <li>Use short, plain British English (analyse, colour, organise, programme). Do not use em dashes.</li>
+  <li><b>Ask one question at a time.</b> Wait for the answer before moving on. Never send a list of ten questions.</li>
+  <li>Assume nothing about the person's confidence with technology. Never use code names (such as question_round or text_slide). Use the teacher names in the Toolbox (Section 5): Slide, Picture, Video, Quiz, Vote, Word cloud, Shared board, Buzzer quiz, Wheel, Whiteboard, Timer, Spot the hazard.</li>
+  <li>Offer choices rather than open questions where you can: "Would you like A, B or C?" Always add "or something else".</li>
+  <li>If the person seems unsure, give a worked suggestion they can say yes to. If they are confident, move faster and let them lead.</li>
+  <li>Be encouraging. Many staff will be nervous about the room. Tell them what the room will do for them.</li>
+  <li>If something they want is not possible in the room, say so plainly and offer the nearest thing that is (see Section 16, "What the room cannot do").</li>
+  <li>Never invent a link, a video or a fact. If a video would help, describe what to search for and ask them to find it and paste the link.</li>
+</ul>
+
+<h3>1.2 The stages of the conversation</h3>
+<p>Work through these stages in order. Tell the person which stage you are on ("Step 2 of 6: the brief").</p>
+<table>
+  <tr><th style="width:23%">Stage</th><th>What you do</th></tr>
+  <tr><td><b>1. Welcome</b></td><td>Explain in two sentences what will happen: "I'll ask you some questions about your session, suggest a plan, and at the end give you a Lesson Brief to paste into the platform." Ask what topic and which group the session is for. Ask whether they have existing material (slides, worksheets, videos, Wordwalls) they want to use.</td></tr>
+  <tr><td><b>2. The brief</b></td><td>Collect the brief (Section 11, page 1), one question at a time: length, level and group size; what learners already know; the one idea in a sentence; objectives (offer a set of 3 or 4 that climb, and let them choose); what learners will make or do by the end; <b>always ask both:</b> "Do you want learners writing on the whiteboard tables?" and "Do you want printed packs, or nothing printed?"; other kit; what must be kept from their material; any feedback to collect. Skip any question their material already answers.</td></tr>
+  <tr><td><b>3. The big idea</b></td><td>Ask: "What tools have I got, and what is the most exciting way to get this across?" Offer two or three session shapes from Section 8 that suit the topic (for example an investigation, a game show, an escape room, a debate). Suggest a hook that opens a question the session will answer at the end. Let them choose.</td></tr>
+  <tr><td><b>4. The screen map</b></td><td>Propose the session step by step as a table with the columns in Section 12. Plan where learners are for every step. Check it against the standard (Section 4) and the room plan (Section 6) before showing it. Explain any choice they might question in one line.</td></tr>
+  <tr><td><b>5. Refine</b></td><td>Ask what they would like to change. Show only the changed rows for small changes. Check the timings add up to the session length. Run the checklist in Section 15 and fix anything that fails, telling them what you changed and why.</td></tr>
+  <tr><td><b>6. The Lesson Brief</b></td><td>Produce the Lesson Brief in the exact format in Section 12, in one block they can copy. Then tell them the next steps in Section 14, in plain words. Offer to make it shorter, change anything, or explain any part.</td></tr>
+</table>
+
+<h3>1.3 Rules you must follow when planning</h3>
+<ul>
+  <li>Use only the tools in Section 5. Nothing else exists in the room.</li>
+  <li>Every step gives every screen a job. "Standby" is only for while the tutor is talking, never on two screens at once.</li>
+  <li>Both touch screens show the same activity (half the class at each).</li>
+  <li>Anything learners tap (a Wordwall, a Canva activity, a website) goes on the touch screens, never the big screen.</li>
+  <li>Follow LEAD in order: Launch, Establish, Apply, Demonstrate (Section 4.2).</li>
+  <li>If whiteboard tables are agreed: at least two table tasks, and at least a third of the time at the tables, each with a stretch.</li>
+  <li>No more than about two whole-class moves in 45 minutes. Group the touch-screen steps into one trip.</li>
+  <li>Do not add steps the person said no to. Do not add printing if they said nothing printed. Do not suggest buying anything unless they say they can.</li>
+  <li>For safety-critical and regulated topics follow Section 10: never state legal limits, numbers or regulation details from memory; mark them as things to check.</li>
+  <li>Follow the inclusion rules in Section 9.3 in every example, name and picture description.</li>
+  <li>The lesson agent cannot make pictures or slides. If the plan needs a picture, put it in the Lesson Brief's "Pictures and files to upload" list with a description, so the person can make it in Canva or find it.</li>
+  <li>Spot the hazard, Spot the difference and Audio &amp; picture cannot be built by the agent. Put them in the plan as normal, and list them under "Add in the Stage Designer after building" in the Lesson Brief.</li>
+</ul>
+
+<!-- ═══════════════════════════════════ 2 -->
+<h2>2. The journey: from idea to a session in the room</h2>
+<table>
+  <tr><th style="width:6%">#</th><th style="width:26%">Step</th><th>What happens</th><th style="width:18%">Where</th></tr>
+  <tr><td>1</td><td>Plan with Copilot</td><td>Answer Copilot's questions. Agree a plan. Copilot gives you a Lesson Brief.</td><td>This Copilot notebook</td></tr>
+  <tr><td>2</td><td>Gather your files</td><td>Get the pictures, slides, worksheets and video links the Lesson Brief lists. Make any new slides in Canva and download them as pictures (PNG or JPG).</td><td>Your computer, Canva, YouTube</td></tr>
+  <tr><td>3</td><td>Build with the lesson agent</td><td>Open the lesson agent, paste the Lesson Brief into the message box, drop your files onto the page, check the plan it shows you, then press <b>Build lesson</b>, then <b>Create lesson</b>.</td><td>The platform: Admin, then Build with the agent</td></tr>
+  <tr><td>4</td><td>Finish in the Stage Designer</td><td>Add anything listed under "Add in the Stage Designer" (Spot the hazard, Spot the difference, Audio &amp; picture). Fix any wording.</td><td>The platform: Stage Designer</td></tr>
+  <tr><td>5</td><td>Try it yourself</td><td>Click through the preview. It shows all three screens and the tutor notes for every step. Watch every video to the end.</td><td>The platform: Preview / lesson card</td></tr>
+  <tr><td>6</td><td>Teach it</td><td>Start a session from the Host screen. Join the touch screens with the code. Use your phone as the remote.</td><td>The Immersive Learning Room</td></tr>
+  <tr><td>7</td><td>Tell us how it went</td><td>What went well, and what would be even better if. This is how the guide improves.</td><td>Your notes / the WWW log</td></tr>
+</table>
+<div class="box green"><p><b>You will not break anything.</b> Planning with Copilot changes nothing in the room. The lesson agent keeps your conversation, and you can build again as many times as you like. The preview never affects a real class.</p></div>
+
+<!-- ═══════════════════════════════════ 3 -->
+<h2>3. The room, in plain words</h2>
+<table>
+  <tr><th style="width:22%">Part of the room</th><th>What it is</th><th style="width:34%">What it is for</th></tr>
+  <tr><td><b>The big screen</b> (the Host)</td><td>A very large landscape projection at the front. The whole class watches it together. The tutor controls it.</td><td>Slides, pictures, videos, live results, the wheel, timers.</td></tr>
+  <tr><td><b>Touch Screen 1 and Touch Screen 2</b></td><td>Two tall portrait touch screens that learners walk up to and tap. They show the same activity, so half the class can be at each.</td><td>Quizzes, votes, word clouds, shared boards, drawing, tap-to-find pictures, team games.</td></tr>
+  <tr><td><b>The whiteboard tables</b></td><td>Tables learners stand around and write on with whiteboard pens.</td><td>Group tasks, drawing diagrams, sorting, writing answers. Two touch screens cannot occupy a whole class. The tables can.</td></tr>
+  <tr><td><b>Your phone (the remote)</b></td><td>The tutor's phone, joined to the session.</td><td>Moves the session on, adds a timer over whatever is on screen, controls reveals.</td></tr>
+</table>
+<p><b>A session is a set of steps.</b> Each step puts something on each of the three screens at the same time. The tutor moves to the next step when the class is ready (or a video ending, a timer or answers coming in can move it on). Each step also has notes for the tutor: what to say and what to watch for.</p>
+<p><b>The room is not a slide deck.</b> The three screens can show three different things at once: a picture on the big screen while learners answer questions on the touch screens and write on the tables. The best sessions use all of that.</p>
+
+<!-- ═══════════════════════════════════ 4 -->
+<h2>4. The standard every session must meet</h2>
+<p>Each point below came from building or running a real session in the room.</p>
+
+<h3>4.1 Before building: agree the brief</h3>
+<p>Building without a brief is what produced a "quiz chain", which is the most common way sessions go wrong. Agree these first:</p>
+<ul>
+  <li>Length, level and a typical group size. What learners already know.</li>
+  <li><b>The one idea the session is about.</b> If you cannot say it in a sentence, the session does not know what it is about yet.</li>
+  <li><b>The learning objectives</b>, chosen by the person running the session. They should climb (see 4.3).</li>
+  <li><b>What learners will make or do by the end</b> that proves the last objective.</li>
+  <li><b>Whiteboard tables: ask every time.</b> Never assume yes or no.</li>
+  <li><b>Printing: ask every time.</b> "Do you want printed packs, or nothing printed?"</li>
+  <li>Any other kit in the room. What must be kept from the source material. What feedback to collect from learners.</li>
+</ul>
+
+<h3>4.2 LEAD: the four phases, in order</h3>
+<table>
+  <tr><th style="width:17%">Phase</th><th style="width:38%">Purpose</th><th>In this room</th></tr>
+  <tr><td><b>Launch</b></td><td>Inspire, gauge starting points, share the learning intentions.</td><td>A hook that opens a question (a video, a mystery, a picture, a message). A starting confidence check. The objectives.</td></tr>
+  <tr><td><b>Establish</b></td><td>Learners meet the new content and form concepts.</td><td>Short input on the big screen, then a check straight away. Learners predict or attempt before they are told.</td></tr>
+  <tr><td><b>Apply</b></td><td>Higher-order thinking: use the learning in a new context, with increasing challenge.</td><td>Table tasks, question rounds, buzzer games, spot the hazard, scenarios.</td></tr>
+  <tr><td><b>Demonstrate</b></td><td>Learners show what they have learned.</td><td>A product tested against criteria (not a recall quiz), captured on a shared board. The closing confidence check. The hook question answered.</td></tr>
+</table>
+
+<h3>4.3 The standard</h3>
+<ul>
+  <li><b>One thread.</b> Every clip, slide and task serves the one idea. If a video does not, drop it, however good it is.</li>
+  <li><b>Objectives climb Bloom's taxonomy,</b> with at least one at analyse or above. Identify, explain, analyse, create is a good ladder.</li>
+  <li><b>Close the loop.</b> The question opened in Launch is answered in the last step.</li>
+  <li><b>Do it before being told.</b> Learners predict, act out or attempt the task first, then see the explanation.</li>
+  <li><b>At least two table tasks,</b> and at least a third of the time at the tables (if tables are agreed). <b>A stretch on every table task.</b></li>
+  <li><b>Everyone has a job.</b> Two touch screens cannot occupy a whole class. Table tasks can.</li>
+  <li><b>No activity twice in a row.</b> Mix watching, moving, writing, tapping, talking, making and judging.</li>
+  <li><b>Mix the question types.</b> True or false for pace. Best answer, where two options look right, for debate. Odd one out. Never two rounds of the same shape.</li>
+  <li><b>Explain before it starts.</b> Nothing learners act on begins by itself. Set the task, then start it.</li>
+  <li><b>Teach before you test.</b> A question follows the step that answers it.</li>
+  <li><b>Inclusive by design</b> (Section 9.3).</li>
+  <li><b>A movement plan</b> (Section 6).</li>
+  <li><b>For the staff member:</b> every tutor note names the technique used ("predict before reveal", "best-answer question", "create, then test each other's work") and says what a good answer looks like. The tutor leaves with approaches they can reuse.</li>
+</ul>
+
+<!-- ═══════════════════════════════════ 5 -->
+<h2>5. The toolbox: everything the screens can do</h2>
+<p>These are the only tools that exist. "Name to use" is the name to use with the lesson agent. <span class="tag">DESIGNER</span> means the agent cannot build it: plan it, then add it in the Stage Designer afterwards.</p>
+
+<h3>5.1 Show</h3>
+<table>
+  <tr><th style="width:19%">Name to use</th><th style="width:15%">Which screen</th><th>What it does</th><th style="width:31%">Good to know</th></tr>
+  <tr><td><b>Slide</b> (text slide)</td><td>Any</td><td>Large text, with an optional title box.</td><td>A headline, not an essay. Read from across a room. Detail belongs in what the tutor says.</td></tr>
+  <tr><td><b>Picture</b></td><td>Any</td><td>Shows an image: a Canva slide, a photo, a diagram.</td><td>Make real slides in Canva and add them as pictures, so the session does not look like an app.</td></tr>
+  <tr><td><b>Video</b> (YouTube)</td><td>Big screen, or all three</td><td>Plays a YouTube video. Can be trimmed with a start and end time.</td><td>The session moves on by itself when the video ends. Choose full focus or a watching task (Section 7.2).</td></tr>
+  <tr><td><b>Video file (loops)</b></td><td>Any</td><td>Plays an uploaded video file. Can start by itself and loop.</td><td>For welcome screens, music under a walk, anything that must loop.</td></tr>
+  <tr><td><b>Audio (listening)</b></td><td>Big screen</td><td>Plays a sound file with Play, Pause and Play again.</td><td>Never starts by itself, never moves the session on. For listening tasks.</td></tr>
+  <tr><td><b>Audio &amp; picture</b> <span class="tag">DESIGNER</span></td><td>Big screen</td><td>A sound file played over a picture.</td><td>For a voicemail, a scene, a soundscape. Plays only when the tutor presses Play.</td></tr>
+  <tr><td><b>Embed</b> (Wordwall, Canva, website)</td><td>Touch screens</td><td>Shows a web page learners can tap.</td><td>Anything learners tap goes on the touch screens, with the instruction on the big screen. Write one line saying what it shows.</td></tr>
+  <tr><td><b>Standby</b></td><td>Any</td><td>A holding screen.</td><td>Only while the tutor talks. Never on two screens at once.</td></tr>
+</table>
+
+<h3>5.2 Ask</h3>
+<table>
+  <tr><th style="width:19%">Name to use</th><th style="width:15%">Which screen</th><th>What it does</th><th style="width:31%">Good to know</th></tr>
+  <tr><td><b>Confidence check</b></td><td>Touch screens, results on big screen</td><td>Learners rate how confident they feel: numbers, faces, or agree to disagree.</td><td>Use one at the start and one at the end. The big screen compares start and end.</td></tr>
+  <tr><td><b>Vote</b></td><td>Touch screens, results on big screen</td><td>Learners choose from 2 to 6 options. Live results.</td><td>For opinions and best-answer debates, where two options look right.</td></tr>
+  <tr><td><b>Quiz</b> (question round)</td><td>Both touch screens, results on big screen</td><td>Up to 10 questions: multiple choice or true/false. The big screen counts answers; the tutor reveals.</td><td>For right answers. Mix question types. Teach before you test.</td></tr>
+  <tr><td><b>Word cloud</b></td><td>Touch screens, cloud on big screen</td><td>Learners type short answers; repeated words grow.</td><td>For many short answers. Shows everything in lower case, so not for capital letters. "Finish this sentence" works well.</td></tr>
+  <tr><td><b>Shared board</b></td><td>Touch screens, board on big screen</td><td>Learners type longer answers, shown exactly as typed.</td><td>When wording matters. Use it to capture the product at the end as evidence of learning.</td></tr>
+</table>
+
+<h3>5.3 Play</h3>
+<table>
+  <tr><th style="width:19%">Name to use</th><th style="width:15%">Which screen</th><th>What it does</th><th style="width:31%">Good to know</th></tr>
+  <tr><td><b>Buzzer quiz</b></td><td>One team per touch screen, big screen hosts</td><td>Two teams buzz in; the tutor reads questions and has the answers.</td><td>For fast recall of things already taught.</td></tr>
+  <tr><td><b>Wheel</b> (wheel spinner)</td><td>Big screen</td><td>Spins to pick an item: a person, topic, scenario or question.</td><td>Spin several times to make a point ("is the answer the same every time?").</td></tr>
+  <tr><td><b>Whiteboard</b></td><td>Touch screens and big screen</td><td>Learners draw, on a blank board or over a picture, and send the drawing to the big screen.</td><td>Matching, labelling, floor plans, "draw what is missing". Drawing counts as writing, so it suits Pre-Entry. Put it on the big screen too.</td></tr>
+  <tr><td><b>Spot the hazard</b> <span class="tag">DESIGNER</span></td><td>All three</td><td>Tap-to-find on a photo. Each touch screen must find every spot; the big screen shows each team's count and a reveal.</td><td>Hazards, mistakes, objects to name. Add odd-ones-out so learners decide, not just tap. Two of these must not use the same picture.</td></tr>
+  <tr><td><b>Spot the difference</b> <span class="tag">DESIGNER</span></td><td>All three</td><td>Two matching photos; each screen finds the differences.</td><td>Needs a matched pair of photos. Take them yourself: a room set up correctly, then set up wrongly. AI image tools cannot make a matched pair.</td></tr>
+</table>
+
+<h3>5.4 Time and move</h3>
+<table>
+  <tr><th style="width:19%">Name to use</th><th style="width:15%">Which screen</th><th>What it does</th><th style="width:31%">Good to know</th></tr>
+  <tr><td><b>Timer</b> (countdown)</td><td>Any / all</td><td>A countdown with a label saying what to do.</td><td>For a timed task everyone can see.</td></tr>
+  <tr><td><b>Rotation timer</b></td><td>Any</td><td>A carousel: a number of rounds, a time per round, a time to move, and what to do.</td><td>Table tasks in two rounds: do the task, then move and check or build on another table's work. It hides the slide.</td></tr>
+  <tr><td><b>Big-screen timer</b></td><td>Big screen only</td><td>A timer on the big screen.</td><td>When the touch screens are doing something else.</td></tr>
+  <tr><td><b>Add Timer</b> (on the remote)</td><td>Over anything</td><td>The tutor starts a timer from their phone over whatever is showing.</td><td>Keeps a picture on screen during a table task.</td></tr>
+</table>
+
+<h3>5.5 How a step ends</h3>
+<ul>
+  <li><b>The tutor moves on</b> (from the remote or Touch Screen 1). This is the default and the safest.</li>
+  <li><b>When answers are in</b> (Touch Screen 2 submits): for questions and confidence checks.</li>
+  <li><b>When a video ends</b>: automatic. The next step must be the one you want next.</li>
+  <li><b>Timed</b>: moves on by itself. Use rarely.</li>
+</ul>
+
+<h3>5.6 Picking the tool for the job</h3>
+<table>
+  <tr><th style="width:42%">If you want learners to…</th><th>Use</th></tr>
+  <tr><td>Give many short answers or ideas</td><td>Word cloud</td></tr>
+  <tr><td>Write a sentence where the exact wording matters</td><td>Shared board</td></tr>
+  <tr><td>Give an opinion, or debate two good answers</td><td>Vote</td></tr>
+  <tr><td>Answer questions with right answers</td><td>Quiz</td></tr>
+  <tr><td>Recall facts quickly, competitively</td><td>Buzzer quiz</td></tr>
+  <tr><td>Find things in a picture</td><td>Spot the hazard</td></tr>
+  <tr><td>Label, match, draw or plan</td><td>Whiteboard (over a picture) or the tables</td></tr>
+  <tr><td>Work in groups, discuss, sort, write at length</td><td>A table task, with a Timer or Rotation timer</td></tr>
+  <tr><td>Be surprised, or start a debate</td><td>Video or Picture as a hook, then a Vote</td></tr>
+  <tr><td>Pick a random scenario, person or question</td><td>Wheel</td></tr>
+</table>
+
+<!-- ═══════════════════════════════════ 6 -->
+<h2>6. Where are the learners? Planning the room</h2>
+<p>At every moment learners are in one of three places: <b>standing</b>, <b>at the tables</b>, or <b>at the touch screens</b>. Getting sixteen people from one place to another costs about a minute and breaks concentration. So plan the room, not only the content.</p>
+<ul>
+  <li><b>Write down where learners are for every step</b> before building. If the answer keeps changing, the order is wrong.</li>
+  <li><b>Ask of every move: is it worth it?</b> Walking the whole class to the touch screens for one vote or three taps is not.</li>
+  <li><b>Group the touch-screen steps together.</b> One trip should cover several things: a quiz, a vote, a word cloud, a hotspot game. Then one trip back.</li>
+  <li><b>Aim for two whole-class moves in 45 minutes.</b> Tables, then screens, then tables.</li>
+  <li><b>Send a runner, not the room.</b> When only one answer per table is needed, one person goes to the screen.</li>
+  <li><b>Do quick checks where learners stand.</b> Hands up, thumbs, or writing T or F on the table costs nothing.</li>
+  <li><b>Slides and videos need no move.</b> Everyone can see the big screen from anywhere.</li>
+  <li><b>A Wordwall or tap game counts as a trip to the touch screens.</b> Put it next to another screen step.</li>
+  <li><b>Tell the tutor.</b> Each tutor note starts with where learners are, and says clearly when they move.</li>
+</ul>
+<div class="box"><p><b>A good pattern for 90 minutes:</b> arrive past the touch screens (starting confidence check) → tables for about 50 minutes (hook, teaching, two or three table tasks, a video) → one trip to the touch screens (quiz, spot the hazard, buzzer) → tables (the final product, peer marking) → touch screens to finish (shared board, word cloud, final confidence check).</p></div>
+
+<!-- ═══════════════════════════════════ 7 -->
+<h2>7. Table tasks, videos, listening, pictures and slides</h2>
+
+<h3>7.1 Table tasks (only if whiteboard tables are agreed)</h3>
+<ul>
+  <li>Learners stand at the tables and write on the table, around any printed sheet. Nothing is written on the paper, so packs can be reused.</li>
+  <li>Put the brief and the success criteria on the big screen while tables work.</li>
+  <li>Use the rotation timer for two rounds: do the task, then move and check or challenge another table's work, in a different colour.</li>
+  <li>A stretch on every table task for groups who finish first.</li>
+  <li>Keep a picture on screen during a table task by leaving the slide up and starting a timer from the remote (Add Timer). The rotation timer hides the slide.</li>
+  <li>Capture the product at the end on a shared board.</li>
+  <li><b>If printing:</b> one pack per table, in an envelope, opened on cue. Make it feel like something (a case file with evidence, cards to sort, a role card), not a worksheet. Give the tutor an answer sheet.</li>
+  <li><b>With no printing:</b> the tutor writes the model on the whiteboard, because a slide disappears when a timer starts. Swap picture cards for "draw it, your table says it".</li>
+  <li><b>Tables as stations:</b> write a different heading on each table in marker, rotate the class round them, and have each group add to the last group's work.</li>
+</ul>
+
+<h3>7.2 Videos: nobody is a passenger</h3>
+<ul>
+  <li><b>Full focus:</b> the video on all three screens, when the clip is the event.</li>
+  <li><b>Watching task:</b> the video on the big screen, two or three real questions in large text on the touch screens. The tutor reads the questions out before the clip starts. At the tables, learners write answers while they watch.</li>
+  <li><b>The next step opens the floor to those same questions,</b> on a slide. Never straight into a quiz, and never a new question they were not watching for.</li>
+  <li>Videos start conversations: use them to open a debate or bust a myth, not to deliver facts a slide could give.</li>
+  <li>Trim a long video to the part that matters (a start and end time). One video can do two jobs, split across two steps.</li>
+  <li>Watch every video to the end before teaching. A link found by search is not proof it plays or cuts well.</li>
+</ul>
+
+<h3>7.3 Listening</h3>
+<ul>
+  <li>Audio never starts by itself. Set the task, then press Play. Give each listen a narrower job: just listen, then listen for names, then write the numbers.</li>
+  <li>Put the listening task on the touch screens in large text while the sound plays.</li>
+  <li>Listen to the track yourself and note the answers.</li>
+  <li>A sound can be swapped for a written version on a slide (for example a voicemail as a transcript) if a recording is not available.</li>
+</ul>
+
+<h3>7.4 Pictures and slides</h3>
+<ul>
+  <li>Make real slides in Canva for the teaching points. Download them as pictures and add them as Picture steps. An embedded Canva loads slowly and shows Canva's own toolbar.</li>
+  <li>Keep on-screen text short. The detail belongs in what the tutor says.</li>
+  <li>If using Canva's AI to make a picture, ask for a photo with no words at all, and add the words yourself. AI pictures often have garbled words.</li>
+  <li>Keep a teacher's own slides recognisably theirs: their order, their words, their pictures.</li>
+  <li>Check every picture works on a very large screen. A picture that is fine in a textbook can be wrong on a 300-inch screen.</li>
+</ul>
+
+<!-- ═══════════════════════════════════ 8 -->
+<h2>8. Session shapes that work (ideas to start from)</h2>
+<p>Offer these when someone does not know where to start, or when the content feels dry. Learners who "do not like this content" respond to a story, a role and a reason to care.</p>
+<table>
+  <tr><th style="width:19%">Shape</th><th>How it works</th><th style="width:30%">Tools it uses</th></tr>
+  <tr><td><b>Investigation / case file</b></td><td>Something has gone wrong (an outbreak, a complaint, an accident). Learners are the team who must find out why. Each step uncovers part of the answer. The final product is their report.</td><td>Picture or message as the hook, table tasks, Spot the hazard as the "crime scene", Shared board for the report.</td></tr>
+  <tr><td><b>Escape room</b></td><td>Learners must "escape" by solving puzzles. Printed envelopes are the locks: each puzzle gives a code word, the last task needs all of them, and one runner per table types the answer on a shared board. Each puzzle uses a different skill. Add a deliberate trap (a decoy card). The app cannot lock a step, so the tutor is the lock.</td><td>Video trailer as the hook, printed packs (or table puzzles), Shared board, music under walks.</td></tr>
+  <tr><td><b>Simulation / secret role</b></td><td>Something happens to the class without them knowing, and is revealed at the end. Example: the first learner to touch Touch Screen 1 is secretly "Patient Zero", and by the end most of the room has "caught" the infection by touching the same screen and pens.</td><td>Any, plus a Word cloud for the reveal ("how did it reach you?").</td></tr>
+  <tr><td><b>Game show / tournament</b></td><td>Two teams compete across rounds: buzzer, quiz, hotspot race, best-answer votes. Keep score on the whiteboard.</td><td>Buzzer quiz, Quiz, Spot the hazard, Vote, Wheel.</td></tr>
+  <tr><td><b>Debate / myth-busting</b></td><td>A video or statement opens a question. Learners vote, argue at the tables, then vote again. The shift in the vote is the evidence.</td><td>Video, Vote (start and end), table task, Shared board.</td></tr>
+  <tr><td><b>Stations / carousel</b></td><td>Each table is a station with a different task or topic. Groups rotate and add to the last group's work.</td><td>Rotation timer, whiteboard tables, Picture on the big screen.</td></tr>
+  <tr><td><b>Make and test</b></td><td>Learners create something (a quiz question, a poster, a plan), then test it on another group, who judge it against criteria.</td><td>Table task, Rotation timer, Shared board, Vote.</td></tr>
+</table>
+<h3>Hooks that open a question</h3>
+<ul>
+  <li>A mystery picture: "What has gone wrong here?"</li>
+  <li>A message or voicemail from a character who needs help.</li>
+  <li>A short dramatic video clip with the sound up.</li>
+  <li>A surprising statistic or claim: "True or false?"</li>
+  <li>Something deliberately missing from a picture: "What is missing?"</li>
+  <li>The wheel: "Who is in the chair?", with the twist that the answer is always the same.</li>
+</ul>
+
+<!-- ═══════════════════════════════════ 9 -->
+<h2>9. Different levels and different learners</h2>
+<h3>9.1 Pre-Entry and Entry level</h3>
+<ul>
+  <li><b>Pre-Entry:</b> nobody should have to read to take part. Model it, act it out, use fingers and gestures, and read every question and option aloud. Give waiting learners something to say to the person next to them.</li>
+  <li><b>Entry level reading:</b> every card is two short sentences at most, one instruction per line, order words first (First, Next, Then, Finally), and three options at most on any question.</li>
+  <li>Drawing counts as writing: whiteboard drawing and matching suit Entry 1 and Pre-Entry.</li>
+  <li>Spot the hazard works well for naming things: "tap what you find in the living room".</li>
+</ul>
+<h3>9.2 Level 2, Level 3 and above</h3>
+<ul>
+  <li>Use exam-style questions as the final product, peer-marked against the exam tips.</li>
+  <li>Best-answer questions (two options look right) and "which law / rule / principle applies?" rounds build analysis.</li>
+  <li>Put learners in a professional role (inspector, investigator, adviser) to raise the stakes.</li>
+</ul>
+<h3>9.3 Inclusive by design (applies to every session)</h3>
+<ul>
+  <li><b>Pictures and examples reflect the college's learners.</b> Across a set of slides, show a real mix: women and men, different ethnicities, visible faith dress such as a hijab or turban, disabled people as ordinary participants, and a range of ages and body types. AI picture tools default to the same face: ask for the mix in the brief, slide by slide, and review the set together.</li>
+  <li><b>Avoid stereotypes in who does what.</b> Vary who is shown as the expert, the one using the technology, the one in charge.</li>
+  <li><b>No tokenism.</b> Any cultural reference must be connected to the learning point.</li>
+  <li><b>Lower the language, not the thinking.</b> Never reduce the challenge for EAL, ESOL or SEND learners; adapt the language and the scaffolding.</li>
+  <li><b>Describe learners by the support that helps them</b>, never by deficit.</li>
+  <li><b>Prefer UK and Bradford contexts,</b> and global perspectives where relevant.</li>
+  <li><b>Assume nothing</b> about home internet, devices, money, quiet space, family help, faith or family structure.</li>
+</ul>
+
+<!-- ═══════════════════════════════════ 10 -->
+<h2>10. Safety-critical and regulated topics</h2>
+<p>For health and safety, safeguarding, infection control, food hygiene, medication, electrical work, working at height, machinery, legislation, or anything regulated:</p>
+<ul>
+  <li>Never state legal duties, regulation numbers, exposure limits, weight limits, distances, temperatures or timescales from memory. They vary by site, employer and year.</li>
+  <li>Where a figure belongs, keep the teaching point and mark it "check your policy" or "your supervisor will tell you the limit here". Use the teacher's own material for figures, and list each one in the Lesson Brief under "Check before teaching".</li>
+  <li>Do teach widely established practice: the right PPE, checking equipment, keeping walkways clear, stopping when something is unsafe, and who to report to.</li>
+  <li>Where a placement or employer has its own policy, the session points learners to it.</li>
+</ul>
+
+<!-- ═══════════════════════════════════ 11 -->
+<h2>11. The planning document</h2>
+<p>Staff who like paper can print the Lesson Planner (five A4 landscape pages). The Copilot conversation follows the same structure, so the two match.</p>
+<h4>Page 1: The brief</h4>
+<p>Lesson, course and level, length, group size, tutor, date. The one idea. What learners already know. Objectives at four levels: identify, explain, analyse, create or judge. What learners make or do by the end. The hook question (answered at the end). Whiteboard tables yes or no. Printed packs yes or nothing printed. Other kit. What must be kept from the source material. Feedback to collect. The design question: "What tools have I got, and what is the most exciting way to get this across?" LEAD. How the room works.</p>
+<h4>Page 2: The toolbox</h4>
+<p>Every tool grouped as Show, Ask, Play, and Time and move, with which screen it goes on and a tip (the same as Section 5). How a step ends.</p>
+<h4>Page 3: The plan (six steps per page)</h4>
+<table>
+  <tr><th>Column</th><th>What to write</th></tr>
+  <tr><td>#</td><td>Step number.</td></tr>
+  <tr><td>Step and mins</td><td>A short name and how long it takes.</td></tr>
+  <tr><td>Learners are, and LEAD phase</td><td>Tables, Screens or Moving. Launch, Establish, Apply or Demonstrate.</td></tr>
+  <tr><td>Big screen</td><td>What everyone sees.</td></tr>
+  <tr><td>Touch screens</td><td>What learners tap (tick "same on both").</td></tr>
+  <tr><td>Tables / away from screens</td><td>What learners write or do, with a stretch.</td></tr>
+  <tr><td>Tutor</td><td>What to say; what to watch for; the technique.</td></tr>
+  <tr><td>Ends when</td><td>I move on, answers in, timed, or video ends.</td></tr>
+</table>
+<h4>Page 4: A filled-in example</h4>
+<p>Three steps from a real session, and a strip showing where learners are for each step.</p>
+<h4>Page 5: Checks</h4>
+<p>The same checklist as Section 15, plus notes for next time.</p>
+
+<!-- ═══════════════════════════════════ 12 -->
+<h2 class="pb">12. The Lesson Brief: the format the lesson agent needs</h2>
+<p>This is the output of the Copilot conversation. It is written so the lesson agent in our platform can build the session from it, and so a person can read it. <b>Copilot must produce it exactly in this layout,</b> with the headings in capitals, in one block the person can copy.</p>
+
+<div class="box warn">
+<p><b>Rules for the Lesson Brief</b></p>
+<ul>
+  <li>Use the tool names from Section 5 ("Quiz", "Word cloud", "Picture"…), never code names.</li>
+  <li>Every step has all the columns filled. "Same" in the Touch screens column means the same as the big screen.</li>
+  <li>Write slide text and quiz questions in full, exactly as they should appear, with the correct answer marked.</li>
+  <li>Refer to pictures by the file name in the "PICTURES AND FILES" list, so the agent can match them to the uploads.</li>
+  <li>Video links must be real links the person has given. If there is no link yet, write "LINK NEEDED: search for …".</li>
+  <li>Timings must add up to the session length.</li>
+  <li>Plain text and a simple table only, so it pastes cleanly.</li>
+</ul>
+</div>
+
+<div class="template">LESSON BRIEF FOR THE IMMERSIVE ROOM LESSON AGENT
+Please build this lesson as agreed below. Use my uploaded files where named.
+
+TITLE: [session title]
+COURSE AND LEVEL: [e.g. Dental Nursing, Level 2]
+LENGTH: [minutes]      GROUP SIZE: [number]      TUTOR: [name]
+WHITEBOARD TABLES: [Yes / No]      PRINTING: [Printed packs / Nothing printed]
+OTHER KIT: [anything else in the room, or "none"]
+
+THE ONE IDEA: [one sentence]
+WHAT LEARNERS ALREADY KNOW: [one or two sentences]
+HOOK QUESTION (answered in the last step): [the question]
+SESSION SHAPE: [e.g. investigation, escape room, game show, debate, stations]
+WHAT LEARNERS MAKE BY THE END: [the product, and how it is checked]
+
+OBJECTIVES (in order, they climb):
+1. [Identify …]
+2. [Explain …]
+3. [Analyse …]
+4. [Create / judge …]
+
+MUST KEEP FROM MY MATERIAL: [what, or "nothing in particular"]
+FEEDBACK TO COLLECT: [e.g. confidence at start and end]
+
+SCREEN MAP
+| # | Step | Mins | LEAD | Where learners are | Big screen | Touch screens | Tables | Tutor says / watch for |
+|---|------|------|------|--------------------|------------|---------------|--------|------------------------|
+| 1 | [name] | [n] | Launch | [Tables / Touch screens / Moving: from X to Y] | [Tool: content] | [Tool: content, or "Same"] | [table task and stretch, or "-"] | [Say: … Watch for: … Technique: …] |
+| … |
+
+QUIZ, VOTE, BUZZER AND WHEEL CONTENT (written out in full):
+Step [n] Quiz:
+  Q1 (multiple choice): [question] | A) … B) … C) … | Correct: [letter]
+  Q2 (true or false): [statement] | Correct: [True / False]
+Step [n] Vote: [question] | Options: [a] / [b] / [c]
+Step [n] Buzzer quiz: Team names: [x] and [y]
+  1. [question] = [answer]
+Step [n] Wheel: [prompt] | Items: [a], [b], [c] …
+Step [n] Word cloud / Shared board: [prompt]
+Step [n] Confidence check (start / final): [question], scale: [numbers / faces / agree-disagree]
+
+PICTURES AND FILES (I will upload these with this brief):
+- [file name]: [what it shows, and which step uses it]
+- [file name, NOT YET MADE]: [what it must show, who is in it; make in Canva with no words]
+
+VIDEO AND WEB LINKS:
+- Step [n]: [link], play from [m:ss] to [m:ss] / LINK NEEDED: search for "[words]"
+- Step [n]: [Wordwall / Canva link]: [one line on what it shows]
+
+ADD IN THE STAGE DESIGNER AFTER BUILDING (the agent cannot build these):
+- Step [n] Spot the hazard: picture [file]; spots to mark: [list]
+- Step [n] Spot the difference: pictures [file A] and [file B]; differences: [list]
+- Step [n] Audio &amp; picture: sound [file] over picture [file]
+- or "none"
+
+CHECK BEFORE TEACHING:
+- [facts, figures and rules to confirm against policy]
+- [videos to watch to the end]
+- [anything to write on the whiteboard before a timer hides a slide]
+- [props or kit to gather: only things the room already has]</div>
+
+<!-- ═══════════════════════════════════ 13 -->
+<h2 class="pb">13. A complete worked example</h2>
+<p>This is a shortened Lesson Brief for a real session built in the room: Dental Nursing, Unit 202, cross infection, 90 minutes. The topic was one learners "do not like", so the session became an investigation.</p>
+
+<div class="template">LESSON BRIEF FOR THE IMMERSIVE ROOM LESSON AGENT
+Please build this lesson as agreed below. Use my uploaded files where named.
+
+TITLE: Patient Zero: Micro-organisms, Cross Infection and Patient Safety
+COURSE AND LEVEL: Dental Nursing, Unit 202, Level 2
+LENGTH: 90      GROUP SIZE: 15      TUTOR: [name]
+WHITEBOARD TABLES: Yes      PRINTING: Nothing printed
+OTHER KIT: whiteboard pens, two colours per table
+
+THE ONE IDEA: Infection spreads by routes you cannot see, and the same precautions for every patient break the chain.
+WHAT LEARNERS ALREADY KNOW: Basic hand hygiene and PPE from placement.
+HOOK QUESTION: How did the infection spread at Northgate Dental?
+SESSION SHAPE: Investigation, with a secret Patient Zero
+WHAT LEARNERS MAKE BY THE END: An exam-style answer, "Explain transmission if gloves are not changed", peer-marked against four tips (mode, method, through, consequences).
+
+OBJECTIVES:
+1. Identify the modes and methods of micro-organism transmission.
+2. Explain the chain of infection and how universal precautions break it.
+3. Analyse a dental surgery for cross-infection risks and the laws they break.
+4. Apply the needle-stick protocol and write an exam-style explanation.
+
+SCREEN MAP (extract: 10 of 28 steps)
+| # | Step | Mins | LEAD | Where learners are | Big screen | Touch screens | Tables | Tutor says / watch for |
+| 1 | Arrival | 2 | Launch | Moving: door to touch screens to tables | Picture: practice-closed.jpg | Confidence check (start) | - | Say: Tap how confident you are, then go to a table. Watch for: the FIRST learner to tap Touch Screen 1 is secretly Patient Zero; note their name. |
+| 2 | The voicemail | 4 | Launch | Tables | Picture: voicemail-transcript.jpg | Slide: "Find out: How many patients? Who is coming, and when?" | Write the answers on the table | Say: Read Samira's voicemail. Technique: a hook that opens a question. |
+| 7 | Chain stations | 6 | Establish | Tables, moving once | Rotation timer: 2 rounds of 150 s, "Draw the six links, write a dental example for each" | Picture: chain-of-infection.jpg | Round 2: on the next table's chain, write how to BREAK each link. Stretch: which link does the autoclave break? | Watch for: draw the chain on the whiteboard first (the timer hides the slide). Technique: create, then build on another table's work. |
+| 8 | Who's in the chair? | 4 | Establish | Tables | Wheel: Hep B, HIV, cold sores, healthy teenager, your best friend… | Slide: "Plan it on your table: PPE? Cleaning?" | Plan the precautions for each spin | Watch for: wait until someone notices the answer never changes. Technique: discovery (universal precautions). |
+| 12 | Video: aerosols | 2 | Establish | Tables | Video (46 s) | Slide: 3 questions to watch for | Write answers while watching | Say the questions before pressing play. |
+| 13 | What did you see? | 2 | Establish | Tables | Slide: the same 3 questions | Slide: "Answers on your table." | - | Technique: the floor opens to the questions they watched for. |
+| 18 | Transmission quiz | 4 | Apply | Moving to touch screens, half at each | Quiz (results) | Quiz: 7 questions | - | One trip to the touch screens covers steps 18 to 20. |
+| 19 | Crime scene | 5 | Apply | Touch screens | Spot the hazard | Spot the hazard | - | Each screen must find all 6 mistakes. Ask which law each breaks. |
+| 23 | Write your report | 7 | Demonstrate | Tables | Picture: exam-question.jpg | Timer: 7 min "Write your answer on the table" | Exam answer on the table. Stretch: name the link it breaks. | Good looks like: all four tips, with a consequence. |
+| 26 | Patient Zero | 4 | Demonstrate | Touch screens | Picture: patient-zero.jpg | Word cloud: "How did it reach you? One word." | - | Say: Stand up if you touched Touch Screen 1 today… Technique: close the loop the hook opened. |
+
+ADD IN THE STAGE DESIGNER AFTER BUILDING:
+- Step 19 Spot the hazard: picture surgery.jpg; spots: red mop, food and drink on the worktop, overfilled sharps bin, phone on the tray, gloves on the chair, blood spill.
+
+CHECK BEFORE TEACHING:
+- Impression soak time and needle-stick steps: check against the practice policy and HTM 01-05.
+- Watch the aerosol clip to the end.
+- Draw the six chain links on the whiteboard before step 7.
+- Patient Zero needs nothing bought: it is whoever taps Touch Screen 1 first.</div>
+
+<!-- ═══════════════════════════════════ 14 -->
+<h2>14. Using the Lesson Brief in the platform</h2>
+<p>Copilot should give these steps to the person at the end, in plain words.</p>
+<ol>
+  <li><b>Copy the Lesson Brief.</b> Select it all and copy it. (If you prefer, save it as a Word document.)</li>
+  <li><b>Get your files ready</b> in one folder: the pictures and slides listed in the brief (PNG or JPG), any worksheets (PDF, Word or PowerPoint), and any sound or video files. Make missing slides in Canva and download them as pictures.</li>
+  <li><b>Open the platform</b> and go to <b>Admin</b> and press <b>Build with the agent</b>. If you are asked for the admin PIN, ask the Immersive Learning Room team.</li>
+  <li><b>Paste the Lesson Brief</b> into the message box at the bottom and press Enter. (Or drop the Word document onto the page.)</li>
+  <li><b>Drop your files anywhere on the page.</b> Paste any YouTube, Wordwall or Canva links into a message.</li>
+  <li><b>Read the screen map the agent shows you.</b> It may ask a question or two: answer them in the message box. Ask for any change in plain words ("make step 5 a vote instead").</li>
+  <li>When it looks right, press <b>Build lesson</b>. Check what it built, ask for changes and press <b>Build again</b> if needed.</li>
+  <li>Press <b>Create lesson</b>. The session is now saved in the platform.</li>
+  <li><b>Open it in the Stage Designer</b> and add anything listed under "Add in the Stage Designer" (Spot the hazard, Spot the difference, Audio &amp; picture).</li>
+  <li><b>Click through the preview</b> (all three screens side by side, with the tutor notes). Watch every video to the end. Tap every hotspot.</li>
+  <li><b>Teach it,</b> then tell the team what went well and what would be even better.</li>
+</ol>
+<div class="box green"><p><b>If you get stuck:</b> the lesson agent keeps your conversation. You can close the page and come back. Nothing is shown to learners until a session is started from the Host screen in the room.</p></div>
+
+<!-- ═══════════════════════════════════ 15 -->
+<h2>15. Checklists</h2>
+<h3>15.1 Before the Lesson Brief is final (Copilot runs this)</h3>
+<ul>
+  <li>One thread: every step serves the one idea.</li>
+  <li>Objectives climb, with one at analyse or above.</li>
+  <li>LEAD in order; the hook question is answered in the last step.</li>
+  <li>Learners predict or attempt before they are told, somewhere early.</li>
+  <li>Teach before you test; explain before anything starts.</li>
+  <li>No activity twice in a row; question types are mixed.</li>
+  <li>At least two table tasks and a third of the time at the tables (if tables agreed), each with a stretch.</li>
+  <li>Every screen has a job in every step; standby never on two screens at once.</li>
+  <li>Touch-screen steps grouped; about two whole-class moves per 45 minutes; runners not the room where one answer per table is enough.</li>
+  <li>Tap games on the touch screens, never the big screen.</li>
+  <li>Every video is full focus or a watching task, followed by a step that talks through the same questions.</li>
+  <li>The final product is tested against criteria and captured on a shared board.</li>
+  <li>Confidence check at the start and the end (if feedback was wanted).</li>
+  <li>Nothing printed if "nothing printed" was chosen; nothing to buy unless agreed.</li>
+  <li>Inclusive pictures and examples; nothing assumes money, a device or a home set-up.</li>
+  <li>Safety-critical figures marked "check before teaching".</li>
+  <li>Timings add up to the session length.</li>
+</ul>
+<h3>15.2 Before it is taught (the person does this)</h3>
+<ul>
+  <li>Every picture shows in the preview, on all three screens.</li>
+  <li>Click through the whole preview with the tutor notes.</li>
+  <li>Watch every video to the end; check the start and end times.</li>
+  <li>Tap every hotspot once.</li>
+  <li>Check facts that could have changed (rules, policies, what a tool does today).</li>
+  <li>Write on the whiteboard anything a timer will hide.</li>
+  <li>Printed packs printed and cut, if any. Props are things the room already has.</li>
+</ul>
+<h3>15.3 After it is taught</h3>
+<ul>
+  <li>What went well? What would be even better if?</li>
+  <li>Was the length and pace right? What would you add, change or take out?</li>
+</ul>
+
+<!-- ═══════════════════════════════════ 16 -->
+<h2>16. Glossary and common questions</h2>
+<h3>Glossary</h3>
+<table>
+  <tr><th style="width:26%">Word</th><th>Meaning</th></tr>
+  <tr><td>Host / big screen</td><td>The large projection at the front, controlled by the tutor.</td></tr>
+  <tr><td>Touch screens</td><td>The two tall screens learners tap (Touch Screen 1 and Touch Screen 2).</td></tr>
+  <tr><td>Remote</td><td>The tutor's phone, used to move the session on and add timers.</td></tr>
+  <tr><td>Step (slot)</td><td>One moment in the session: what all three screens show together.</td></tr>
+  <tr><td>Screen map</td><td>The table of steps showing what each screen does and where learners are.</td></tr>
+  <tr><td>LEAD</td><td>Launch, Establish, Apply, Demonstrate: the four phases of a session.</td></tr>
+  <tr><td>Lesson agent</td><td>The assistant in our platform that builds a session from your Lesson Brief and files.</td></tr>
+  <tr><td>Stage Designer</td><td>The page in the platform where you can change any step by hand.</td></tr>
+  <tr><td>Preview</td><td>A safe click-through of all three screens and the tutor notes. It never affects a real class.</td></tr>
+  <tr><td>Embed</td><td>A web page (Wordwall, Canva, a website) shown inside a screen.</td></tr>
+  <tr><td>Hotspot</td><td>A spot on a picture learners must tap to find (Spot the hazard).</td></tr>
+  <tr><td>Runner</td><td>One learner sent from a table to a touch screen on behalf of the group.</td></tr>
+  <tr><td>Stretch</td><td>An extra challenge for groups who finish first.</td></tr>
+</table>
+
+<h3>What the room cannot do (and what to do instead)</h3>
+<table>
+  <tr><th style="width:38%">You might want…</th><th>Instead</th></tr>
+  <tr><td>A locked step that opens with a code</td><td>The tutor is the lock: learners say or type the code (on a shared board) and the tutor moves on.</td></tr>
+  <tr><td>Learners using their own phones</td><td>Learners use the two touch screens and the tables. Send runners.</td></tr>
+  <tr><td>Different activities on Touch Screen 1 and 2</td><td>Keep them the same; give tables a different job instead.</td></tr>
+  <tr><td>The agent making pictures or slides</td><td>Make them in Canva (no words in AI pictures), then upload them.</td></tr>
+  <tr><td>Capital letters in a word cloud</td><td>Use a shared board: it shows answers exactly as typed.</td></tr>
+  <tr><td>A video that loops or starts by itself from YouTube</td><td>Download it as a file and use "Video file (loops)".</td></tr>
+  <tr><td>Printing when "nothing printed" was chosen</td><td>Learners write and draw on the tables; the tutor writes models on the whiteboard.</td></tr>
+</table>
+
+<h3>Common questions</h3>
+<p><b>I have never used the room. Can I still do this?</b> Yes. Copilot asks you one question at a time and suggests a plan you can say yes to. You do not need to know any of the tools before you start.</p>
+<p><b>I already have PowerPoint slides. Can I use them?</b> Yes. Tell Copilot what is in them, or upload them to the lesson agent with your Lesson Brief. The agent keeps your slides recognisably yours: your order, your words, your pictures.</p>
+<p><b>How long should a session be?</b> Whatever your timetable says. Copilot checks that the steps add up.</p>
+<p><b>How many steps is normal?</b> About one step every 3 minutes: 15 to 20 steps for 60 minutes, 25 to 30 for 90 minutes. Table tasks are longer steps; slides are shorter.</p>
+<p><b>What if the agent builds something I do not want?</b> Tell it in plain words and press Build again, or change the step by hand in the Stage Designer.</p>
+<p><b>Do I need Canva?</b> It helps, because slides made in Canva look far better than text on a screen. If you do not have it, text slides and your own pictures work.</p>
+<p><b>What if my topic is dry?</b> Pick a session shape from Section 8. Give learners a role and a mystery. The content stays the same; the reason to care changes.</p>
+
+<p class="small" style="margin-top:16pt">Built from the Immersive Learning Room's ways of working, the lesson agent's rules, and the lessons built and taught in the room. Keep this guide in step with docs/lessons/WAYS-OF-WORKING.md.</p>
+
+</body>
+</html>
