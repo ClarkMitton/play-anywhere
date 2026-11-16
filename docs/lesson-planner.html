@@ -3,196 +3,485 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Lesson Planner — Three Screen Sketch</title>
+<title>Lesson Planner · Immersive Learning Room</title>
 <style>
   :root {
-    --cyan: #06b6d4;
-    --orange: #f97316;
-    --ink: #1a1a1a;
-    --line: #c8c8c8;
-    --muted: #6b7280;
+    --ink: #17202a;
+    --muted: #5f6b76;
+    --line: #c9d1d8;
+    --faint: #eef2f5;
+    --cyan: #0e7490;
+    --cyan-bg: #ecfeff;
+    --cyan-edge: #a5f3fc;
+    --orange: #b45309;
+    --orange-bg: #fff7ed;
+    --orange-edge: #fed7aa;
+    --green: #15803d;
+    --green-bg: #f0fdf4;
+    --green-edge: #bbf7d0;
+    --violet: #6d28d9;
+    --violet-bg: #f5f3ff;
+    --violet-edge: #ddd6fe;
   }
   * { box-sizing: border-box; }
-  html, body {
-    margin: 0;
-    padding: 0;
+  html, body { margin: 0; padding: 0; }
+  body {
     font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
     color: var(--ink);
-    background: #f4f4f5;
+    background: #e5e7eb;
+    font-size: 10.5px;
+    line-height: 1.35;
   }
 
-  /* Screen view: centre the page with a little breathing room */
-  .page {
-    width: 297mm;
-    min-height: 210mm;
-    margin: 16px auto;
-    padding: 12mm 12mm 10mm;
-    background: #fff;
-    box-shadow: 0 4px 24px rgba(0,0,0,0.12);
-  }
-
-  /* ── Header ─────────────────────────────── */
-  header { border-bottom: 2px solid var(--ink); padding-bottom: 8px; margin-bottom: 12px; }
-  .eyebrow {
-    font-size: 10px; letter-spacing: 4px; text-transform: uppercase;
-    color: var(--cyan); font-weight: 700;
-  }
-  h1 { font-size: 22px; margin: 2px 0 8px; font-weight: 800; }
-  .meta { display: flex; gap: 18px; flex-wrap: wrap; font-size: 12px; }
-  .meta .field { display: flex; align-items: baseline; gap: 6px; flex: 1; min-width: 140px; }
-  .meta label { color: var(--muted); text-transform: uppercase; letter-spacing: 1px; font-size: 9px; font-weight: 700; white-space: nowrap; }
-  .meta .blank { flex: 1; border-bottom: 1px solid var(--line); height: 16px; }
-
-  /* ── Column headings (the 3 screens) ──────── */
-  .col-heads { display: grid; grid-template-columns: 70px 1fr 1fr 1fr; gap: 8px; margin: 14px 0 6px; }
-  .col-heads .spacer {}
-  .col-heads .head {
-    text-align: center; font-weight: 800; font-size: 11px;
-    text-transform: uppercase; letter-spacing: 2px; padding: 4px;
-    border-radius: 6px 6px 0 0;
-  }
-  .head.host   { background: #fff4e6; color: #b45309; border: 1px solid #fed7aa; border-bottom: none; }
-  .head.s1     { background: #ecfeff; color: #0e7490; border: 1px solid #a5f3fc; border-bottom: none; }
-  .head.s2     { background: #ecfeff; color: #0e7490; border: 1px solid #a5f3fc; border-bottom: none; }
-  .head small  { display: block; font-size: 8px; letter-spacing: 1px; font-weight: 600; opacity: .7; }
-
-  /* ── Slot rows ─────────────────────────────── */
-  .slot { display: grid; grid-template-columns: 70px 1fr 1fr 1fr; gap: 8px; margin-bottom: 10px; }
-  .slot .tab {
-    display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
-    padding-top: 6px; gap: 6px;
-  }
-  .slot .num {
-    width: 30px; height: 30px; border-radius: 50%; border: 2px solid var(--ink);
-    display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 14px;
-  }
-  .slot .tabline { width: 100%; border-bottom: 1px solid var(--line); height: 14px; }
-  .slot .tablabel { font-size: 7px; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); text-align: center; }
-  .box {
-    border: 1px solid var(--line); border-radius: 0 0 6px 6px; min-height: 92px;
-    padding: 6px 8px; position: relative;
-  }
-  .box.host { border-color: #fed7aa; background: #fffdf9; }
-  .box.s1, .box.s2 { border-color: #a5f3fc; background: #fbffff; }
-  .box .hint { font-size: 8px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
-
-  /* ── Reference strip ───────────────────────── */
-  .ref { margin-top: 14px; border-top: 1px dashed var(--line); padding-top: 8px; }
-  .ref h2 { font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); margin: 0 0 6px; }
-  .chips { display: flex; flex-wrap: wrap; gap: 5px; }
-  .chip {
-    font-size: 9.5px; padding: 2px 8px; border-radius: 99px; border: 1px solid var(--line);
-    background: #fafafa;
-  }
-  .chip b { color: var(--cyan); }
-  .footnote { margin-top: 8px; font-size: 9px; color: var(--muted); line-height: 1.5; }
-  .footnote b { color: var(--ink); }
-
-  /* ── Print ─────────────────────────────────── */
-  @media print {
-    html, body { background: #fff; }
-    .page { width: auto; min-height: auto; margin: 0; padding: 8mm; box-shadow: none; }
-    @page { size: A4 landscape; margin: 6mm; }
-    .slot { break-inside: avoid; }
-    .toolbar { display: none; }
-  }
-  .toolbar { text-align: center; margin: 12px; }
+  .toolbar { text-align: center; padding: 14px; }
   .toolbar button {
-    font: inherit; font-size: 13px; padding: 8px 20px; border-radius: 8px; border: none;
-    background: var(--ink); color: #fff; cursor: pointer; letter-spacing: 1px;
+    font: inherit; font-size: 13px; padding: 9px 22px; border-radius: 8px; border: none;
+    background: var(--ink); color: #fff; cursor: pointer;
+  }
+  .toolbar p { margin: 8px 0 0; color: var(--muted); font-size: 12px; }
+
+  .page {
+    width: 297mm; height: 210mm; margin: 0 auto 16px; padding: 9mm 10mm 8mm;
+    background: #fff; box-shadow: 0 4px 24px rgba(0,0,0,.12);
+    display: flex; flex-direction: column; overflow: hidden; position: relative;
+  }
+  .foot {
+    position: absolute; bottom: 4mm; left: 10mm; right: 10mm;
+    display: flex; justify-content: space-between; color: var(--muted); font-size: 8px;
+  }
+
+  /* header */
+  .eyebrow { font-size: 8.5px; letter-spacing: 3px; text-transform: uppercase; color: var(--cyan); font-weight: 700; }
+  h1 { font-size: 20px; margin: 1px 0 6px; font-weight: 800; }
+  h2 {
+    font-size: 10px; letter-spacing: 2px; text-transform: uppercase; margin: 0 0 5px;
+    padding-bottom: 3px; border-bottom: 2px solid var(--cyan); color: var(--ink);
+  }
+  .meta { display: grid; grid-template-columns: 2.2fr 1.4fr 1fr 1fr 1.3fr 1fr; gap: 10px; padding-bottom: 7px; border-bottom: 2px solid var(--ink); margin-bottom: 8px; }
+  .field { display: flex; flex-direction: column; gap: 2px; }
+  .field label { font-size: 7.5px; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); font-weight: 700; }
+  .blank { border-bottom: 1px solid var(--line); height: 15px; }
+
+  /* page 1: brief */
+  .brief { display: grid; grid-template-columns: 1.25fr 1fr; gap: 14px; flex: 1; }
+  .q { margin-bottom: 11px; }
+  .q b { display: block; font-size: 11.5px; }
+  .q span { color: var(--muted); font-size: 9px; }
+  .lines { margin-top: 3px; }
+  .lines i { display: block; border-bottom: 1px solid var(--line); height: 24px; }
+  .yn { display: flex; gap: 14px; margin-top: 3px; font-size: 10px; }
+  .yn label::before { content: ""; display: inline-block; width: 10px; height: 10px; border: 1.5px solid var(--ink); border-radius: 2px; margin-right: 5px; vertical-align: -1px; }
+  .obj { display: grid; grid-template-columns: 62px 1fr; gap: 4px 8px; align-items: end; margin-top: 3px; }
+  .obj em { font-style: normal; font-size: 8.5px; font-weight: 700; color: var(--cyan); text-transform: uppercase; letter-spacing: .5px; }
+  .obj i { border-bottom: 1px solid var(--line); height: 23px; display: block; }
+  .callout { border: 1px solid var(--cyan-edge); background: var(--cyan-bg); border-radius: 8px; padding: 8px 10px; margin-bottom: 9px; }
+  .callout p { margin: 0 0 4px; }
+  .big-q { font-size: 13px; font-weight: 800; color: var(--cyan); margin: 2px 0 4px; }
+  .lead { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; margin-bottom: 9px; }
+  .lead div { border: 1px solid var(--line); border-radius: 6px; padding: 5px 6px; }
+  .lead b { display: block; font-size: 11.5px; }
+  .lead span { font-size: 9.5px; color: var(--muted); }
+  .room { border: 1px solid var(--line); border-radius: 8px; padding: 7px 9px; }
+  .room ul { margin: 2px 0 0; padding-left: 14px; }
+  .room li { margin-bottom: 5px; font-size: 11px; }
+
+  /* page 2: toolbox */
+  .tools { display: grid; grid-template-columns: repeat(4, 1fr); gap: 9px; flex: 1; }
+  .group { border-radius: 8px; padding: 7px 8px; border: 1px solid; }
+  .group h3 { margin: 0 0 7px; font-size: 13px; letter-spacing: 2px; text-transform: uppercase; }
+  .g-show { background: var(--orange-bg); border-color: var(--orange-edge); } .g-show h3 { color: var(--orange); }
+  .g-ask  { background: var(--cyan-bg); border-color: var(--cyan-edge); }     .g-ask h3 { color: var(--cyan); }
+  .g-play { background: var(--violet-bg); border-color: var(--violet-edge); } .g-play h3 { color: var(--violet); }
+  .g-time { background: var(--green-bg); border-color: var(--green-edge); }   .g-time h3 { color: var(--green); }
+  .tool { background: #fff; border-radius: 6px; padding: 6px 8px; margin-bottom: 6px; }
+  .tool b { font-size: 12px; }
+  .tool .where { float: right; font-size: 7.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: var(--muted); }
+  .tool p { margin: 2px 0 0; font-size: 10.4px; color: #36424d; line-height: 1.38; }
+  .tool.new b::after { content: "NEW"; font-size: 6.5px; font-weight: 800; letter-spacing: 1px; color: #fff; background: #dc2626; border-radius: 3px; padding: 0 3px; margin-left: 5px; vertical-align: 1px; }
+  .strip { margin-top: 8px; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 9px; }
+  .strip div { border: 1px solid var(--line); border-radius: 8px; padding: 6px 8px; font-size: 10px; }
+  .strip b { display: block; font-size: 9.5px; margin-bottom: 2px; }
+
+  /* plan grid */
+  .grid-head, .row { display: grid; grid-template-columns: 26px 92px 66px 1fr 1fr 1fr 1.15fr 64px; }
+  .grid-head > div {
+    font-size: 7.8px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; text-align: center;
+    padding: 4px 3px; border: 1px solid var(--line); border-bottom: none; background: var(--faint); color: var(--muted);
+  }
+  .grid-head .h-host { background: var(--orange-bg); color: var(--orange); border-color: var(--orange-edge); }
+  .grid-head .h-touch { background: var(--cyan-bg); color: var(--cyan); border-color: var(--cyan-edge); }
+  .grid-head .h-table { background: var(--green-bg); color: var(--green); border-color: var(--green-edge); }
+  .grid-head small { display: block; font-size: 7px; font-weight: 600; letter-spacing: .3px; text-transform: none; opacity: .85; }
+  .rows { flex: 1; display: grid; grid-auto-rows: 1fr; }
+  .row > div { border: 1px solid var(--line); margin: 0 -1px -1px 0; padding: 3px 4px; position: relative; }
+  .row .n { display: flex; align-items: flex-start; justify-content: center; padding-top: 5px; font-weight: 800; font-size: 13px; }
+  .row .host { background: #fffdf9; }
+  .row .touch { background: #fbffff; }
+  .row .table { background: #fbfffc; }
+  .hint { font-size: 7px; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; display: block; }
+  .ticks { display: flex; flex-direction: column; gap: 2.5px; font-size: 8.5px; margin-top: 2px; }
+  .ticks span::before { content: ""; display: inline-block; width: 8px; height: 8px; border: 1.2px solid var(--muted); border-radius: 2px; margin-right: 4px; vertical-align: -1px; }
+  .namebox { display: flex; flex-direction: column; justify-content: space-between; height: 100%; }
+  .namebox .mins { border-top: 1px dashed var(--line); padding-top: 2px; }
+  .same { position: absolute; right: 4px; bottom: 3px; font-size: 7.5px; color: var(--muted); }
+  .same::before { content: ""; display: inline-block; width: 7px; height: 7px; border: 1.2px solid var(--muted); border-radius: 2px; margin-right: 3px; vertical-align: -1px; }
+  .say { position: absolute; left: 4px; right: 4px; top: 48%; border-top: 1px dashed var(--line); padding-top: 1px; }
+
+  /* checklist page */
+  .checks { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; flex: 1; }
+  .checks ul { list-style: none; margin: 0; padding: 0; }
+  .checks li { position: relative; padding-left: 18px; margin-bottom: 9px; font-size: 11.6px; line-height: 1.4; }
+  .checks li::before { content: ""; position: absolute; left: 0; top: 3px; width: 11px; height: 11px; border: 1.4px solid var(--ink); border-radius: 2px; }
+  .checks li b { font-weight: 700; }
+  .move { margin-top: 6px; }
+  .move .cells { display: grid; grid-template-columns: 54px repeat(20, 1fr); border-top: 1px solid var(--line); border-left: 1px solid var(--line); }
+  .move .cells div { border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); height: 17px; font-size: 7.5px; color: var(--muted); text-align: center; padding-top: 3px; }
+  .move .cells .lab { text-align: left; padding-left: 4px; font-weight: 700; color: var(--ink); background: var(--faint); }
+  .key { font-size: 8.5px; color: var(--muted); margin-top: 3px; }
+
+  @media print {
+    body { background: #fff; }
+    .toolbar { display: none; }
+    .page { margin: 0; box-shadow: none; page-break-after: always; break-after: page; }
+    .page:last-child { page-break-after: auto; break-after: auto; }
+    @page { size: A4 landscape; margin: 0; }
+    * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   }
 </style>
 </head>
 <body>
-<div class="toolbar"><button onclick="window.print()">Print / Save as PDF</button></div>
 
-<div class="page">
-  <header>
-    <div class="eyebrow">Immersive Learning · Lesson Sketch</div>
-    <h1>Three-Screen Lesson Planner</h1>
-    <div class="meta">
-      <div class="field"><label>Lesson</label><span class="blank"></span></div>
-      <div class="field"><label>Designer</label><span class="blank"></span></div>
-      <div class="field"><label>Total mins</label><span class="blank"></span></div>
-      <div class="field"><label>Date</label><span class="blank"></span></div>
-    </div>
-  </header>
-
-  <!-- Column headings: the three real screens -->
-  <div class="col-heads">
-    <div class="spacer"></div>
-    <div class="head host">Host · Teacher <small>What YOU show / control</small></div>
-    <div class="head s1">Touch Screen 1 <small>What learners see / do</small></div>
-    <div class="head s2">Touch Screen 2 <small>What learners see / do</small></div>
-  </div>
-
-  <!-- Slot rows. Print 5 per page; duplicate for longer lessons. -->
-  <div class="slot">
-    <div class="tab">
-      <div class="num">1</div>
-      <div class="tabline"></div><div class="tablabel">name</div>
-      <div class="tabline"></div><div class="tablabel">mins</div>
-    </div>
-    <div class="box host"><span class="hint">host</span></div>
-    <div class="box s1"><span class="hint">screen 1</span></div>
-    <div class="box s2"><span class="hint">screen 2</span></div>
-  </div>
-
-  <div class="slot">
-    <div class="tab">
-      <div class="num">2</div>
-      <div class="tabline"></div><div class="tablabel">name</div>
-      <div class="tabline"></div><div class="tablabel">mins</div>
-    </div>
-    <div class="box host"><span class="hint">host</span></div>
-    <div class="box s1"><span class="hint">screen 1</span></div>
-    <div class="box s2"><span class="hint">screen 2</span></div>
-  </div>
-
-  <div class="slot">
-    <div class="tab">
-      <div class="num">3</div>
-      <div class="tabline"></div><div class="tablabel">name</div>
-      <div class="tabline"></div><div class="tablabel">mins</div>
-    </div>
-    <div class="box host"><span class="hint">host</span></div>
-    <div class="box s1"><span class="hint">screen 1</span></div>
-    <div class="box s2"><span class="hint">screen 2</span></div>
-  </div>
-
-  <div class="slot">
-    <div class="tab">
-      <div class="num">4</div>
-      <div class="tabline"></div><div class="tablabel">name</div>
-      <div class="tabline"></div><div class="tablabel">mins</div>
-    </div>
-    <div class="box host"><span class="hint">host</span></div>
-    <div class="box s1"><span class="hint">screen 1</span></div>
-    <div class="box s2"><span class="hint">screen 2</span></div>
-  </div>
-
-  <!-- Reference strip: what authors can drop into any box -->
-  <div class="ref">
-    <h2>What can go in a box?</h2>
-    <div class="chips">
-      <span class="chip">Text slide</span>
-      <span class="chip">Image</span>
-      <span class="chip">YouTube</span>
-      <span class="chip">Embed / website</span>
-      <span class="chip"><b>Confidence checker</b> (1–10, emoji, or agree↔disagree)</span>
-      <span class="chip"><b>Question</b> (multiple choice · true/false)</span>
-      <span class="chip"><b>Voting</b></span>
-      <span class="chip"><b>Quiz buzzer</b> (2 teams)</span>
-      <span class="chip">Wheel spinner</span>
-      <span class="chip">Countdown timer</span>
-      <span class="chip">Standby</span>
-    </div>
-    <p class="footnote">
-      <b>Tip:</b> a slot can mirror the same thing on all 3 screens (e.g. a clip), or split roles —
-      Host shows the question, Touch Screens collect the answers.
-      <b>Moving between slots</b> is controlled on the Host screen or phone — you decide when to move on.
-    </p>
-  </div>
+<div class="toolbar">
+  <button onclick="window.print()">Print / Save as PDF</button>
+  <p>A4 landscape, five pages. Print page 3 as many times as the lesson needs. Page 2 is worth laminating.</p>
 </div>
+
+<!-- ══════════════ PAGE 1 · THE BRIEF ══════════════ -->
+<section class="page">
+  <div class="eyebrow">Bradford College · Immersive Learning Room · Lesson Planner</div>
+  <h1>1 · The brief</h1>
+  <div class="meta">
+    <div class="field"><label>Lesson</label><span class="blank"></span></div>
+    <div class="field"><label>Course and level</label><span class="blank"></span></div>
+    <div class="field"><label>Length (mins)</label><span class="blank"></span></div>
+    <div class="field"><label>Group size</label><span class="blank"></span></div>
+    <div class="field"><label>Tutor</label><span class="blank"></span></div>
+    <div class="field"><label>Date</label><span class="blank"></span></div>
+  </div>
+
+  <div class="brief">
+    <div>
+      <h2>Agree these before building anything</h2>
+      <div class="q"><b>The one idea this lesson is about</b><span>If you cannot say it in a sentence, the lesson does not know what it is about yet.</span>
+        <div class="lines"><i></i><i></i></div></div>
+      <div class="q"><b>What learners already know</b>
+        <div class="lines"><i></i></div></div>
+      <div class="q"><b>Objectives: they should climb, with at least one at analyse or above</b>
+        <div class="obj">
+          <em>Identify</em><i></i>
+          <em>Explain</em><i></i>
+          <em>Analyse</em><i></i>
+          <em>Create / judge</em><i></i>
+        </div></div>
+      <div class="q"><b>What learners make or do by the end that proves the last objective</b><span>A product tested against criteria, not a recall quiz.</span>
+        <div class="lines"><i></i></div></div>
+      <div class="q"><b>The hook question that opens the lesson (and gets answered at the end)</b>
+        <div class="lines"><i></i></div></div>
+      <div class="q" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
+        <div><b>Writing on the whiteboard tables?</b><div class="yn"><label>Yes</label><label>No</label></div></div>
+        <div><b>Printed packs?</b><div class="yn"><label>Yes</label><label>Nothing printed</label></div></div>
+        <div><b>Other kit in the room</b><div class="lines"><i></i></div></div>
+      </div>
+      <div class="q" style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div><b>Must keep from the source material</b><div class="lines"><i></i></div></div>
+        <div><b>Feedback to collect from learners</b><div class="lines"><i></i></div></div>
+      </div>
+    </div>
+
+    <div>
+      <div class="callout">
+        <p style="font-size:8.5px;letter-spacing:1.5px;text-transform:uppercase;font-weight:700;color:var(--cyan)">Ask this of every idea in the lesson</p>
+        <div class="big-q">What tools have I got, and what is the most exciting way to get this across?</div>
+        <p style="font-size:9.5px">This is a room, not a slide deck. Three screens show different things at the same time, the tables are for writing, and your phone is the remote. Page 2 is the full toolbox.</p>
+      </div>
+
+      <h2>LEAD: work through the four phases in order</h2>
+      <div class="lead">
+        <div><b>Launch</b><span>A hook that opens a question. Confidence baseline. Share the objectives.</span></div>
+        <div><b>Establish</b><span>Short input, then check straight away. Predict before reveal.</span></div>
+        <div><b>Apply</b><span>Use it in a new context: table tasks, hotspots, buzzer, harder questions.</span></div>
+        <div><b>Demonstrate</b><span>Learners show it: a product against criteria, the final confidence check.</span></div>
+      </div>
+
+      <div class="room">
+        <h2 style="border-color:var(--green)">The room</h2>
+        <ul>
+          <li><b>Big screen:</b> the whole class watches together. Slides, video, live results.</li>
+          <li><b>Two touch screens:</b> portrait, learners walk up and tap. Both show the same activity: half the class at each.</li>
+          <li><b>Whiteboard tables:</b> learners stand and write on the table. Two touch screens cannot occupy a whole class; tables can.</li>
+          <li><b>Your phone (the remote):</b> moves the lesson on, adds a timer over any slide, controls the reveal.</li>
+          <li><b>Plan where learners are for every step.</b> Aim for two whole-class moves in 45 minutes. Send a runner, not the room, when one answer per table is enough.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="foot"><span>Page 1 of 5 · The brief</span><span>Full guidance: docs/lessons/WAYS-OF-WORKING.md</span></div>
+</section>
+
+<!-- ══════════════ PAGE 2 · THE TOOLBOX ══════════════ -->
+<section class="page">
+  <div class="eyebrow">Bradford College · Immersive Learning Room · Lesson Planner</div>
+  <h1>2 · The toolbox: everything a screen can do</h1>
+
+  <div class="tools">
+    <div class="group g-show">
+      <h3>Show</h3>
+      <div class="tool"><span class="where">Any</span><b>Text slide</b><p>A headline, not an essay. Optional title box for context.</p></div>
+      <div class="tool"><span class="where">Any</span><b>Picture (Canva slide)</b><p>Make slides in Canva and add them as pictures. Few words, read from across the room.</p></div>
+      <div class="tool"><span class="where">Big or all</span><b>YouTube</b><p>Trim with start and end times. The lesson moves on when it ends. Big screen + questions on the touch screens = a watching task.</p></div>
+      <div class="tool"><span class="where">Any</span><b>Video file (loops)</b><p>Starts by itself and can loop: welcome screens, music under a walk.</p></div>
+      <div class="tool"><span class="where">Big</span><b>Audio (listening)</b><p>Play, pause, play again. Never starts by itself, never moves the lesson on.</p></div>
+      <div class="tool new"><span class="where">Big</span><b>Audio &amp; picture</b><p>A sound file over a picture: a voicemail, a scene, a soundscape. Plays only when you press Play.</p></div>
+      <div class="tool"><span class="where">Touch</span><b>Embed (Wordwall, Canva, website)</b><p>Anything learners tap goes on the touch screens, never the big screen. Write one line on what it shows.</p></div>
+      <div class="tool"><span class="where">Any</span><b>Standby</b><p>Only while you talk. Never on two screens at once.</p></div>
+    </div>
+
+    <div class="group g-ask">
+      <h3>Ask</h3>
+      <div class="tool"><span class="where">Touch</span><b>Confidence check</b><p>Numbers, faces or agree/disagree. Mark one Start and one Final: the big screen compares them.</p></div>
+      <div class="tool"><span class="where">Touch</span><b>Vote</b><p>Opinions and best-answer debates, where two options look right. Live results on the big screen.</p></div>
+      <div class="tool"><span class="where">Touch 2</span><b>Single question</b><p>Multiple choice or true/false, answered on Touch Screen 2.</p></div>
+      <div class="tool"><span class="where">Both touch</span><b>Question round</b><p>Up to 10 questions on both touch screens. Mix true/false, best answer, odd one out.</p></div>
+      <div class="tool"><span class="where">Touch</span><b>Word cloud</b><p>Many short answers. Repeated words grow. Everything shows in lower case.</p></div>
+      <div class="tool"><span class="where">Touch</span><b>Shared board</b><p>Longer answers, exactly as typed. Use it to capture the product at the end.</p></div>
+    </div>
+
+    <div class="group g-play">
+      <h3>Play</h3>
+      <div class="tool"><span class="where">Both touch</span><b>Buzzer quiz</b><p>Two teams, one per touch screen. Fast recall of what has already been taught.</p></div>
+      <div class="tool"><span class="where">Big</span><b>Wheel spinner</b><p>Picks a person, topic or scenario. Spin it again to make a point (same answer every time?).</p></div>
+      <div class="tool"><span class="where">All</span><b>Spot the hazard (hotspots)</b><p>Tap to find on a photo. Each touch screen must find every spot; the big screen shows the race and the reveal.</p></div>
+      <div class="tool new"><span class="where">All</span><b>Spot the difference</b><p>Two matching photos, each screen finds the differences. Photograph it yourself: set up right, then set up wrong.</p></div>
+      <div class="tool"><span class="where">Touch + big</span><b>Whiteboard</b><p>Draw, alone or over a picture (floor plans, matching, "draw what is missing"). Send to the big screen; put it there too.</p></div>
+    </div>
+
+    <div class="group g-time">
+      <h3>Time &amp; move</h3>
+      <div class="tool"><span class="where">All</span><b>Countdown</b><p>A timed task everyone can see, with a label saying what to do.</p></div>
+      <div class="tool"><span class="where">Any</span><b>Rotation timer</b><p>Carousel round the tables: rounds, move time, what to do. Do the task, then move and check another table. Hides the slide.</p></div>
+      <div class="tool"><span class="where">Big</span><b>Big-screen timer</b><p>A timer on the big screen only.</p></div>
+      <div class="tool"><span class="where">Remote</span><b>Add Timer (from your phone)</b><p>Starts a timer over whatever is showing, so a picture stays up during a table task.</p></div>
+      <h3 style="margin-top:8px">How a step ends</h3>
+      <div class="tool"><b>You move on</b><p>From the remote or Touch Screen 1. The default.</p></div>
+      <div class="tool"><b>Answers are in</b><p>When Touch Screen 2 submits. For questions and checks.</p></div>
+      <div class="tool"><b>Timed</b><p>Moves on by itself. Use rarely: explain before anything starts.</p></div>
+    </div>
+  </div>
+
+  <div class="strip">
+    <div><b>Pick the tool for the job</b>Word cloud for many short answers. Shared board when wording matters. Vote for opinions. Question round for right answers. Buzzer for fast recall.</div>
+    <div><b>Pictures and sound</b>Upload to the app's media storage and use the full address, or add them in the designer. Make people in pictures look like the people in the room.</div>
+    <div><b>Nobody is a passenger</b>Every step gives every screen a job and every learner something to do: watching, moving, writing, tapping, talking, making or judging.</div>
+  </div>
+  <div class="foot"><span>Page 2 of 5 · The toolbox</span><span>NEW = added since the last version of this planner</span></div>
+</section>
+
+<!-- ══════════════ PAGE 3 · THE PLAN (6 steps per page) ══════════════ -->
+<section class="page">
+  <div class="eyebrow">Bradford College · Immersive Learning Room · Lesson Planner</div>
+  <h1 style="margin-bottom:6px">3 · The plan <span style="font-weight:400;font-size:12px;color:var(--muted)">print this page as many times as you need · 6 steps a page</span></h1>
+
+  <div class="grid-head">
+    <div>#</div>
+    <div>Step &amp; mins</div>
+    <div>Learners are<small>&amp; LEAD phase</small></div>
+    <div class="h-host">Big screen<small>what everyone sees</small></div>
+    <div class="h-touch">Touch screens<small>what learners tap</small></div>
+    <div class="h-table">Tables / away from screens<small>what learners write or do</small></div>
+    <div>Tutor<small>say · watch for · technique</small></div>
+    <div>Ends when</div>
+  </div>
+  <div class="rows">
+    <!-- row template ×6 -->
+    <div class="row">
+      <div class="n">&nbsp;</div>
+      <div><div class="namebox"><span class="hint">name</span><span class="mins hint">mins</span></div></div>
+      <div><div class="ticks"><span>Tables</span><span>Screens</span><span>Moving</span></div><div class="ticks" style="margin-top:6px;font-size:8px;flex-direction:row;flex-wrap:wrap;gap:3px 6px"><span>L</span><span>E</span><span>A</span><span>D</span></div></div>
+      <div class="host"></div>
+      <div class="touch"><span class="same">same on both</span></div>
+      <div class="table"><span class="hint">stretch:</span></div>
+      <div><span class="hint">say</span><span class="say hint">watch for · technique</span></div>
+      <div><div class="ticks"><span>I move on</span><span>Answers in</span><span>Timed</span><span>Video ends</span></div></div>
+    </div>
+    <div class="row">
+      <div class="n">&nbsp;</div>
+      <div><div class="namebox"><span class="hint">name</span><span class="mins hint">mins</span></div></div>
+      <div><div class="ticks"><span>Tables</span><span>Screens</span><span>Moving</span></div><div class="ticks" style="margin-top:6px;font-size:8px;flex-direction:row;flex-wrap:wrap;gap:3px 6px"><span>L</span><span>E</span><span>A</span><span>D</span></div></div>
+      <div class="host"></div>
+      <div class="touch"><span class="same">same on both</span></div>
+      <div class="table"><span class="hint">stretch:</span></div>
+      <div><span class="hint">say</span><span class="say hint">watch for · technique</span></div>
+      <div><div class="ticks"><span>I move on</span><span>Answers in</span><span>Timed</span><span>Video ends</span></div></div>
+    </div>
+    <div class="row">
+      <div class="n">&nbsp;</div>
+      <div><div class="namebox"><span class="hint">name</span><span class="mins hint">mins</span></div></div>
+      <div><div class="ticks"><span>Tables</span><span>Screens</span><span>Moving</span></div><div class="ticks" style="margin-top:6px;font-size:8px;flex-direction:row;flex-wrap:wrap;gap:3px 6px"><span>L</span><span>E</span><span>A</span><span>D</span></div></div>
+      <div class="host"></div>
+      <div class="touch"><span class="same">same on both</span></div>
+      <div class="table"><span class="hint">stretch:</span></div>
+      <div><span class="hint">say</span><span class="say hint">watch for · technique</span></div>
+      <div><div class="ticks"><span>I move on</span><span>Answers in</span><span>Timed</span><span>Video ends</span></div></div>
+    </div>
+    <div class="row">
+      <div class="n">&nbsp;</div>
+      <div><div class="namebox"><span class="hint">name</span><span class="mins hint">mins</span></div></div>
+      <div><div class="ticks"><span>Tables</span><span>Screens</span><span>Moving</span></div><div class="ticks" style="margin-top:6px;font-size:8px;flex-direction:row;flex-wrap:wrap;gap:3px 6px"><span>L</span><span>E</span><span>A</span><span>D</span></div></div>
+      <div class="host"></div>
+      <div class="touch"><span class="same">same on both</span></div>
+      <div class="table"><span class="hint">stretch:</span></div>
+      <div><span class="hint">say</span><span class="say hint">watch for · technique</span></div>
+      <div><div class="ticks"><span>I move on</span><span>Answers in</span><span>Timed</span><span>Video ends</span></div></div>
+    </div>
+    <div class="row">
+      <div class="n">&nbsp;</div>
+      <div><div class="namebox"><span class="hint">name</span><span class="mins hint">mins</span></div></div>
+      <div><div class="ticks"><span>Tables</span><span>Screens</span><span>Moving</span></div><div class="ticks" style="margin-top:6px;font-size:8px;flex-direction:row;flex-wrap:wrap;gap:3px 6px"><span>L</span><span>E</span><span>A</span><span>D</span></div></div>
+      <div class="host"></div>
+      <div class="touch"><span class="same">same on both</span></div>
+      <div class="table"><span class="hint">stretch:</span></div>
+      <div><span class="hint">say</span><span class="say hint">watch for · technique</span></div>
+      <div><div class="ticks"><span>I move on</span><span>Answers in</span><span>Timed</span><span>Video ends</span></div></div>
+    </div>
+    <div class="row">
+      <div class="n">&nbsp;</div>
+      <div><div class="namebox"><span class="hint">name</span><span class="mins hint">mins</span></div></div>
+      <div><div class="ticks"><span>Tables</span><span>Screens</span><span>Moving</span></div><div class="ticks" style="margin-top:6px;font-size:8px;flex-direction:row;flex-wrap:wrap;gap:3px 6px"><span>L</span><span>E</span><span>A</span><span>D</span></div></div>
+      <div class="host"></div>
+      <div class="touch"><span class="same">same on both</span></div>
+      <div class="table"><span class="hint">stretch:</span></div>
+      <div><span class="hint">say</span><span class="say hint">watch for · technique</span></div>
+      <div><div class="ticks"><span>I move on</span><span>Answers in</span><span>Timed</span><span>Video ends</span></div></div>
+    </div>
+  </div>
+  <div class="foot"><span>Page 3 of 5 · The plan · Number the steps yourself so pages can be added</span><span>Rule of thumb: no activity twice in a row · teach before you test · explain before it starts</span></div>
+</section>
+
+<!-- ══════════════ PAGE 4 · WORKED EXAMPLE ══════════════ -->
+<section class="page">
+  <div class="eyebrow">Bradford College · Immersive Learning Room · Lesson Planner</div>
+  <h1 style="margin-bottom:6px">4 · A filled-in example <span style="font-weight:400;font-size:12px;color:var(--muted)">three steps from "Patient Zero" (dental nursing, cross infection, Level 2)</span></h1>
+
+  <div class="grid-head">
+    <div>#</div>
+    <div>Step &amp; mins</div>
+    <div>Learners are<small>&amp; LEAD phase</small></div>
+    <div class="h-host">Big screen</div>
+    <div class="h-touch">Touch screens</div>
+    <div class="h-table">Tables / away from screens</div>
+    <div>Tutor</div>
+    <div>Ends when</div>
+  </div>
+  <div class="rows" style="font-size:9.3px">
+    <div class="row">
+      <div class="n">8</div>
+      <div><b>Who's in the chair?</b><br>4 min</div>
+      <div>Tables<br><span class="hint">Establish</span></div>
+      <div class="host"><b>Wheel spinner:</b> Hep B, HIV, cold sores, a healthy teenager, your best friend…</div>
+      <div class="touch"><b>Text slide:</b> "Plan it on your table: PPE? Cleaning? Anything different?"</div>
+      <div class="table">Each spin, tables write the precautions for that patient. <span class="hint">stretch:</span> which link of the chain does each one break?</div>
+      <div><b>Say:</b> "Spin. That person is in your chair. Spin again." <b>Watch for:</b> wait until someone notices the answer never changes. <b>Technique:</b> discovery, a trap that sets up universal precautions.</div>
+      <div>I move on</div>
+    </div>
+    <div class="row">
+      <div class="n">19</div>
+      <div><b>Crime scene</b><br>5 min</div>
+      <div>Screens, half at each<br><span class="hint">Apply</span></div>
+      <div class="host"><b>Spot the hazard:</b> each team's count, then Reveal all.</div>
+      <div class="touch"><b>Spot the hazard:</b> a surgery photo with six mistakes. Each screen finds all six.</div>
+      <div class="table">Nothing: everyone is at a screen (a planned whole-class move, grouped with two other screen steps).</div>
+      <div><b>Say:</b> "First team to six, press Finish." <b>Watch for:</b> after the reveal, ask which law each mistake breaks. <b>Technique:</b> team race, apply to a scene.</div>
+      <div>I move on</div>
+    </div>
+    <div class="row">
+      <div class="n">23</div>
+      <div><b>Write your report</b><br>7 min</div>
+      <div>Tables<br><span class="hint">Demonstrate</span></div>
+      <div class="host"><b>Picture:</b> the exam question and the four tips (mode, method, through, consequences).</div>
+      <div class="touch"><b>Countdown:</b> 7 minutes, "Write your answer on the table".</div>
+      <div class="table">Each table writes an exam answer on the table. Next step: rotate and mark another table's against the four tips. <span class="hint">stretch:</span> name the link it breaks.</div>
+      <div><b>Say:</b> "This is your report to the inspectors." <b>Good looks like:</b> all four tips, with a consequence. <b>Technique:</b> a product tested against criteria.</div>
+      <div>I move on</div>
+    </div>
+  </div>
+
+  <div class="move" style="margin-top:8px">
+    <h2>Where are the learners? (the same example, steps 1 to 20)</h2>
+    <div class="cells">
+      <div class="lab">Step</div><div>1</div><div>2</div><div>3</div><div>4</div><div>5</div><div>6</div><div>7</div><div>8</div><div>9</div><div>10</div><div>11</div><div>12</div><div>13</div><div>14</div><div>15</div><div>16</div><div>17</div><div>18</div><div>19</div><div>20</div>
+      <div class="lab">Where</div><div>S→T</div><div>T</div><div>T</div><div>T</div><div>T</div><div>T</div><div>T</div><div>T</div><div>T</div><div>T</div><div>T</div><div>T</div><div>T</div><div>T</div><div>T</div><div>T</div><div>T→S</div><div>S</div><div>S</div><div>S</div>
+    </div>
+    <div class="key">T = tables · S = touch screens · → = whole-class move. Long runs of one letter are good: every move costs a minute and breaks concentration.</div>
+  </div>
+  <div class="foot"><span>Page 4 of 5 · A filled-in example</span><span>Name the technique in every tutor note: the tutor leaves with approaches they can reuse</span></div>
+</section>
+
+<!-- ══════════════ PAGE 5 · CHECK BEFORE HANDING OVER ══════════════ -->
+<section class="page">
+  <div class="eyebrow">Bradford College · Immersive Learning Room · Lesson Planner</div>
+  <h1>5 · Check it before you hand it over</h1>
+
+  <div class="checks">
+    <div>
+      <h2>The lesson</h2>
+      <ul>
+        <li><b>One thread.</b> Every clip, slide and task serves the one idea.</li>
+        <li>Objectives <b>climb</b>, with one at analyse or above.</li>
+        <li><b>LEAD in order.</b> The Launch hook question is answered in the last step.</li>
+        <li>Learners <b>predict or attempt</b> before they are told.</li>
+        <li><b>Teach before you test:</b> every question follows the step that answers it.</li>
+        <li><b>Mix the question types:</b> never two rounds of the same shape.</li>
+        <li><b>No activity twice in a row.</b></li>
+        <li>Demonstrate is a <b>product against criteria</b>, captured on a shared board.</li>
+        <li>Confidence check at the <b>start and the end</b>.</li>
+      </ul>
+    </div>
+    <div>
+      <h2>The room</h2>
+      <ul>
+        <li>At least <b>two table tasks</b>, and a third of the time at the tables (if tables were agreed).</li>
+        <li>A <b>stretch</b> on every table task.</li>
+        <li><b>Every screen has a job</b> in every step; standby never on two screens at once.</li>
+        <li><b>Screen steps grouped</b> into one trip. About two whole-class moves per 45 minutes.</li>
+        <li>A <b>runner, not the room,</b> when one answer per table is enough.</li>
+        <li><b>Wordwalls and tap games on the touch screens,</b> with the instruction on the big screen.</li>
+        <li>Every video is either <b>full focus</b> (all screens) or a <b>watching task</b> (questions set first, then talked through).</li>
+        <li>The step after a video is the one you want: <b>the lesson moves on when it ends.</b></li>
+        <li><b>Inclusive:</b> pictures show a real mix of people; nothing assumes money, a device or a home set-up.</li>
+      </ul>
+    </div>
+    <div>
+      <h2>Before it is taught</h2>
+      <ul>
+        <li>Pictures and sound are in the <b>media storage</b> and open in a browser.</li>
+        <li><b>Click through the preview:</b> all three screens with the notes for each step.</li>
+        <li><b>Watch every clip to the end</b>, with start and end times set.</li>
+        <li>Tap every <b>hotspot</b> once and check the ring lands on the right thing.</li>
+        <li><b>Facts that could change</b> (rules, policies, what a tool does today) checked against the real source.</li>
+        <li>Anything a timer will hide is <b>on the whiteboard</b> first.</li>
+        <li>Printed packs printed and cut, or the lesson works with <b>nothing printed</b>.</li>
+        <li>Props and kit are <b>things the room already has</b>, unless someone has agreed to buy them.</li>
+      </ul>
+      <h2 style="margin-top:9px">After it is taught</h2>
+      <ul>
+        <li>What went well, and even better if, written up <b>while it is fresh</b>.</li>
+        <li>Was the length and pace right? What would you add, change or take out?</li>
+      </ul>
+    </div>
+  </div>
+  <div style="margin-top:6px"><h2>Notes and what to change next time</h2><div class="lines"><i></i><i></i><i></i></div></div>
+  <div class="foot"><span>Page 5 of 5 · Checks</span><span>Bradford College · Immersive Learning Room</span></div>
+</section>
+
 </body>
 </html>
