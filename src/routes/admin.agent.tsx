@@ -232,7 +232,7 @@ function AgentPage() {
   const onRetry = (e: LiveEvent) => {
     if (e.type !== "retry") return;
     setLive({ text: "", steps: 0 });
-    say({ role: "activity", content: "No answer yet (the agent may have been starting up), so I asked again…" });
+    say({ role: "activity", content: "The agent stopped answering, so I asked again (your chat is safe)…" });
   };
 
   // ── Adding resources ──────────────────────────

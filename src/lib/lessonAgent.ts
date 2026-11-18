@@ -78,6 +78,7 @@ function chosenModel(): string {
   }
 }
 const SILENCE_MS = 30_000;
+const MAX_RESENDS = 3;
 
 /**
  * Ask for a live reply: text and build progress arrive as they are written,
@@ -168,9 +169,13 @@ async function streamAgent<T>(
   }
   if (reply) return reply;
   if (signal?.aborted) return { ok: false, error: "Stopped." };
-  if (silent && attempt === 0) {
+  // A stuck or dropped call is sent again by itself, up to three more times:
+  // hangs come in runs, and one resend was not always enough.
+  if (attempt < MAX_RESENDS) {
     onEvent?.({ type: "retry" });
-    return streamAgent<T>(body, onEvent, signal, 1);
+    await new Promise((r) => setTimeout(r, 1500 * (attempt + 1)));
+    if (signal?.aborted) return { ok: false, error: "Stopped." };
+    return streamAgent<T>(body, onEvent, signal, attempt + 1);
   }
   return { ok: false, error: silent ? NO_ANSWER : DROPPED };
 }
