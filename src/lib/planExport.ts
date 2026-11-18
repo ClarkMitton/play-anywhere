@@ -305,6 +305,17 @@ export function describeContent(content: ContentDef | null | undefined): {
       };
     }
 
+    case "designed_slide":
+      return {
+        label: "Slide",
+        detail: [
+          [str(c.kicker), str(c.title)].filter(Boolean).join(": "),
+          str(c.text),
+          ...(Array.isArray(c.points) ? c.points.map((p, i) => `${c.layout === "steps" ? `${i + 1}.` : "•"} ${str(p)}`) : []),
+          ...(Array.isArray(c.columns) ? c.columns.map((col) => `${str((col as { heading?: unknown }).heading)}: ${str((col as { text?: unknown }).text)}`) : []),
+        ].filter(Boolean),
+      };
+
     case "spot_difference":
       return {
         label: "Spot the Difference",

@@ -167,7 +167,8 @@ serve(async (req) => {
     if (!isAllowedOrigin(req)) return json({ ok: false, error: "Origin not allowed." }, 403);
 
     const ip = getClientIp(req);
-    if (isRateLimited(ip)) {
+    // A lesson can ask for several photos in a row (the lesson agent fills up to six).
+    if (isRateLimited(ip, 20)) {
       return json({ ok: false, error: "Too many image requests. Wait a moment." }, 429);
     }
 

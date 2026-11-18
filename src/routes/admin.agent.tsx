@@ -32,6 +32,7 @@ import {
 import { readAgentHistory, writeAgentConversation, type AgentConversation } from "@/lib/agentHistory";
 import { Button } from "@/components/ui/button";
 import { readDocument } from "@/lib/officeReader";
+import { DesignedSlideCard, LAYOUT_LABELS, type DesignedSlideContent } from "@/components/DesignedSlide";
 import {
   buildWithAgent,
   chatWithAgent,
@@ -41,6 +42,7 @@ import {
   newFolder,
   prepareImage,
   previewFromUrl,
+  fillStockPhotos,
   saveAgentLesson,
   uploadToLessonMedia,
   validateAgentBuild,
@@ -136,8 +138,8 @@ function AgentPage() {
   const [input, setInput] = useState("");
   // Files added since the last message: shown in the composer, sent with the next message.
   const [pendingIds, setPendingIds] = useState<string[]>([]);
-  const [busy, setBusy] = useState<null | "describing" | "thinking" | "building" | "saving">(null);
-  const [live, setLive] = useState<{ text: string; steps: number }>({ text: "", steps: 0 });
+  const [busy, setBusy] = useState<null | "describing" | "thinking" | "building" | "photos" | "saving">(null);
+  const [live, setLive] = useState<{ text: string; steps: number; total?: number }>({ text: "", steps: 0 });
   const [session, setSession] = useState({ calls: 0, prompt_tokens: 0, completion_tokens: 0 });
   const [today, setToday] = useState<AgentToday | null>(null);
   const [restored, setRestored] = useState(false);
@@ -519,6 +521,20 @@ function AgentPage() {
         if (checked.ok) {
           const s = checked.draft.session;
           const fixes = checked.draft.warnings.length;
+          // Slides that asked for a photo get a free stock one before the draft is shown.
+          const asked = s.slots.some((slot) =>
+            [slot.host, slot.screen1, slot.screen2].some((c) => c.type === "designed_slide" && !!(c as { image_search?: string }).image_search));
+          if (asked) {
+            setBusy("photos");
+            const photos = await fillStockPhotos(s, (done, total) => setLive((l) => ({ ...l, steps: done, total })));
+            say({
+              role: "activity",
+              tone: photos.missed.length ? undefined : "ok",
+              content: `Found ${photos.found} stock photo${photos.found === 1 ? "" : "s"} (free, from Pexels)` +
+                (photos.missed.length ? `; nothing suitable for "${photos.missed.join('", "')}", so those slides have no picture` : "") +
+                ". Check the people and settings suit your group.",
+            });
+          }
           setDraft(checked.draft);
           setMessages((m) => [
             ...m.map((x) => (x.showsDraft ? { ...x, showsDraft: false } : x)),
@@ -675,6 +691,7 @@ function AgentPage() {
             {busy === "building" && (
               <Activity running text={live.steps ? `Building the lesson · writing step ${live.steps}…` : "Building the lesson · reading the plan…"} />
             )}
+            {busy === "photos" && <Activity running text={`Finding stock photos for the slides${live.total ? ` · ${live.steps} of ${live.total}` : ""}…`} />}
             {busy === "saving" && <Activity running text="Creating the lesson…" />}
 
             {suggestsBuild && (
@@ -910,6 +927,18 @@ function summary(c: AnyContent): { label: string; text: string; img?: string } {
 }
 
 function Cell({ c }: { c: AnyContent }) {
+  if (c.type === "designed_slide") {
+    const d = c as unknown as DesignedSlideContent;
+    return (
+      <div className="flex items-center gap-2 min-w-0">
+        <div className="w-28 shrink-0 rounded overflow-hidden"><DesignedSlideCard content={d} /></div>
+        <div className="min-w-0">
+          <div className="text-[10px] uppercase tracking-widest text-[color:var(--cyan)]">Slide · {LAYOUT_LABELS[d.layout] ?? d.layout}</div>
+          <div className="text-xs line-clamp-2">{d.title}</div>
+        </div>
+      </div>
+    );
+  }
   const v = summary(c);
   return (
     <div className="flex items-center gap-2 min-w-0">

@@ -419,6 +419,18 @@ export function describeForTeacher(content: ContentDef | null | undefined): Teac
         ],
       };
 
+    case "designed_slide":
+      return {
+        title: str(c.title) || "Slide",
+        summary: str(c.text) || str(c.kicker),
+        items: [
+          ...(Array.isArray(c.points) ? c.points.map(str) : []),
+          ...(Array.isArray(c.columns) ? c.columns.map((col) => `${str((col as { heading?: unknown }).heading)}: ${str((col as { text?: unknown }).text)}`) : []),
+        ].filter(Boolean),
+        preview: str(c.image_url) ? { kind: "image", url: str(c.image_url), caption: "Picture on the slide" } : undefined,
+        doing: ["A slide everyone reads. Talk it through, then press Next."],
+      };
+
     case "spot_difference":
       return {
         title: "Spot the Difference",

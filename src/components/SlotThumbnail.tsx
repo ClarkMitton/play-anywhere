@@ -9,6 +9,7 @@
 // `role` chooses host-side vs screen-side rendering for interactive types.
 
 import type { ContentDef } from "@/types/slot";
+import { DesignedSlideCard, type DesignedSlideContent } from "@/components/DesignedSlide";
 
 type Role = "host" | "screen";
 type Size = "lg" | "sm";
@@ -164,6 +165,15 @@ function ThumbContent({
         </div>
       );
     }
+
+    case "designed_slide":
+      return (
+        <div className="absolute inset-0 bg-immersive flex items-center justify-center overflow-hidden">
+          {role === "host"
+            ? <DesignedSlideCard content={c as unknown as DesignedSlideContent} className="w-full" />
+            : <div style={{ height: "100%", aspectRatio: "9 / 16" }}><DesignedSlideCard content={c as unknown as DesignedSlideContent} tall /></div>}
+        </div>
+      );
 
     case "spot_difference": {
       const url = String((role === "host" ? c.reference_url : c.comparison_url) ?? "");

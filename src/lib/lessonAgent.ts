@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { makeSlot } from "./slotDefaults";
 import { deriveEndBehaviour, repairAndValidate, type RepairWarning } from "./sessionRepair";
 import { LEVELS, type Brief, type GeneratedSession } from "./sessionSchema";
+import { fetchImage } from "./fetchImage";
 
 export type AgentResource = {
   id: string;
@@ -369,6 +370,16 @@ export function fixRoomRules(d: any): RepairWarning[] {
   });
 
   slots.forEach((s, i) => {
+    // A designed slide's picture must be one of ours; anything else becomes a
+    // stock photo search on the slide's title instead of a broken picture.
+    for (const c of contents(s)) {
+      if (c.type !== "designed_slide" || !c.image_url) continue;
+      if (typeof c.image_url !== "string" || !c.image_url.includes("/storage/v1/object/public/lesson-media/")) {
+        c.image_search = typeof c.image_search === "string" && c.image_search ? c.image_search : String(c.title ?? "");
+        delete c.image_url;
+        warnings.push({ slotIndex: i, message: "replaced a picture address the agent made up with a stock photo search" });
+      }
+    }
     // The big-screen-only timer shows nothing on a touch screen.
     for (const k of ["screen1", "screen2"]) {
       const c = s[k] as Record<string, unknown> | undefined;
@@ -387,6 +398,47 @@ export function fixRoomRules(d: any): RepairWarning[] {
     }
   });
   return warnings;
+}
+
+/**
+ * Fill each designed slide's image_search with a free stock photo (Pexels,
+ * through fetch-image, saved to lesson-media). The same search on several
+ * screens of one step is fetched once. A search that finds nothing leaves the
+ * slide without a picture, which every layout handles.
+ */
+export async function fillStockPhotos(
+  session: GeneratedSession,
+  onProgress?: (done: number, total: number) => void,
+): Promise<{ found: number; missed: string[] }> {
+  type Slide = { type: string; title?: string; image_url?: string; image_search?: string };
+  const wanted = new Map<string, Slide[]>();
+  for (const slot of session.slots) {
+    for (const screen of ["host", "screen1", "screen2"] as const) {
+      const c = slot[screen] as unknown as Slide;
+      if (c.type !== "designed_slide" || c.image_url || !c.image_search?.trim()) continue;
+      const key = c.image_search.trim().toLowerCase();
+      wanted.set(key, [...(wanted.get(key) ?? []), c]);
+    }
+  }
+  let found = 0;
+  const missed: string[] = [];
+  let done = 0;
+  for (const [query, slides] of wanted) {
+    let res = await fetchImage("stock", query, slides[0].title ?? "");
+    // The photo search allows a burst of requests a minute; wait once if it is busy.
+    if (!res.ok && /too many|wait a minute|429/i.test(res.error)) {
+      await new Promise((r) => setTimeout(r, 15_000));
+      res = await fetchImage("stock", query, slides[0].title ?? "");
+    }
+    for (const s of slides) {
+      if (res.ok) s.image_url = res.url;
+      delete s.image_search;
+    }
+    if (res.ok) found++;
+    else missed.push(query);
+    onProgress?.(++done, wanted.size);
+  }
+  return { found, missed };
 }
 
 /** Repair and validate the agent's JSON with the same rules the generator uses. */

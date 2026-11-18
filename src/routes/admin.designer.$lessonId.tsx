@@ -26,6 +26,8 @@ import { rotationTotalSecs } from "@/components/RotationTimer";
 import type { Hotspot } from "@/components/HazardHotspots";
 import { HotspotEditorDialog } from "@/components/HotspotEditor";
 import { differenceScreens } from "@/lib/spotDifference";
+import { DesignedSlideEditor, NEW_DESIGNED_SLIDE } from "@/components/DesignedSlideEditor";
+import type { DesignedSlideContent } from "@/components/DesignedSlide";
 
 // ─────────────────────────────────────────────
 // Constants
@@ -56,6 +58,7 @@ const LEAD_COLOURS: Record<string, string> = {
 const CONTENT_TYPES_HOST = [
   { value: "waiting", label: "Waiting (standby)" },
   { value: "text_slide", label: "Text Slide" },
+  { value: "designed_slide", label: "Designed Slide (layout and look)" },
   { value: "image", label: "Image" },
   { value: "audio_image", label: "Audio & Image" },
   { value: "youtube", label: "YouTube" },
@@ -78,6 +81,7 @@ const CONTENT_TYPES_HOST = [
 const CONTENT_TYPES_SCREEN1 = [
   { value: "waiting", label: "Waiting (standby)" },
   { value: "text_slide", label: "Text Slide" },
+  { value: "designed_slide", label: "Designed Slide (layout and look)" },
   { value: "image", label: "Image" },
   { value: "audio_image", label: "Audio & Image" },
   { value: "youtube", label: "YouTube" },
@@ -1639,6 +1643,13 @@ function SlotEditorPanel({
         : slot.screen2_content;
 
   const setContentType = (type: string) => {
+    if (type === "designed_slide" && screenContent.type !== "designed_slide") {
+      const fresh = { ...NEW_DESIGNED_SLIDE };
+      if (activeScreen === "host") onUpdate({ host_content: fresh });
+      else if (activeScreen === "screen1") onUpdate({ screen1_content: fresh });
+      else onUpdate({ screen2_content: fresh });
+      return;
+    }
     if (type === "spot_difference") {
       onUpdate(differenceScreens({ type, reference_url: "", comparison_url: "", total_differences: 1, hotspots: [] }));
       return;
@@ -1836,6 +1847,16 @@ function ContentTypeForm({
         <div className="py-3 text-center text-[10px] uppercase tracking-widest text-muted-foreground">
           No configuration needed
         </div>
+      );
+
+    case "designed_slide":
+      return (
+        <DesignedSlideEditor
+          content={content as unknown as DesignedSlideContent}
+          lessonId={lessonId}
+          tall={screen !== "host"}
+          onChange={(patch) => onChange(patch as Record<string, unknown>)}
+        />
       );
 
     case "text_slide":

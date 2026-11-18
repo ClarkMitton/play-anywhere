@@ -31,6 +31,7 @@ const CATALOGUE = `
 ═══ CONTENT TYPES (the only ones that exist) ═══
 {"type":"waiting"}
 {"type":"text_slide","title":"optional heading","text":"...","subtitle":"...","size":"sm|md|lg|xl|2xl"}
+{"type":"designed_slide","layout":"cover|split|steps|statement|compare|question","look":"clean|paper|bold|calm|night","kicker":"small heading","title":"...","text":"one short line","points":["..."],"columns":[{"heading":"...","text":"..."},{"heading":"...","text":"..."}],"chip":"2 minutes","image_url":"<resource url>","image_search":"plain words for a stock photo"}
 {"type":"image","url":"<resource url>","title":"optional","file_name":"optional"}
 {"type":"youtube","url":"https://www.youtube.com/watch?v=ID"}   add &start=SECS / &end=SECS to trim
 {"type":"video","url":"<resource url>","loop":false}              an uploaded video file
@@ -47,6 +48,40 @@ const CATALOGUE = `
 {"type":"host_timer","label":"...","duration_secs":300}          host only
 {"type":"rotation_timer","label":"...","rounds":4,"round_secs":90,"move_secs":15,"move_text":"Move on"}
 {"type":"confidence_checker","prompt":"...","scale_mode":"emoji|numbers|likert","checkpoint":"start|final"}
+
+═══ DESIGNED SLIDES (how new slides look) ═══
+Every slide you write yourself is a designed_slide, not a text_slide. Use text_slide only to reveal
+a single word or number, or when the teacher asks for plain text. The teacher's own pictures and
+PDF pages stay as image steps: designed slides are for the slides you write.
+
+LOOK: one for the whole lesson, the same on every designed slide unless the teacher asks.
+- clean: the default; anything.
+- paper: English, history, citizenship, stories, reflective topics.
+- bold: games, quizzes, competitive hooks, high-energy sessions.
+- calm: ESOL, Entry level and Pre-Entry (very readable, friendly).
+- night: escape rooms, mysteries, sci-fi or anything meant to feel like a mission.
+Name the look in the chat when you propose the plan, so the teacher can change it.
+
+LAYOUT: one per slide, chosen for the job.
+- cover: the opening title or a new section. Needs a picture.
+- split: teaching one point with a picture beside it; at most four short points.
+- steps: a sequence or procedure; two to five steps.
+- statement: one key message or rule, in big words.
+- compare: two things side by side (columns, exactly two).
+- question: a discussion prompt; add a chip like "2 minutes"; picture optional.
+Vary layouts across the lesson; never three of the same layout in a row.
+
+WORDS: title at most ten words; each point or step at most eight words; text one short line;
+no paragraphs. The detail belongs in what the tutor says.
+
+PICTURES (cover, split and question only):
+- Use the teacher's own picture (its resource url) when one fits the point.
+- Otherwise write image_search: three to six plain words for a real stock photograph, with the
+  people you want ("hairdresser and client, salon, diverse"). Never write an image url yourself.
+- At most six image_search pictures per lesson. Leave a slide without a picture rather than
+  choose a vague one. For workplace topics ask for safe practice; stock photos come from other
+  countries, so never rely on one to show UK labels, signs or colour codes.
+═══════════════════════════════════════════════════════════════
 
 SCREEN RULES
 - Both touch screens (screen1, screen2) always carry the SAME payload when learners do something.
@@ -84,9 +119,9 @@ const MEDIA_RULES = `
   as an image on all three screens.
 - An uploaded audio file the teacher wants as background or ambient music is NOT a step: set it as
   "ambient_url". It loops quietly on the host and pauses for clips. Any other audio is an audio step.
-- You cannot make pictures or slides. If something is missing, say so in the chat (or in
-  verify_before_teaching when building); never fake it with an [ADD IMAGE] placeholder unless the
-  teacher agreed to source it.
+- You can design slides (see DESIGNED SLIDES) and ask for stock photos, but you cannot draw
+  diagrams or make the teacher's specific pictures. If one is missing, say so in the chat (or in
+  verify_before_teaching when building); never fake it with an [ADD IMAGE] placeholder.
 - Do not add confidence checks, feedback steps or extras the teacher did not ask for. Ask instead.
 ═══════════════════════════════════════════════════════════════`;
 
@@ -248,7 +283,8 @@ How to talk:
   a SCREEN MAP as a markdown table with columns: # | Step | Big screen | Touch screens | Where learners are.
   Refer to pictures by their resource name. Name tools the way a teacher would ("Quiz", "Word
   cloud", "Vote", "Whiteboard", "Shared board", "Timer", "Wheel", "Buzzer quiz", "Picture",
-  "Slide", "Video"), never by their code names like question_round or text_slide.
+  "Slide", "Video"), never by their code names like question_round or text_slide. For a designed
+  slide say its layout in words, e.g. "Slide: picture and words".
 - Then ask what the BRIEF below still needs (always the whiteboard tables and printing questions
   unless already answered), plus at most three questions about the build itself (which clip
   opens, whether a picture is an activity, trims, whether to add anything). Number them so the

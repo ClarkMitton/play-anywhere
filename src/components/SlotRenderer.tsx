@@ -9,6 +9,7 @@ import { HazardHotspotsRenderer, type HazardHotspotsContent } from "@/components
 import { SpotDifferenceRenderer } from "@/components/SpotDifference";
 import type { SpotDifferenceContent } from "@/lib/spotDifference";
 import { AudioImageRenderer, type AudioImageContent } from "@/components/AudioImage";
+import { DesignedSlide, type DesignedSlideContent } from "@/components/DesignedSlide";
 
 // ─────────────────────────────────────────────
 // CONFETTI — celebratory burst (wheel result, confidence improvement)
@@ -73,6 +74,7 @@ export type SlotContent =
   | { type: "countdown_timer"; label?: string; duration_secs: number }
   | { type: "host_timer"; label?: string; duration_secs: number }
   | { type: "multiple_choice"; id?: string; text: string; options: string[]; correct?: number }
+  | DesignedSlideContent
   | { type: "true_or_false"; id?: string; text: string; correct_tf?: boolean }
   | { type: "question_round"; questions: RoundQ[] }
   | { type: "voting"; question: string; options: string[] }
@@ -259,6 +261,10 @@ export function SlotRenderer({
 
     case "hazard_hotspots":
       return <HazardHotspotsRenderer content={content as HazardHotspotsContent} screen={screen} sessionId={sessionId} />;
+
+    case "designed_slide":
+      // The touch screens are portrait, so they get the tall version.
+      return <DesignedSlide content={content as DesignedSlideContent} tall={screen !== "host"} />;
 
     case "spot_difference":
       return <SpotDifferenceRenderer content={content as SpotDifferenceContent} screen={screen} sessionId={sessionId} slotId={slotId} />;

@@ -233,6 +233,23 @@ const hazardHotspots = z.object({
     .min(1),
 });
 
+// A slide with a proper layout and look (see components/DesignedSlide.tsx).
+// The lesson agent writes these; image_search is a photo still to be found,
+// filled from free stock photography after the build.
+const designedSlide = z.object({
+  type: z.literal("designed_slide"),
+  layout: z.enum(["cover", "split", "steps", "statement", "compare", "question"]),
+  look: z.enum(["clean", "paper", "bold", "calm", "night"]).optional(),
+  kicker: z.string().optional(),
+  title: z.string().min(1),
+  text: z.string().optional(),
+  points: z.array(z.string()).max(6).optional(),
+  columns: z.array(z.object({ heading: z.string(), text: z.string() })).max(2).optional(),
+  chip: z.string().optional(),
+  image_url: z.string().optional(),
+  image_search: z.string().optional(),
+});
+
 const whiteboard = z.object({
   type: z.literal("whiteboard"),
   title: z.string().optional(),
@@ -263,6 +280,7 @@ export const contentSchema = z.discriminatedUnion("type", [
   padlet,
   rotationTimer,
   hazardHotspots,
+  designedSlide,
 ]);
 
 export type Content = z.infer<typeof contentSchema>;
