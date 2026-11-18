@@ -53,6 +53,61 @@ export async function readChatCompletion(
   return { text, usage };
 }
 
+/**
+ * The same, for Claude models: the gateway serves them only in Anthropic's own
+ * message format, whose stream is a different set of events.
+ */
+export async function readAnthropicStream(
+  response: Response,
+  onDelta?: (piece: string) => void,
+): Promise<{ text: string; usage: Usage }> {
+  if (!response.body) throw new Error("The AI connection ended before a reply arrived.");
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let pending = "";
+  let text = "";
+  let stop: string | null = null;
+  const usage: Usage = { prompt_tokens: 0, completion_tokens: 0 };
+  const frame = (line: string) => {
+    if (!line.startsWith("data:")) return;
+    const data = line.slice(5).trim();
+    if (!data) return;
+    const event = JSON.parse(data);
+    if (event.type === "error") throw new Error(event.error?.message ?? "The AI connection failed.");
+    if (event.type === "message_start") {
+      const u = event.message?.usage ?? {};
+      usage.prompt_tokens = (Number(u.input_tokens) || 0) + (Number(u.cache_read_input_tokens) || 0) + (Number(u.cache_creation_input_tokens) || 0);
+      usage.completion_tokens = Number(u.output_tokens) || 0;
+    }
+    if (event.type === "content_block_delta" && event.delta?.type === "text_delta" && typeof event.delta.text === "string") {
+      text += event.delta.text;
+      if (event.delta.text) onDelta?.(event.delta.text);
+    }
+    if (event.type === "message_delta") {
+      if (event.usage?.output_tokens != null) usage.completion_tokens = Number(event.usage.output_tokens) || 0;
+      if (event.delta?.stop_reason) stop = event.delta.stop_reason;
+    }
+  };
+  try {
+    while (true) {
+      const chunk = await reader.read();
+      pending += decoder.decode(chunk.value, { stream: !chunk.done });
+      const lines = pending.split("\n");
+      pending = lines.pop() ?? "";
+      for (const line of lines) frame(line.trimEnd());
+      if (chunk.done) break;
+    }
+    if (pending.trim()) frame(pending.trimEnd());
+  } finally {
+    reader.releaseLock();
+  }
+  if (stop === "refusal") throw new Error("The AI declined this request.");
+  if (stop === "max_tokens") throw new Error("The AI reply was incomplete. Your chat is still saved; try a smaller lesson.");
+  if (stop !== "end_turn" && stop !== "stop_sequence") throw new Error("The AI connection ended before the lesson was complete. Your chat is still saved; try Build again.");
+  if (!text.trim()) throw new Error("The AI returned an empty reply.");
+  return { text, usage };
+}
+
 export type AgentEvent =
   | { type: "delta"; text: string }
   | { type: "progress"; steps: number }

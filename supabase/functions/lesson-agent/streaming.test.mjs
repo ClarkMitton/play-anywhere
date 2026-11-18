@@ -53,3 +53,26 @@ test('a failed live reply still ends with a readable result', async () => {
   const last = JSON.parse((await res.text()).trim().split('\n').pop());
   assert.deepEqual(last, { type: 'result', ok: false, error: 'Connection interrupted' });
 });
+test('a Claude stream assembles text and usage', async () => {
+  const { readAnthropicStream } = await import('./streaming.ts');
+  const pieces = [];
+  const result = await readAnthropicStream(response([
+    'event: message_start\ndata: {"type":"message_start","message":{"usage":{"input_tokens":20,"output_tokens":1}}}\n\n',
+    'event: content_block_delta\ndata: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"Hel"}}\n\n',
+    'event: content_block_delta\ndata: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"lo"}}\n\n',
+    'event: message_delta\ndata: {"type":"message_delta","delta":{"stop_reason":"end_turn"},"usage":{"output_tokens":7}}\n\n',
+    'event: message_stop\ndata: {"type":"message_stop"}\n\n',
+  ]), (p) => pieces.push(p));
+  assert.deepEqual(result, { text: 'Hello', usage: { prompt_tokens: 20, completion_tokens: 7 } });
+  assert.deepEqual(pieces, ['Hel', 'lo']);
+});
+test('a Claude stream that stops early is never accepted', async () => {
+  const { readAnthropicStream } = await import('./streaming.ts');
+  await assert.rejects(readAnthropicStream(response([
+    'data: {"type":"content_block_delta","delta":{"type":"text_delta","text":"{\\"lesson\\":"}}\n\n',
+  ])), /before the lesson was complete/);
+  await assert.rejects(readAnthropicStream(response([
+    'data: {"type":"content_block_delta","delta":{"type":"text_delta","text":"partial"}}\n\n',
+    'data: {"type":"message_delta","delta":{"stop_reason":"max_tokens"}}\n\n',
+  ])), /incomplete/);
+});

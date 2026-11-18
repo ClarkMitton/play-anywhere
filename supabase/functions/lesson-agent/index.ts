@@ -16,7 +16,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { preflight, json, corsHeaders } from "../_shared/cors.ts";
-import { readChatCompletion, streamEventsResponse, streamJsonResponse, type AgentEvent } from "./streaming.ts";
+import { readAnthropicStream, readChatCompletion, streamEventsResponse, streamJsonResponse, type AgentEvent } from "./streaming.ts";
 import {
   getClientIp,
   isAllowedOrigin,
@@ -37,6 +37,11 @@ const DAILY_CALLS = 400;
 const BURST_PER_MINUTE = 40;
 // The planning and building model can be changed without a code change.
 const MODEL = Deno.env.get("LESSON_AGENT_MODEL") ?? "google/gemini-2.5-pro";
+// Each job gets the cheapest model that does it well. The chat is many short
+// turns, so it runs on MODEL. The build is one call per lesson where a mistake
+// reaches a classroom: a stronger model caught an error in a teacher's own
+// handout (foam extinguishers labelled yellow) that the fast one passed over.
+const BUILD_MODEL = Deno.env.get("LESSON_AGENT_BUILD_MODEL") ?? "google/gemini-4-argon";
 const DESCRIBE_MODEL = Deno.env.get("LESSON_AGENT_DESCRIBE_MODEL") ?? "google/gemini-2.5-flash";
 const MAX_IMAGES_PER_DESCRIBE = 8;
 // The page may name a model (it is only used by us). Anything that does not
@@ -53,22 +58,40 @@ async function callModel(
   body: Record<string, any>,
   onDelta?: (piece: string) => void,
 ): Promise<{ text: string; usage: Usage }> {
-  // Claude models on the gateway may not take OpenAI's JSON mode; the prompt
-  // already asks for JSON only, and the reply is parsed loosely.
-  const { response_format, ...rest } = body;
-  const payload = String(body.model).startsWith("anthropic/") || !response_format ? rest : { ...rest, response_format };
-  const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-    method: "POST",
-    headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ ...payload, stream: true, stream_options: { include_usage: true } }),
-  });
+  const claude = String(body.model).startsWith("anthropic/");
+  const res = claude
+    ? await fetch("https://ai.gateway.lovable.dev/v1/messages", {
+      // Claude is served in Anthropic's own format: the system prompt is its
+      // own field, and there is no JSON mode (the prompt asks for JSON only,
+      // and the reply is parsed loosely).
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "x-api-key": apiKey,
+        "anthropic-version": "2023-06-01",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: body.model,
+        max_tokens: 32_000,
+        system: (body.messages as { role: string; content: string }[])
+          .filter((m) => m.role === "system").map((m) => m.content).join("\n\n"),
+        messages: (body.messages as { role: string; content: unknown }[]).filter((m) => m.role !== "system"),
+        stream: true,
+      }),
+    })
+    : await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ ...body, stream: true, stream_options: { include_usage: true } }),
+    });
   if (!res.ok) {
     const detail = await res.text();
     if (res.status === 402) throw new Error("The AI credits for this project have run out.");
     if (res.status === 429) throw new Error("The AI service is busy. Wait a moment and try again.");
     throw new Error(`AI gateway returned ${res.status}: ${detail.slice(0, 400)}`);
   }
-  return await readChatCompletion(res, onDelta);
+  return claude ? await readAnthropicStream(res, onDelta) : await readChatCompletion(res, onDelta);
 }
 
 function parseLoosely(text: string): unknown | null {
@@ -184,7 +207,8 @@ async function handle(req: Request, body: any, emit?: (event: AgentEvent) => voi
     // deno-lint-ignore no-explicit-any
     let result: Record<string, any>;
     let usage: Usage;
-    let model = typeof body?.model === "string" && MODEL_ID.test(body.model) ? body.model : MODEL;
+    const chosen = typeof body?.model === "string" && MODEL_ID.test(body.model) ? body.model : null;
+    let model = chosen ?? (mode === "build" ? BUILD_MODEL : MODEL);
 
     if (mode === "describe") {
       model = DESCRIBE_MODEL;
