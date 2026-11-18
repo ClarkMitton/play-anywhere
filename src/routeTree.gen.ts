@@ -14,7 +14,6 @@ import { Route as AdminRouteImport } from './routes/admin'
 import { Route as HostRouteImport } from './routes/host'
 import { Route as AdminAgentRouteImport } from './routes/admin.agent'
 import { Route as AdminGenerateRouteImport } from './routes/admin.generate'
-import { Route as AdminTestRouteImport } from './routes/admin.test'
 import { Route as CardLessonIdRouteImport } from './routes/card.$lessonId'
 import { Route as PreviewLessonIdRouteImport } from './routes/preview.$lessonId'
 import { Route as RemoteSessionIdRouteImport } from './routes/remote.$sessionId'
@@ -46,11 +45,6 @@ const AdminAgentRoute = AdminAgentRouteImport.update({
 const AdminGenerateRoute = AdminGenerateRouteImport.update({
   id: '/generate',
   path: '/generate',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminTestRoute = AdminTestRouteImport.update({
-  id: '/test',
-  path: '/test',
   getParentRoute: () => AdminRoute,
 } as any)
 const CardLessonIdRoute = CardLessonIdRouteImport.update({
@@ -95,7 +89,6 @@ export interface FileRoutesByFullPath {
   '/host': typeof HostRoute
   '/admin/agent': typeof AdminAgentRoute
   '/admin/generate': typeof AdminGenerateRoute
-  '/admin/test': typeof AdminTestRoute
   '/card/$lessonId': typeof CardLessonIdRoute
   '/preview/$lessonId': typeof PreviewLessonIdRoute
   '/remote/$sessionId': typeof RemoteSessionIdRoute
@@ -110,7 +103,6 @@ export interface FileRoutesByTo {
   '/host': typeof HostRoute
   '/admin/agent': typeof AdminAgentRoute
   '/admin/generate': typeof AdminGenerateRoute
-  '/admin/test': typeof AdminTestRoute
   '/card/$lessonId': typeof CardLessonIdRoute
   '/preview/$lessonId': typeof PreviewLessonIdRoute
   '/remote/$sessionId': typeof RemoteSessionIdRoute
@@ -126,7 +118,6 @@ export interface FileRoutesById {
   '/host': typeof HostRoute
   '/admin/agent': typeof AdminAgentRoute
   '/admin/generate': typeof AdminGenerateRoute
-  '/admin/test': typeof AdminTestRoute
   '/card/$lessonId': typeof CardLessonIdRoute
   '/preview/$lessonId': typeof PreviewLessonIdRoute
   '/remote/$sessionId': typeof RemoteSessionIdRoute
@@ -143,7 +134,6 @@ export interface FileRouteTypes {
     | '/host'
     | '/admin/agent'
     | '/admin/generate'
-    | '/admin/test'
     | '/card/$lessonId'
     | '/preview/$lessonId'
     | '/remote/$sessionId'
@@ -158,7 +148,6 @@ export interface FileRouteTypes {
     | '/host'
     | '/admin/agent'
     | '/admin/generate'
-    | '/admin/test'
     | '/card/$lessonId'
     | '/preview/$lessonId'
     | '/remote/$sessionId'
@@ -173,7 +162,6 @@ export interface FileRouteTypes {
     | '/host'
     | '/admin/agent'
     | '/admin/generate'
-    | '/admin/test'
     | '/card/$lessonId'
     | '/preview/$lessonId'
     | '/remote/$sessionId'
@@ -231,13 +219,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminGenerateRouteImport
       parentRoute: typeof AdminRoute
     }
-    '/admin/test': {
-      id: '/admin/test'
-      path: '/test'
-      fullPath: '/admin/test'
-      preLoaderRoute: typeof AdminTestRouteImport
-      parentRoute: typeof AdminRoute
-    }
     '/card/$lessonId': {
       id: '/card/$lessonId'
       path: '/card/$lessonId'
@@ -293,7 +274,6 @@ declare module '@tanstack/react-router' {
 interface AdminRouteChildren {
   AdminAgentRoute: typeof AdminAgentRoute
   AdminGenerateRoute: typeof AdminGenerateRoute
-  AdminTestRoute: typeof AdminTestRoute
   AdminDesignerLessonIdRoute: typeof AdminDesignerLessonIdRoute
   AdminPlanLessonIdRoute: typeof AdminPlanLessonIdRoute
 }
@@ -301,7 +281,6 @@ interface AdminRouteChildren {
 const AdminRouteChildren: AdminRouteChildren = {
   AdminAgentRoute: AdminAgentRoute,
   AdminGenerateRoute: AdminGenerateRoute,
-  AdminTestRoute: AdminTestRoute,
   AdminDesignerLessonIdRoute: AdminDesignerLessonIdRoute,
   AdminPlanLessonIdRoute: AdminPlanLessonIdRoute,
 }
