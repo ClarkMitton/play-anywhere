@@ -16,7 +16,8 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { preflight, json, corsHeaders } from "../_shared/cors.ts";
-import { readAnthropicStream, readChatCompletion, streamEventsResponse, streamJsonResponse, type AgentEvent } from "./streaming.ts";
+import { findVideos, type FoundVideo, videosForModel } from "./videos.ts";
+import { readAnthropicStream, readChatCompletion, streamEventsResponse, type ToolCall, streamJsonResponse, type AgentEvent } from "./streaming.ts";
 import {
   getClientIp,
   isAllowedOrigin,
@@ -59,7 +60,7 @@ async function callModel(
   // deno-lint-ignore no-explicit-any
   body: Record<string, any>,
   onDelta?: (piece: string) => void,
-): Promise<{ text: string; usage: Usage }> {
+): Promise<{ text: string; usage: Usage; toolCalls?: ToolCall[] }> {
   const claude = String(body.model).startsWith("anthropic/");
   const res = claude
     ? await fetch("https://ai.gateway.lovable.dev/v1/messages", {
@@ -95,6 +96,26 @@ async function callModel(
   }
   return claude ? await readAnthropicStream(res, onDelta) : await readChatCompletion(res, onDelta);
 }
+
+// What the planning chat can do besides talk.
+const TOOLS = [{
+  type: "function",
+  function: {
+    name: "find_youtube_videos",
+    description:
+      "Search YouTube for a clip for this lesson. Returns up to three videos with their full timestamped transcripts. Videos without readable captions are left out, so only suggest clips this returns.",
+    parameters: {
+      type: "object",
+      properties: {
+        query: {
+          type: "string",
+          description: "What to search for, as you would type it into YouTube, e.g. 'salon fire extinguisher types UK training'.",
+        },
+      },
+      required: ["query"],
+    },
+  },
+}];
 
 function parseLoosely(text: string): unknown | null {
   const stripped = text.replace(/^\s*```(?:json)?\s*/i, "").replace(/\s*```\s*$/, "").trim();
@@ -239,13 +260,54 @@ async function handle(req: Request, body: any, emit?: (event: AgentEvent) => voi
       const messages = cleanMessages(body?.messages);
       if (messages.length === 0) return json({ ok: false, error: "Say what you want first." }, 400);
       const system = chatSystemPrompt(cleanResources(body?.resources), body?.current ?? null);
-      const reply = await callModel(apiKey, {
-        model,
-        temperature: 0.5,
-        messages: [{ role: "system", content: system }, ...messages],
-      }, emit ? (piece) => emit({ type: "delta", text: piece }) : undefined);
-      usage = reply.usage;
-      result = { reply: reply.text };
+      // The agent may search YouTube for itself, at most twice a reply. Clips
+      // whose transcript could be read go back to the page, which keeps them
+      // with the chat so later turns and the build see the same words.
+      // deno-lint-ignore no-explicit-any
+      const convo: any[] = [{ role: "system", content: system }, ...messages];
+      const found: FoundVideo[] = [];
+      const said: string[] = [];
+      const canSearch = !String(model).startsWith("anthropic/");
+      usage = { prompt_tokens: 0, completion_tokens: 0 };
+      for (let round = 0; round < 3; round++) {
+        const reply = await callModel(apiKey, {
+          model,
+          temperature: 0.5,
+          messages: convo,
+          ...(canSearch ? { tools: TOOLS, tool_choice: round < 2 ? "auto" : "none" } : {}),
+        }, emit ? (piece) => emit({ type: "delta", text: piece }) : undefined);
+        usage.prompt_tokens += reply.usage.prompt_tokens;
+        usage.completion_tokens += reply.usage.completion_tokens;
+        if (reply.text.trim()) said.push(reply.text.trim());
+        const calls = (reply.toolCalls ?? []).map((c, i) => ({ ...c, id: c.id || `call_${round}_${i}` }));
+        if (!calls.length) break;
+        convo.push({
+          role: "assistant",
+          content: reply.text || null,
+          tool_calls: calls.map((c) => ({ id: c.id, type: "function", function: { name: c.name, arguments: c.arguments } })),
+        });
+        for (const [i, call] of calls.entries()) {
+          if (i >= 2 || call.name !== "find_youtube_videos") {
+            convo.push({ role: "tool", tool_call_id: call.id, content: "Not run: at most two video searches per reply." });
+            continue;
+          }
+          let query = "";
+          try {
+            query = String(JSON.parse(call.arguments || "{}").query ?? "").slice(0, 200);
+          } catch {
+            // left empty
+          }
+          emit?.({ type: "activity", text: `Searching YouTube for "${query}"…` });
+          const searched = query
+            ? await findVideos(query).catch((e) => ({ videos: [] as FoundVideo[], note: `The search failed: ${e instanceof Error ? e.message : "unknown error"}` }))
+            : { videos: [] as FoundVideo[], note: "No search words were given" };
+          found.push(...searched.videos.filter((v) => !found.some((f) => f.url === v.url)));
+          emit?.({ type: "activity", text: searched.note });
+          convo.push({ role: "tool", tool_call_id: call.id, content: videosForModel(searched) });
+        }
+      }
+      if (!said.length) throw new Error("The AI returned an empty reply.");
+      result = { reply: said.join("\n\n"), videos: found };
     } else if (mode === "build") {
       const messages = cleanMessages(body?.messages);
       const system = buildSystemPrompt(cleanResources(body?.resources), body?.current ?? null);

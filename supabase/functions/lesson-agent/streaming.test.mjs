@@ -13,7 +13,7 @@ test('split SSE assembles complete text and token usage', async () => {
     'data: {"choices":[{"delta":{},"finish_reason":"stop"}]}\n\n',
     'data: {"choices":[],"usage":{"prompt_tokens":12,"completion_tokens":4}}\n\ndata: [DONE]\n\n',
   ]));
-  assert.deepEqual(result, { text: 'hello', usage: { prompt_tokens: 12, completion_tokens: 4 } });
+  assert.deepEqual(result, { text: 'hello', usage: { prompt_tokens: 12, completion_tokens: 4 }, toolCalls: [] });
 });
 test('truncated JSON is never accepted as a complete build', async () => {
   await assert.rejects(readChatCompletion(response(['data: {"choices":[{"delta":{"content":"{\\\"lesson\\\":"}}]}\n\n'])), /before the lesson was complete/);
@@ -75,4 +75,12 @@ test('a Claude stream that stops early is never accepted', async () => {
     'data: {"type":"content_block_delta","delta":{"type":"text_delta","text":"partial"}}\n\n',
     'data: {"type":"message_delta","delta":{"stop_reason":"max_tokens"}}\n\n',
   ])), /incomplete/);
+});
+test('a request to use a tool is collected from its pieces', async () => {
+  const result = await readChatCompletion(response([
+    'data: {"choices":[{"delta":{"tool_calls":[{"index":0,"id":"call_1","function":{"name":"find_youtube_videos","arguments":"{\\"query\\":"}}]}}]}\n\n',
+    'data: {"choices":[{"delta":{"tool_calls":[{"index":0,"function":{"arguments":"\\"salon fire\\"}"}}]},"finish_reason":"tool_calls"}]}\n\n',
+  ]));
+  assert.deepEqual(result.toolCalls, [{ id: 'call_1', name: 'find_youtube_videos', arguments: '{"query":"salon fire"}' }]);
+  assert.equal(result.text, '');
 });

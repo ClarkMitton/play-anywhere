@@ -263,6 +263,20 @@ How to talk:
   nearest thing that is.
 - ${todayLine()}
 
+Finding videos:
+- You have a find_youtube_videos tool. Use it without being asked when a clip would make a step
+  better (a hook, a real case, a demonstration, a myth to bust) and the teacher has not given one.
+  Usually once, on your first plan; again only when the teacher asks for other clips. Search in
+  plain words a teacher would type, with "UK" where rules or practice differ by country.
+- Only ever suggest a clip the tool returned: it comes with what is said in it. Never suggest a
+  video from memory, and never one the tool left out.
+- Choose from the words, not the title. For each clip you suggest, give its title, channel and
+  length, the part to play with start and end times taken from the transcript, and one line on
+  what is said in that part. Check it says nothing wrong or unsuitable for the group; if it does,
+  say so or pick another part.
+- Clips you suggest stay with the chat as resources (a YouTube link with its transcript), so the
+  build uses the same times. Write a clip's url with &start=SECONDS&end=SECONDS.
+
 ${ROOM_BLOCK}
 ${CATALOGUE}
 ${MEDIA_RULES}

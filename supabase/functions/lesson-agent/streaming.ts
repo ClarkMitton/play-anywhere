@@ -1,5 +1,8 @@
 type Usage = { prompt_tokens: number; completion_tokens: number };
 
+/** A tool the model asked to use, with its arguments as the JSON text it wrote. */
+export type ToolCall = { id: string; name: string; arguments: string };
+
 /**
  * Consume provider SSE, keeping usage and rejecting unfinished lessons.
  * onDelta sees each piece of text as it arrives, so the page can show it.
@@ -7,13 +10,15 @@ type Usage = { prompt_tokens: number; completion_tokens: number };
 export async function readChatCompletion(
   response: Response,
   onDelta?: (piece: string) => void,
-): Promise<{ text: string; usage: Usage }> {
+): Promise<{ text: string; usage: Usage; toolCalls: ToolCall[] }> {
   if (!response.body) throw new Error("The AI connection ended before a reply arrived.");
   const reader = response.body.getReader();
   const decoder = new TextDecoder();
   let pending = "";
   let text = "";
   let completed = false;
+  // Tool requests arrive in pieces, matched by their index.
+  const calls: ToolCall[] = [];
   const usage: Usage = { prompt_tokens: 0, completion_tokens: 0 };
   const frame = (line: string) => {
     if (!line.startsWith("data:")) return;
@@ -31,7 +36,14 @@ export async function readChatCompletion(
         text += choice.delta.content;
         if (choice.delta.content) onDelta?.(choice.delta.content);
       }
-      if (choice.finish_reason === "stop") completed = true;
+      for (const t of choice.delta?.tool_calls ?? []) {
+        const i = Number(t.index ?? 0);
+        calls[i] ??= { id: "", name: "", arguments: "" };
+        if (t.id) calls[i].id = t.id;
+        if (t.function?.name) calls[i].name += t.function.name;
+        if (t.function?.arguments) calls[i].arguments += t.function.arguments;
+      }
+      if (choice.finish_reason === "stop" || choice.finish_reason === "tool_calls") completed = true;
       if (choice.finish_reason === "length") throw new Error("The AI reply was incomplete. Your chat is still saved; try a smaller lesson.");
     }
   };
@@ -49,8 +61,9 @@ export async function readChatCompletion(
     reader.releaseLock();
   }
   if (!completed) throw new Error("The AI connection ended before the lesson was complete. Your chat is still saved; try Build again.");
-  if (!text.trim()) throw new Error("The AI returned an empty reply.");
-  return { text, usage };
+  const toolCalls = calls.filter((c) => c && c.name);
+  if (!text.trim() && !toolCalls.length) throw new Error("The AI returned an empty reply.");
+  return { text, usage, toolCalls };
 }
 
 /**
@@ -110,6 +123,7 @@ export async function readAnthropicStream(
 
 export type AgentEvent =
   | { type: "delta"; text: string }
+  | { type: "activity"; text: string }
   | { type: "progress"; steps: number }
   | { type: "ping" };
 

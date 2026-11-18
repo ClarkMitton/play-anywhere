@@ -39,7 +39,14 @@ export type AgentMessage = {
 };
 
 /** Live events while the agent works. */
-export type LiveEvent = { type: "delta"; text: string } | { type: "progress"; steps: number } | { type: "retry" };
+export type LiveEvent =
+  | { type: "delta"; text: string }
+  | { type: "progress"; steps: number }
+  | { type: "activity"; text: string }
+  | { type: "retry" };
+
+/** A YouTube clip the agent found and could read the transcript of. */
+export type FoundVideo = { url: string; title: string; channel: string; seconds: number; transcript: string };
 
 export type AgentUsage = { prompt_tokens: number; completion_tokens: number; model?: string };
 export type AgentToday = { calls: number; prompt_tokens: number; completion_tokens: number };
@@ -134,7 +141,7 @@ async function streamAgent<T>(
           const { type: _t, ...result } = event;
           return result as AgentReply<T>;
         }
-        if (event.type === "delta" || event.type === "progress") onEvent?.(event as LiveEvent);
+        if (event.type === "delta" || event.type === "progress" || event.type === "activity") onEvent?.(event as LiveEvent);
       }
       if (done) break;
     }
@@ -213,7 +220,7 @@ export function chatWithAgent(
   onEvent?: (event: LiveEvent) => void,
   signal?: AbortSignal,
 ) {
-  return streamAgent<{ reply: string }>(
+  return streamAgent<{ reply: string; videos?: FoundVideo[] }>(
     { mode: "chat", messages: forModel(messages, resources), resources: forServer(resources), current },
     onEvent,
     signal,

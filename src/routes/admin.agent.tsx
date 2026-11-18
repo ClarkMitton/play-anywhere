@@ -48,6 +48,7 @@ import {
   type AgentMessage,
   type AgentResource,
   type AgentToday,
+  type FoundVideo,
   type LiveEvent,
 } from "@/lib/lessonAgent";
 
@@ -310,6 +311,24 @@ function AgentPage() {
     });
   };
 
+  // Clips the agent found and read stay with the chat, transcript and all, so
+  // the next turns and the build work from the same words.
+  const keepVideos = (videos: FoundVideo[]) => {
+    const known = new Set(resourcesRef.current.map((r) => r.url));
+    const fresh = videos.filter((v) => !known.has(v.url));
+    if (!fresh.length) return;
+    const length = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
+    setResources((rs) => [...rs, ...fresh.map((v) => ({
+      id: crypto.randomUUID(),
+      name: `YouTube: ${v.title} (${v.channel}, ${length(v.seconds)})`,
+      kind: "link" as const,
+      url: v.url,
+      text: v.transcript,
+      description: "Found by the agent; the transcript was read.",
+      status: "ready" as const,
+    }))]);
+  };
+
   const addLinks = (urls: string[]): string[] => {
     const known = new Set(resourcesRef.current.map((r) => r.url));
     const fresh = [...new Set(urls.map((u) => u.replace(/[.,;:!?]+$/, "")))].filter((u) => !known.has(u));
@@ -427,6 +446,7 @@ function AgentPage() {
       abortRef.current = controller;
       const res = await chatWithAgent(history, list, draftOrCurrent(), (e) => {
         if (e.type === "delta") setLive((l) => ({ ...l, text: l.text + e.text }));
+        else if (e.type === "activity") say({ role: "activity", content: e.text });
         else onRetry(e);
       }, controller.signal);
       if (!res.ok) {
@@ -434,6 +454,7 @@ function AgentPage() {
         return;
       }
       track(res.usage, res.today);
+      keepVideos(res.videos ?? []);
       say({ role: "assistant", content: res.reply });
     } finally {
       abortRef.current = null;
@@ -779,12 +800,17 @@ function AgentPage() {
 
 // ── Conversation lines ─────────────────────────
 
+function youTubeId(url?: string): string | null {
+  return url?.match(/(?:youtube\.com\/(?:watch\?v=|shorts\/|embed\/)|youtu\.be\/)([\w-]{11})/)?.[1] ?? null;
+}
+
 function Thumb({ r, className }: { r: AgentResource; className: string }) {
   const icon = r.kind === "audio" ? <Music className="size-4" /> : r.kind === "video" ? <Film className="size-4" /> :
     r.kind === "document" ? <FileText className="size-4" /> : <Link2 className="size-4" />;
   return (
     <div className={`${className} shrink-0 rounded bg-muted overflow-hidden flex items-center justify-center text-muted-foreground`}>
-      {r.kind === "image" && r.url ? <img src={r.url} alt="" className="h-full w-full object-cover" /> : icon}
+      {r.kind === "image" && r.url ? <img src={r.url} alt="" className="h-full w-full object-cover" /> :
+        youTubeId(r.url) ? <img src={`https://i.ytimg.com/vi/${youTubeId(r.url)}/mqdefault.jpg`} alt="" className="h-full w-full object-cover" /> : icon}
     </div>
   );
 }
