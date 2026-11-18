@@ -19,6 +19,8 @@ export type AgentResource = {
   previewDataUrl?: string;
   status: "uploading" | "ready" | "failed";
   error?: string;
+  /** For a picture taken out of a document: that document's name. */
+  from?: string;
 };
 
 /**
@@ -55,6 +57,17 @@ const NO_ANSWER = "The lesson agent did not answer. Your chat is saved, so try a
 // testing: an identical call that hung for two minutes answered in three
 // seconds when sent again.
 const FIRST_ANSWER_MS = 25_000;
+
+// Which model plans and builds, chosen on the agent page. Empty means the
+// default set on the Lovable project (LESSON_AGENT_MODEL).
+export const MODEL_KEY = "lesson-agent:model";
+function chosenModel(): string {
+  try {
+    return localStorage.getItem(MODEL_KEY) ?? "";
+  } catch {
+    return "";
+  }
+}
 const SILENCE_MS = 30_000;
 
 /**
@@ -87,7 +100,7 @@ async function streamAgent<T>(
     const res = await fetch(FUNCTION_URL, {
       method: "POST",
       headers: { apikey: PUBLIC_KEY, Authorization: `Bearer ${PUBLIC_KEY}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ ...body, stream: true }),
+      body: JSON.stringify({ ...body, ...(chosenModel() ? { model: chosenModel() } : {}), stream: true }),
       signal: controller.signal,
     });
     if (!res.body) return null;
@@ -167,11 +180,18 @@ function forModel(messages: AgentMessage[], resources: AgentResource[]) {
     });
 }
 
-/** What the server needs to know about each resource. Pictures go as descriptions, not pixels. */
+/**
+ * What the server needs to know about each resource. Pictures go as
+ * descriptions, not pixels. Files that could not be read are sent too, marked
+ * unreadable, so the agent says so instead of guessing what was in them.
+ */
 function forServer(resources: AgentResource[]) {
   return resources
-    .filter((r) => r.status === "ready")
-    .map(({ id, name, kind, url, description, text }) => ({ id, name, kind, url, description, text }));
+    .filter((r) => r.status !== "uploading")
+    .map(({ id, name, kind, url, description, text, from, status, error }) =>
+      status === "failed"
+        ? { id, name, kind, unreadable: error ?? "it could not be read" }
+        : { id, name, kind, url, description, text, from });
 }
 
 export function describeImages(

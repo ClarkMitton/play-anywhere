@@ -31,7 +31,7 @@ import {
 } from "lucide-react";
 import { readAgentHistory, writeAgentConversation, type AgentConversation } from "@/lib/agentHistory";
 import { Button } from "@/components/ui/button";
-import { extractDocumentRich } from "@/lib/documentParser";
+import { readDocument } from "@/lib/officeReader";
 import {
   buildWithAgent,
   chatWithAgent,
@@ -257,17 +257,58 @@ function AgentPage() {
           const url = await uploadToLessonMedia(folder, name, blob, "image/jpeg");
           patch(id, { url, previewDataUrl, status: "ready" });
         } else if (kind === "document") {
-          const text = /\.(txt|md|csv)$/i.test(file.name) ? await file.text() : (await extractDocumentRich(file)).text;
-          patch(id, { text: text.slice(0, 40_000), status: "ready" });
+          await addDocument(file, id);
         } else {
           const url = await uploadToLessonMedia(folder, file.name, file, file.type);
           patch(id, { url, status: "ready" });
         }
       } catch (e) {
-        patch(id, { status: "failed", error: e instanceof Error ? e.message : "upload failed" });
+        const reason = e instanceof Error ? e.message : "upload failed";
+        patch(id, { status: "failed", error: reason });
+        say({
+          role: "activity",
+          tone: "error",
+          content: `Couldn't read ${file.name}: ${reason}. The agent knows it is missing. Save it as a PDF and drop that in, or paste the important text into your message.`,
+        });
       }
     });
   }, [folder]);
+
+  // A document gives its words to the agent, and its pictures (or PDF pages)
+  // become pictures the agent can look at and put on the screens.
+  const addDocument = async (file: File, id: string) => {
+    const read = await readDocument(file);
+    const text = read.text.trim();
+    if (text.length < 40 && !read.pictures.length) {
+      throw new Error(text ? `only ${text.length} characters could be read` : "no words or pictures could be read");
+    }
+    patch(id, { text: text.slice(0, 40_000), status: "ready" });
+    const parts = [
+      read.pages > 1 && /\.(pdf|pptx?)$/i.test(file.name) ? `${read.pages} ${/\.pdf$/i.test(file.name) ? "pages" : "slides"}` : "",
+      `${text.length.toLocaleString()} characters`,
+      read.pictures.length ? `${read.pictures.length} picture${read.pictures.length === 1 ? "" : "s"}${/\.pdf$/i.test(file.name) ? " (one per page)" : ""}` : "",
+      read.skipped ? `${read.skipped} left out (clip art, logos or tiny icons)` : "",
+      text.length > 40_000 ? "only the first 40,000 characters are used" : "",
+    ].filter(Boolean);
+    say({ role: "activity", tone: "ok", content: `Read ${file.name}: ${parts.join(" · ")}` });
+    if (!read.pictures.length) return;
+    const children = read.pictures.map((p) => ({ id: crypto.randomUUID(), name: p.name, blob: p.blob }));
+    setResources((rs) => {
+      // Keep each document's pictures straight after it.
+      const at = rs.findIndex((r) => r.id === id);
+      const added = children.map((c) => ({ id: c.id, name: c.name, kind: "image" as const, status: "uploading" as const, from: file.name }));
+      return at < 0 ? [...rs, ...added] : [...rs.slice(0, at + 1), ...added, ...rs.slice(at + 1)];
+    });
+    await inBatches(children, PARALLEL_UPLOADS, async (c) => {
+      try {
+        const { blob, previewDataUrl } = await prepareImage(new File([c.blob], `${c.name}.jpg`, { type: c.blob.type }));
+        const url = await uploadToLessonMedia(folder, `${c.name.replace(/[^a-zA-Z0-9]+/g, "-").slice(0, 60)}.jpg`, blob, "image/jpeg");
+        patch(c.id, { url, previewDataUrl, status: "ready" });
+      } catch (e) {
+        patch(c.id, { status: "failed", error: e instanceof Error ? e.message : "upload failed" });
+      }
+    });
+  };
 
   const addLinks = (urls: string[]): string[] => {
     const known = new Set(resourcesRef.current.map((r) => r.url));

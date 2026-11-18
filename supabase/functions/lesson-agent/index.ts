@@ -39,6 +39,9 @@ const BURST_PER_MINUTE = 40;
 const MODEL = Deno.env.get("LESSON_AGENT_MODEL") ?? "google/gemini-2.5-pro";
 const DESCRIBE_MODEL = Deno.env.get("LESSON_AGENT_DESCRIBE_MODEL") ?? "google/gemini-2.5-flash";
 const MAX_IMAGES_PER_DESCRIBE = 8;
+// The page may name a model (it is only used by us). Anything that does not
+// look like a gateway model id falls back to the default above.
+const MODEL_ID = /^(anthropic|google|openai)\/[a-z0-9.-]{3,60}$/;
 const MAX_DOC_CHARS = 40_000;
 const MAX_MESSAGES = 40;
 
@@ -50,10 +53,14 @@ async function callModel(
   body: Record<string, any>,
   onDelta?: (piece: string) => void,
 ): Promise<{ text: string; usage: Usage }> {
+  // Claude models on the gateway may not take OpenAI's JSON mode; the prompt
+  // already asks for JSON only, and the reply is parsed loosely.
+  const { response_format, ...rest } = body;
+  const payload = String(body.model).startsWith("anthropic/") || !response_format ? rest : { ...rest, response_format };
   const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",
     headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ ...body, stream: true, stream_options: { include_usage: true } }),
+    body: JSON.stringify({ ...payload, stream: true, stream_options: { include_usage: true } }),
   });
   if (!res.ok) {
     const detail = await res.text();
@@ -98,13 +105,15 @@ function shapeIssues(data: unknown): string[] {
 // deno-lint-ignore no-explicit-any
 function cleanResources(raw: any): Resource[] {
   if (!Array.isArray(raw)) return [];
-  return raw.slice(0, 80).map((r) => ({
+  return raw.slice(0, 200).map((r) => ({
     id: String(r?.id ?? ""),
     name: String(r?.name ?? "resource").slice(0, 200),
     kind: (["image", "audio", "video", "document", "link"].includes(r?.kind) ? r.kind : "link") as Resource["kind"],
     url: typeof r?.url === "string" ? r.url.slice(0, 1000) : undefined,
     description: typeof r?.description === "string" ? r.description.slice(0, 1200) : undefined,
     text: typeof r?.text === "string" ? r.text.slice(0, MAX_DOC_CHARS) : undefined,
+    from: typeof r?.from === "string" ? r.from.slice(0, 200) : undefined,
+    unreadable: typeof r?.unreadable === "string" ? r.unreadable.slice(0, 300) : undefined,
   }));
 }
 
@@ -175,7 +184,7 @@ async function handle(req: Request, body: any, emit?: (event: AgentEvent) => voi
     // deno-lint-ignore no-explicit-any
     let result: Record<string, any>;
     let usage: Usage;
-    let model = MODEL;
+    let model = typeof body?.model === "string" && MODEL_ID.test(body.model) ? body.model : MODEL;
 
     if (mode === "describe") {
       model = DESCRIBE_MODEL;

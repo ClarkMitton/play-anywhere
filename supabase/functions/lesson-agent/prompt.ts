@@ -19,6 +19,10 @@ export type Resource = {
   description?: string;
   /** Extracted text for documents (already trimmed by the caller). */
   text?: string;
+  /** For a picture taken out of a document: that document's name. */
+  from?: string;
+  /** Set when the file could not be read: why. Nothing else is known about it. */
+  unreadable?: string;
 };
 
 export type ChatMessage = { role: "user" | "assistant"; content: string };
@@ -59,6 +63,13 @@ SCREEN RULES
 
 const MEDIA_RULES = `
 ═══ USING THE TEACHER'S RESOURCES ═══
+- Be honest about what you have. If anything is listed under COULD NOT READ, say so in the first
+  line of your reply, name the file, and ask the teacher to save it as a PDF or paste its text.
+  Never describe, summarise or claim to have used a file you could not read; do not fill the gap
+  from your own knowledge and present it as theirs.
+- Pictures named like "<document> · slide 4" or "· page 2" came out of the teacher's own
+  documents. A "page" picture is a whole page of their PDF: their slide or worksheet as designed,
+  ready to show on a screen. Prefer the teacher's own pictures and pages over text slides you write.
 - Use ONLY urls from the RESOURCES list or links the teacher typed in the chat. Never invent a url.
   Copy resource urls exactly.
 - Keep the teacher's material recognisably theirs: their order, their words, their pictures.
@@ -196,14 +207,23 @@ function todayLine(): string {
 }
 
 function resourcesBlock(resources: Resource[]): string {
-  if (resources.length === 0) return "RESOURCES: none uploaded.";
-  const lines = resources.map((r, i) => {
-    const head = `${i + 1}. [${r.kind}] ${r.name}${r.url ? `\n   url: ${r.url}` : ""}`;
+  const readable = resources.filter((r) => !r.unreadable);
+  const unreadable = resources.filter((r) => r.unreadable);
+  const lines = readable.map((r, i) => {
+    const source = r.from ? ` (from the teacher's document "${r.from}")` : "";
+    const head = `${i + 1}. [${r.kind}] ${r.name}${source}${r.url ? `\n   url: ${r.url}` : ""}`;
     const desc = r.description ? `\n   shows: ${r.description}` : "";
     const text = r.text ? `\n   text:\n${r.text}` : "";
     return head + desc + text;
   });
-  return `RESOURCES the teacher uploaded, in the order they were added:\n${lines.join("\n")}`;
+  const list = readable.length
+    ? `RESOURCES the teacher uploaded, in the order they were added:\n${lines.join("\n")}`
+    : "RESOURCES: none that could be read.";
+  if (!unreadable.length) return list;
+  return `${list}
+
+COULD NOT READ (you know nothing about what is in these files except their names):
+${unreadable.map((r) => `- ${r.name}: ${r.unreadable}`).join("\n")}`;
 }
 
 function currentBlock(current: unknown): string {
