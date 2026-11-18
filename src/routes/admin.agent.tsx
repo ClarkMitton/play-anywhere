@@ -546,7 +546,7 @@ function AgentPage() {
           const fixes = checked.draft.warnings.length;
           // Slides that asked for a photo get a free stock one before the draft is shown.
           const asked = s.slots.some((slot) =>
-            [slot.host, slot.screen1, slot.screen2].some((c) => c.type === "designed_slide" && !!(c as { image_search?: string }).image_search));
+            [slot.host, slot.screen1, slot.screen2].some((c) => (c.type === "designed_slide" || c.type === "whiteboard") && !!(c as { image_search?: string }).image_search));
           if (asked) {
             setBusy("photos");
             const photos = await fillStockPhotos(s, (done, total) => setLive((l) => ({ ...l, steps: done, total })));

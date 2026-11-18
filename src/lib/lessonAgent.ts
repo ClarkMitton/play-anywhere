@@ -388,11 +388,24 @@ export function fixRoomRules(d: any): RepairWarning[] {
     }
   });
 
+  // Tools whose results show on the big screen must be on the big screen too.
+  // A quiz beside a teaching slide shows the answers while learners choose; a
+  // whiteboard on the touch screens alone has nowhere to send drawings.
+  const MIRROR = ["question_round", "word_cloud", "voting", "padlet", "quiz_buzzer", "confidence_checker", "whiteboard"];
+  slots.forEach((s, i) => {
+    const touch = s.screen1 as Record<string, unknown> | undefined;
+    const host = s.host as Record<string, unknown> | undefined;
+    if (!touch || !MIRROR.includes(String(touch.type)) || host?.type === touch.type) return;
+    s.host = { ...touch };
+    if (s.screen2 && (s.screen2 as Record<string, unknown>).type !== touch.type) s.screen2 = { ...touch };
+    warnings.push({ slotIndex: i, message: `put the ${String(touch.type).replace(/_/g, " ")} on the big screen too, so its results show there` });
+  });
+
   slots.forEach((s, i) => {
     // A designed slide's picture must be one of ours; anything else becomes a
     // stock photo search on the slide's title instead of a broken picture.
     for (const c of contents(s)) {
-      if (c.type !== "designed_slide" || !c.image_url) continue;
+      if ((c.type !== "designed_slide" && c.type !== "whiteboard") || !c.image_url) continue;
       if (typeof c.image_url !== "string" || !c.image_url.includes("/storage/v1/object/public/lesson-media/")) {
         c.image_search = typeof c.image_search === "string" && c.image_search ? c.image_search : String(c.title ?? "");
         delete c.image_url;
@@ -434,7 +447,7 @@ export async function fillStockPhotos(
   for (const slot of session.slots) {
     for (const screen of ["host", "screen1", "screen2"] as const) {
       const c = slot[screen] as unknown as Slide;
-      if (c.type !== "designed_slide" || c.image_url || !c.image_search?.trim()) continue;
+      if ((c.type !== "designed_slide" && c.type !== "whiteboard") || c.image_url || !c.image_search?.trim()) continue;
       const key = c.image_search.trim().toLowerCase();
       wanted.set(key, [...(wanted.get(key) ?? []), c]);
     }

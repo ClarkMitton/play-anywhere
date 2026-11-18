@@ -256,6 +256,8 @@ const whiteboard = z.object({
   /** Optional picture learners draw on top of. */
   image_url: z.string().optional(),
   file_name: z.string().optional(),
+  /** A photo still to be found to draw on (the lesson agent), filled from stock after the build. */
+  image_search: z.string().optional(),
 });
 
 export const contentSchema = z.discriminatedUnion("type", [

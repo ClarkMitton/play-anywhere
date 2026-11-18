@@ -296,7 +296,11 @@ const CHECKLIST = `
    six minutes, with a break in anything over 90 minutes.
 7. NO CONFIDENCE CHECKS unless the teacher asked for them. This overrides the LEAD notes, which
    mention a confidence baseline: in this room the teacher decides.
-8. ONE PICTURE PER ITEM TAUGHT. When the teacher has a picture for each item (each job, tool,
+8. EVERY OBJECTIVE IS PRACTISED. For each objective the teacher picked, there is at least one
+   step where learners do it themselves (say it, write it, ask it, choose it), not only see it.
+9. TEACH THE LANGUAGE FRAME BEFORE THE TASK. If a task asks for sentences ("There is a...",
+   "He is a...", "I would..."), a slide models that frame first, with two or three examples.
+10. ONE PICTURE PER ITEM TAUGHT. When the teacher has a picture for each item (each job, tool,
    sign, word), show each one on its own: one slide or picture step per item, short (one or two
    minutes), or a quick run of them. Never list several items beside one picture. For Pre-Entry
    and Entry this matters most: the picture is how they learn the word.
@@ -338,6 +342,50 @@ before being taught. Then teach the rules, apply them to a second case, and deci
 MUST INCLUDE / LEAVE OUT. The teacher's "definitely want" picks must each appear at least once,
 where they fit the thread. Their "leave out" picks must not appear anywhere. These beat the
 recipe: if a recipe tool is left out, use the nearest other tool.
+═══════════════════════════════════════════════════════════════`;
+
+// One card per step type: what it is for, where learners are, what each
+// screen shows, the words, and what breaks it. Written from what the screens
+// actually do (SlotRenderer) and from lessons the agent got wrong.
+const TOOL_CARDS = `
+═══ RULE CARD FOR EACH STEP TYPE (follow the card for every step you write) ═══
+DESIGNED SLIDE. Teaching a point everyone reads. All three screens (touch screens get a tall
+  version). Words: see DESIGNED SLIDES. Compare columns must be a real contrast (busy v quiet,
+  water v CO2), never two halves that do not oppose each other. Not a task on its own: say what
+  learners do in the tutor note.
+TEXT SLIDE. Only to reveal one word, number or answer. Never for teaching.
+IMAGE. A teacher's own picture or page, shown as it is. All three screens. A picture that is a
+  worksheet is a whiteboard, not an image.
+YOUTUBE / VIDEO. Only a clip whose transcript you have; trim with start and end from it. Either
+  all three screens (full focus) or big screen with two or three questions on the touch screens.
+  The questions are about what is said in that part. The lesson moves on when it ends.
+AUDIO. Big screen only. Never moves on by itself. The task is on the touch screens in big words.
+EMBED (Wordwall and similar). Touch screens only. Big screen: the instruction in a few big
+  words. Counts as a trip to the touch screens. Describe what the game is.
+WHITEBOARD. Learners draw or write on the touch screens and send it to the big screen, so the
+  SAME whiteboard is on all three screens. If the task is to draw ON something (a street, a
+  sheet, a map), it needs that picture: image_url of the teacher's picture or image_search for a
+  stock photo. A whiteboard without a picture is a blank page: only ask for drawing from nothing.
+QUESTION ROUND. Checks what was just taught; the answer must not be on screen while they choose.
+  All three screens (big screen shows the class answers live). Two to five questions. Options
+  short; at Entry, three options, questions under ten words. Mix true or false, best answer and
+  odd one out. Never two rounds in a row.
+WORD CLOUD. Many short answers from the room. All three screens. Prompt says how many words
+  (one or two). Use a runner per table, not the whole class.
+VOTE. Opinions, not right answers. All three screens. Two to four options. Good for a strong
+  statement at the start and the same vote at the end.
+SHARED BOARD (padlet). Longer answers that must be kept word for word (sentences, plans). All
+  three screens. One runner per table types the table's answer.
+BUZZER QUIZ. Fast recall of things already taught, two teams. All three screens. Five to eight
+  short questions with one-word answers. Name the teams.
+WHEEL. A random pick (a word to act, a topic, a table). All three screens. Up to twelve items of
+  one or two words.
+COUNTDOWN TIMER. A timed task. The label is the task in one or two short lines, because it is
+  what learners read while they work.
+HOST TIMER. Big screen only, for the tutor; the touch screens show the task.
+ROTATION TIMER. Tables do a task, then move and check or add to another table's work. Put the
+  model or success criteria in its details. Two rounds of four to six minutes.
+CONFIDENCE CHECK. Only when the teacher asked (see the checklist).
 ═══════════════════════════════════════════════════════════════`;
 
 function briefBlock(brief: string): string {
@@ -415,6 +463,7 @@ ${MEDIA_RULES}
 ${BRIEF}
 ${WAYS}
 ${CHECKLIST}
+${TOOL_CARDS}
 ${FEELS}
 ${LEAD_BLOCK}
 ${STYLE_BLOCK}
@@ -436,6 +485,7 @@ ${CATALOGUE}
 ${MEDIA_RULES}
 ${WAYS}
 ${CHECKLIST}
+${TOOL_CARDS}
 ${FEELS}
 ${LEAD_BLOCK}
 ${STYLE_BLOCK}
