@@ -298,6 +298,44 @@ const CHECKLIST = `
    mention a confidence baseline: in this room the teacher decides.
 ═══════════════════════════════════════════════════════════════`;
 
+// The feel the teacher picks is a recipe, not a hint: the fast model follows
+// a fixed pattern far better than it invents one.
+const FEELS = `
+═══ SESSION FEELS (the teacher picks one; follow its recipe) ═══
+The teacher's answer to "How should this session feel?" chooses one recipe below. Follow it for
+the whole lesson: its look, step lengths and tools. It sits on top of everything else (the
+thread, the checklist, the teacher's material), it does not replace them.
+
+HIGH ENERGY / GAME SHOW. Look: bold. Steps of three or four minutes. Split the class into two
+named teams in Launch and keep them all lesson (the tutor keeps score). Open with a fast hook
+(a quick clip or a vote with a surprising answer). Use a quiz_buzzer round, a wheel_spinner and
+a rotation_timer table race. Something changes on the screens every few minutes. Finish with a
+buzzer final and announce the winning team.
+CALM AND STEADY. Look: calm. Steps of six to ten minutes. At most two whole-class moves. One
+long table task with a stretch, a listening or picture task, and time to talk in pairs. No
+buzzer, no racing, no countdown pressure. Close with a reflection on a shared board.
+MYSTERY / ESCAPE ROOM. Look: night. Open with a story: a cover slide and a clip or a message
+that sets the mission. Three to five challenges, each a different skill, each unlocking a clue
+(a code word or letters shown on a slide straight after). A countdown keeps the pressure on.
+The last step needs every clue: runners type the final code on a shared board. Tutor notes keep
+the story going between challenges.
+DEBATE AND OPINIONS. Look: paper. Open with a vote on a strong statement. Teach both sides with
+a compare slide. Tables argue an assigned side, then swap sides on a rotation_timer. A word
+cloud collects one-word reasons. Re-run the opening vote at the end to see who changed their
+mind (that closes the loop).
+HANDS-ON / MAKING. Look: clean. At least half the time at the tables. Show a finished model on
+the big screen first, with the success criteria. Learners make something (a poster, a plan, a
+labelled drawing, a set of rules). A gallery walk on a rotation_timer: tables judge another
+table's work against the criteria. The product is captured on a shared board.
+REAL-LIFE CASE. Look: clean. Open with a real clip or scenario. Tables work out what went wrong
+before being taught. Then teach the rules, apply them to a second case, and decide what to do
+(a vote or a shared board). Close by returning to the first case.
+
+MUST INCLUDE / LEAVE OUT. The teacher's "definitely want" picks must each appear at least once,
+where they fit the thread. Their "leave out" picks must not appear anywhere. These beat the
+recipe: if a recipe tool is left out, use the nearest other tool.
+═══════════════════════════════════════════════════════════════`;
+
 function briefBlock(brief: string): string {
   if (!brief.trim()) return "";
   return `
@@ -373,6 +411,7 @@ ${MEDIA_RULES}
 ${BRIEF}
 ${WAYS}
 ${CHECKLIST}
+${FEELS}
 ${LEAD_BLOCK}
 ${STYLE_BLOCK}
 ${INCLUSION_BLOCK}
@@ -393,6 +432,7 @@ ${CATALOGUE}
 ${MEDIA_RULES}
 ${WAYS}
 ${CHECKLIST}
+${FEELS}
 ${LEAD_BLOCK}
 ${STYLE_BLOCK}
 ${SAFETY_BLOCK}

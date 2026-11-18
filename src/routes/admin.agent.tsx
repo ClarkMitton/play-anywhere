@@ -848,8 +848,10 @@ function AgentPage() {
 // ── The essentials, asked before the first plan ──
 // The page asks these itself (no AI, so it always happens), and only the ones
 // the teacher's first message has not already answered.
-const ESSENTIALS: { test: RegExp; q: string; options: string[] }[] = [
-  { test: /\b\d+\s*(min|mins|minutes|hour|hours|hr|hrs)\b|\bhalf an hour\b|\ban hour\b/i, q: "How long is the session?",
+const FEATURES = ["Wordwall or games on the touch screens", "Buzzer quiz (two teams)", "Wheel spinner", "Drawing on the whiteboard", "Vote or word cloud", "Video clips", "Tasks at the tables", "Background music"];
+
+const ESSENTIALS: { test: RegExp; q: string; options: string[]; multi?: boolean }[] = [
+  { test: /\b\d+\s*(min|mins|minute|minutes|hour|hours|hr|hrs)\b|\bhalf an hour\b|\ban hour\b/i, q: "How long is the session?",
     options: ["20 minutes", "30 minutes", "45 minutes", "1 hour", "1 hour 30", "2 hours"] },
   { test: /pre-?entry|\bentry\s*[123e]\b|\bE[123]\b|\blevel\s*[1-3l]\b|\bL[1-3]\b|\bGCSE\b|functional skills|\bHE\b/i, q: "What level are the learners?",
     options: ["Pre-Entry", "Entry 1", "Entry 2", "Entry 3", "Level 1", "Level 2", "Level 3"] },
@@ -859,12 +861,17 @@ const ESSENTIALS: { test: RegExp; q: string; options: string[] }[] = [
     options: ["Yes, use the tables", "No, screens and talk only"] },
   { test: /\bprint/i, q: "Do you want anything printed?",
     options: ["Nothing printed", "Printed packs for the tables"] },
+  // The shape of the session: each feel is a recipe the agent follows.
+  { test: /game ?show|high energy|escape room|mystery|debate|calm and steady|hands-on|real-life case/i, q: "How should this session feel?",
+    options: ["High energy / game show", "Calm and steady", "Mystery / escape room", "Debate and opinions", "Hands-on / making", "Real-life case"] },
+  { test: /(?!)/, q: "Anything you definitely want in it?", multi: true, options: FEATURES },
+  { test: /(?!)/, q: "Anything to leave out?", multi: true, options: FEATURES },
 ];
 
 function essentialsQuestions(firstMessage: string): string | null {
   const missing = ESSENTIALS.filter((e) => !e.test.test(firstMessage));
   if (!missing.length) return null;
-  const block = JSON.stringify(missing.map((e) => ({ q: e.q, multi: false, options: e.options })));
+  const block = JSON.stringify(missing.map((e) => ({ q: e.q, multi: e.multi === true, options: e.options })));
   return `Before I plan it, a few quick picks so it fits your session.\n\n\`\`\`choices\n${block}\n\`\`\``;
 }
 
