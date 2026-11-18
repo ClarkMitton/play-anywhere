@@ -63,8 +63,9 @@ const NO_ANSWER = "The lesson agent did not answer. Your chat is saved, so try a
 // The function answers at once and then sends something at least every 5
 // seconds, so silence this long means the call is stuck, not slow. Seen in
 // testing: an identical call that hung for two minutes answered in three
-// seconds when sent again.
-const FIRST_ANSWER_MS = 25_000;
+// seconds when sent again. The first wait is longer because the first call
+// after a redeploy has to start the function, which can take half a minute.
+const FIRST_ANSWER_MS = 45_000;
 
 // Which model plans and builds, chosen on the agent page. Empty means the
 // default set on the Lovable project (LESSON_AGENT_MODEL).

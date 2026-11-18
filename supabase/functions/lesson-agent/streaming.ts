@@ -147,6 +147,8 @@ export function streamEventsResponse(
       const send = (value: unknown) => {
         if (!cancelled) controller.enqueue(encoder.encode(JSON.stringify(value) + "\n"));
       };
+      // Answer at once, so the page knows the agent is there before any work starts.
+      send({ type: "ping" });
       timer = setInterval(() => send({ type: "ping" }), heartbeatMs);
       void (async () => {
         try {
