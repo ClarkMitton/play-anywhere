@@ -799,6 +799,22 @@ function DesignerHeader({
             Plan
           </Button>
         )}
+        {lesson && (
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={async () => {
+              // Save first, so the preview shows the latest edits. A new tab
+              // keeps the designer where it was.
+              await onSave();
+              window.open(`/preview/${lesson.id}`, "_blank", "noopener");
+            }}
+            className="h-9 px-4 uppercase tracking-widest text-xs"
+            title="All three screens with each step's notes, in a new tab"
+          >
+            Preview
+          </Button>
+        )}
         <Button size="sm" onClick={onSave} className="h-9 px-5 uppercase tracking-widest text-xs">
           Save
         </Button>

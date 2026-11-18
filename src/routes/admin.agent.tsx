@@ -636,7 +636,9 @@ function AgentPage() {
   const pending = pendingIds.map((id) => resources.find((r) => r.id === id)).filter((r): r is AgentResource => !!r);
   const byId = new Map(resources.map((r) => [r.id, r]));
   const lastAssistant = [...messages].reverse().find((m) => m.role !== "activity");
-  const suggestsBuild = !working && lastAssistant?.role === "assistant" && /build lesson/i.test(lastAssistant.content);
+  // Only straight after the agent says the plan is ready; once a draft has been
+  // built below it, Create lesson is the next step, not another build.
+  const suggestsBuild = !working && messages[messages.length - 1]?.role === "assistant" && lastAssistant?.role === "assistant" && /build lesson/i.test(lastAssistant.content);
   const canBuild = !working && !uploading && (messages.some((m) => m.role === "user") || !!current);
   const empty = messages.length === 0;
   const lastIsError = messages[messages.length - 1]?.tone === "error";
@@ -1121,7 +1123,7 @@ function DraftCard({ draft, onCreate, saving, created }: { draft: AgentDraft; on
   const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
   return (
     <section className="rounded-xl border border-[color:var(--cyan)]/50 bg-[color:var(--cyan)]/[0.03] overflow-hidden">
-      <div className="p-4 flex flex-wrap items-start justify-between gap-3">
+      <div className="p-4">
         <div className="min-w-0">
           <h2 className="text-base font-extrabold">{session.lesson.title}</h2>
           <p className="text-xs text-muted-foreground max-w-xl">{session.lesson.description}</p>
@@ -1130,9 +1132,6 @@ function DraftCard({ draft, onCreate, saving, created }: { draft: AgentDraft; on
             {draft.ambientUrl ? " · background music on" : ""}
           </p>
         </div>
-        <Button onClick={onCreate} disabled={saving} className="uppercase tracking-widest">
-          {saving ? "Please wait…" : created ? "Create another copy" : "Create lesson"}
-        </Button>
       </div>
       <button onClick={() => setOpen((o) => !o)} className="w-full flex items-center gap-1 px-4 py-2 border-t border-border/60 text-xs text-muted-foreground hover:text-foreground">
         {open ? <ChevronUp className="size-3.5" /> : <ChevronDown className="size-3.5" />} {open ? "Hide" : "Show"} the steps
@@ -1180,6 +1179,13 @@ function DraftCard({ draft, onCreate, saving, created }: { draft: AgentDraft; on
           )}
         </div>
       )}
+      {/* At the end, after the plan has been read. It opens the Stage Designer, which has Preview. */}
+      <div className="flex flex-wrap items-center gap-3 border-t border-border/60 px-4 py-3">
+        <Button onClick={onCreate} disabled={saving} className="uppercase tracking-widest">
+          {saving ? "Please wait…" : created ? "Create another copy" : "Create lesson"}
+        </Button>
+        <span className="text-[11px] text-muted-foreground">Opens it in the Stage Designer, where Preview shows all three screens.</span>
+      </div>
     </section>
   );
 }
