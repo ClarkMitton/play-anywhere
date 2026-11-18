@@ -447,10 +447,26 @@ export function fixRoomRules(d: any): RepairWarning[] {
  * screens of one step is fetched once. A search that finds nothing leaves the
  * slide without a picture, which every layout handles.
  */
+/** Ask the cheapest picture model whether a stock photo suits the lesson. */
+export async function checkPhoto(url: string, wanted: string): Promise<{ suitable: boolean; reason: string }> {
+  try {
+    const dataUrl = await previewFromUrl(url);
+    const res = await streamAgent<{ suitable: boolean; reason: string }>({ mode: "check_photo", dataUrl, wanted });
+    // If the check itself fails, keep the photo: the tutor is told to check them anyway.
+    return res.ok ? { suitable: res.suitable !== false, reason: res.reason ?? "" } : { suitable: true, reason: "" };
+  } catch {
+    return { suitable: true, reason: "" };
+  }
+}
+
+// A whiteboard background that is a plan, map or outline is drawn, not searched:
+// stock libraries rarely have one, and a found one comes with foreign labels.
+const DRAWING = /\b(plan|floor ?plan|map|outline|diagram|layout|grid|chart|template|blank|drawing|sketch)\b/i;
+
 export async function fillStockPhotos(
   session: GeneratedSession,
   onProgress?: (done: number, total: number) => void,
-): Promise<{ found: number; missed: string[] }> {
+): Promise<{ found: number; missed: string[]; rejected: number; drawn: number }> {
   type Slide = { type: string; title?: string; image_url?: string; image_search?: string };
   const wanted = new Map<string, Slide[]>();
   for (const slot of session.slots) {
@@ -462,16 +478,41 @@ export async function fillStockPhotos(
     }
   }
   let found = 0;
+  let rejected = 0;
+  let drawn = 0;
   const missed: string[] = [];
   let done = 0;
   for (const [query, slides] of wanted) {
+    const board = slides.some((s) => s.type === "whiteboard");
+    if (board && DRAWING.test(query)) {
+      const drawing = await fetchImage("ai", query, slides[0].title ?? "", "image", { style: "drawing" });
+      for (const s of slides) {
+        if (drawing.ok) s.image_url = drawing.url;
+        delete s.image_search;
+      }
+      if (drawing.ok) drawn++;
+      else missed.push(query);
+      onProgress?.(++done, wanted.size);
+      continue;
+    }
     // We are in the UK: ask for UK pictures unless the search already says where.
     const where = /\b(uk|british|britain|england|english|bradford|yorkshire|london)\b/i.test(query) ? query : `${query} UK`;
-    let res = await fetchImage("stock", where, slides[0].title ?? "");
-    // The photo search allows a burst of requests a minute; wait once if it is busy.
-    if (!res.ok && /too many|wait a minute|429/i.test(res.error)) {
-      await new Promise((r) => setTimeout(r, 15_000));
-      res = await fetchImage("stock", where, slides[0].title ?? "");
+    // Up to three results, each looked at before it is used.
+    let res: Awaited<ReturnType<typeof fetchImage>> = { ok: false, error: "nothing found" };
+    for (let skip = 0; skip < 3; skip++) {
+      let next = await fetchImage("stock", where, slides[0].title ?? "", "image", { skip });
+      // The photo search allows a burst of requests a minute; wait once if it is busy.
+      if (!next.ok && /too many|wait a minute|429/i.test(next.error)) {
+        await new Promise((r) => setTimeout(r, 15_000));
+        next = await fetchImage("stock", where, slides[0].title ?? "", "image", { skip });
+      }
+      if (!next.ok) break;
+      const verdict = await checkPhoto(next.url, query);
+      if (verdict.suitable) {
+        res = next;
+        break;
+      }
+      rejected++;
     }
     for (const s of slides) {
       if (res.ok) s.image_url = res.url;
@@ -481,7 +522,7 @@ export async function fillStockPhotos(
     else missed.push(query);
     onProgress?.(++done, wanted.size);
   }
-  return { found, missed };
+  return { found, missed, rejected, drawn };
 }
 
 /**

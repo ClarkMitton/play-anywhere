@@ -33,6 +33,7 @@ export async function fetchImage(
   query: string,
   context: string,
   kind: "image" | "youtube" = "image",
+  opts: { skip?: number; style?: "drawing" } = {},
 ): Promise<FetchImageResult> {
   // Video always searches the real index: a model-invented id never resolves.
   const useKeywords = kind === "youtube" || source === "stock";
@@ -42,6 +43,8 @@ export async function fetchImage(
       kind,
       query: useKeywords ? toSearchQuery(query) : query.replace(/^\s*\[ADD IMAGE\]\s*/i, ""),
       context,
+      ...(opts.skip ? { skip: opts.skip } : {}),
+      ...(opts.style ? { style: opts.style } : {}),
     },
   });
 

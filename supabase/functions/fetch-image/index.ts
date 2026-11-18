@@ -78,7 +78,7 @@ async function findVideo(query: string): Promise<{ url: string; title: string }>
   };
 }
 
-async function fromPexels(query: string): Promise<{ bytes: Uint8Array; contentType: string }> {
+async function fromPexels(query: string, skip = 0): Promise<{ bytes: Uint8Array; contentType: string }> {
   const key = Deno.env.get("PEXELS_API_KEY");
   if (!key) {
     throw new Error(
@@ -86,13 +86,14 @@ async function fromPexels(query: string): Promise<{ bytes: Uint8Array; contentTy
     );
   }
 
+  // skip lets a caller ask for the 2nd, 3rd... result when an earlier one did not suit.
   const url =
-    `https://api.pexels.com/v1/search?query=${encodeURIComponent(query)}&per_page=1&orientation=landscape`;
+    `https://api.pexels.com/v1/search?query=${encodeURIComponent(query)}&per_page=${skip + 1}&orientation=landscape`;
   const res = await fetch(url, { headers: { Authorization: key } });
   if (!res.ok) throw new Error(`Pexels search failed (${res.status}).`);
 
   const data = await res.json();
-  const photo = data?.photos?.[0];
+  const photo = data?.photos?.[skip];
   const src = photo?.src?.large2x ?? photo?.src?.large ?? photo?.src?.original;
   if (!src) throw new Error(`No stock photo found for "${query}". Try different wording.`);
 
@@ -174,6 +175,8 @@ serve(async (req) => {
 
     const body = await req.json().catch(() => null);
     const source = String(body?.source ?? "stock");
+    const skip = Math.max(0, Math.min(4, Number(body?.skip) || 0));
+    const drawing = body?.style === "drawing";
     const query = String(body?.query ?? "").trim();
     const context = String(body?.context ?? "").trim();
 
@@ -187,7 +190,15 @@ serve(async (req) => {
 
     if (source !== "stock" && source !== "ai") return badRequest("source must be stock or ai.");
 
-    const prompt = source === "ai"
+    const prompt = source === "ai" && drawing
+      ? [
+        // A background learners draw and write on (a floor plan, a map, an outline).
+        `A simple, clean black line drawing on a plain white background: ${query}.`,
+        context ? `It is used to: ${context}` : "",
+        "Thick clear lines, lots of empty space to write in, no shading, no colour.",
+        "No text, no labels, no numbers, no letters, no logos anywhere in the image.",
+      ].filter(Boolean).join(" ")
+      : source === "ai"
       ? [
         `A clear, realistic photograph for a UK further education lesson: ${query}.`,
         context ? `It is used to: ${context}` : "",
@@ -198,7 +209,7 @@ serve(async (req) => {
       : query;
 
     const { bytes, contentType } =
-      source === "ai" ? await fromModel(prompt) : await fromPexels(query);
+      source === "ai" ? await fromModel(prompt) : await fromPexels(query, skip);
 
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",

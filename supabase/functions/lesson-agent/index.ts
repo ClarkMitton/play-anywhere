@@ -413,6 +413,32 @@ async function handle(req: Request, body: any, emit?: (event: AgentEvent) => voi
         return json({ ok: false, error: "The build was not usable. Try Build again.", issues }, 422);
       }
       result = { data };
+    } else if (mode === "check_photo") {
+      // The cheapest picture model looks at a stock photo before it goes in a lesson.
+      model = DESCRIBE_MODEL;
+      const dataUrl = String(body?.dataUrl ?? "");
+      const wanted = String(body?.wanted ?? "").slice(0, 300);
+      if (!dataUrl.startsWith("data:image/")) return json({ ok: false, error: "No picture to check." }, 400);
+      const reply = await callModel(apiKey, {
+        model,
+        temperature: 0,
+        response_format: { type: "json_object" },
+        messages: [{ role: "user", content: [
+          { type: "text", text: `A lesson for learners in Bradford, England needs a photo of: "${wanted}".
+Look at this stock photo. Reject it if ANY of these is true:
+- it does not clearly show what is wanted;
+- it has visible writing in a language other than English (signs, labels, a title);
+- it shows a town, street, building, shop or home that is clearly not in the UK (non-Latin script,
+  palm trees, tropical, mountains with chalets, or architecture plainly from another country);
+- it is unsuitable for a college class.
+Otherwise accept it. Return ONLY JSON: {"ok": true or false, "reason": "a few words"}` },
+          { type: "image_url", image_url: { url: dataUrl } },
+        ] }],
+      });
+      usage = reply.usage;
+      // deno-lint-ignore no-explicit-any
+      const parsed = parseLoosely(reply.text) as any;
+      result = { suitable: parsed?.ok !== false, reason: String(parsed?.reason ?? "").slice(0, 120) };
     } else if (mode === "review") {
       // A cheap second look at a built lesson; the page rebuilds once if it finds problems.
       const messages = cleanMessages(body?.messages);

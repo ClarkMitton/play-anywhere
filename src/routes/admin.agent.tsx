@@ -542,6 +542,8 @@ function AgentPage() {
             role: "activity",
             tone: photos.missed.length ? undefined : "ok",
             content: `Found ${photos.found} stock photo${photos.found === 1 ? "" : "s"} (free, from Pexels)` +
+              (photos.rejected ? `, turned down ${photos.rejected} that did not fit (wrong scene, foreign signs or not the UK)` : "") +
+              (photos.drawn ? `; drew ${photos.drawn} plan${photos.drawn === 1 ? "" : "s"} for a whiteboard` : "") +
               (photos.missed.length ? `; nothing suitable for "${photos.missed.join('", "')}", so those have no picture` : "") +
               ". Check the people and settings suit your group.",
           });
