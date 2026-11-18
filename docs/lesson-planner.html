@@ -103,7 +103,7 @@
   .strip b { display: block; font-size: 9.5px; margin-bottom: 2px; }
 
   /* plan grid */
-  .grid-head, .row { display: grid; grid-template-columns: 26px 92px 66px 1fr 1fr 1fr 1.15fr 64px; }
+  .grid-head, .row { display: grid; grid-template-columns: 26px 92px 66px 1fr 1fr 1fr 1.15fr; }
   .grid-head > div {
     font-size: 7.8px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; text-align: center;
     padding: 4px 3px; border: 1px solid var(--line); border-bottom: none; background: var(--faint); color: var(--muted);
@@ -123,9 +123,6 @@
   .ticks span::before { content: ""; display: inline-block; width: 8px; height: 8px; border: 1.2px solid var(--muted); border-radius: 2px; margin-right: 4px; vertical-align: -1px; }
   .namebox { display: flex; flex-direction: column; justify-content: space-between; height: 100%; }
   .namebox .mins { border-top: 1px dashed var(--line); padding-top: 2px; }
-  .same { position: absolute; right: 4px; bottom: 3px; font-size: 7.5px; color: var(--muted); }
-  .same::before { content: ""; display: inline-block; width: 7px; height: 7px; border: 1.2px solid var(--muted); border-radius: 2px; margin-right: 3px; vertical-align: -1px; }
-  .say { position: absolute; left: 4px; right: 4px; top: 48%; border-top: 1px dashed var(--line); padding-top: 1px; }
 
   /* checklist page */
   .checks { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; flex: 1; }
@@ -294,74 +291,67 @@
   <div class="grid-head">
     <div>#</div>
     <div>Step &amp; mins</div>
-    <div>Learners are<small>&amp; LEAD phase</small></div>
+    <div>Learners are</div>
     <div class="h-host">Big screen<small>what everyone sees</small></div>
-    <div class="h-touch">Touch screens<small>what learners tap</small></div>
+    <div class="h-touch">Touch screen 1<small>what learners tap</small></div>
+    <div class="h-touch">Touch screen 2<small>what learners tap</small></div>
     <div class="h-table">Tables / away from screens<small>what learners write or do</small></div>
-    <div>Tutor<small>say · watch for · technique</small></div>
-    <div>Ends when</div>
   </div>
   <div class="rows">
     <!-- row template ×6 -->
     <div class="row">
       <div class="n">&nbsp;</div>
       <div><div class="namebox"><span class="hint">name</span><span class="mins hint">mins</span></div></div>
-      <div><div class="ticks"><span>Tables</span><span>Screens</span><span>Moving</span></div><div class="ticks" style="margin-top:6px;font-size:8px;flex-direction:row;flex-wrap:wrap;gap:3px 6px"><span>L</span><span>E</span><span>A</span><span>D</span></div></div>
+      <div><div class="ticks"><span>Tables</span><span>Screens</span><span>Moving</span></div></div>
       <div class="host"></div>
-      <div class="touch"><span class="same">same on both</span></div>
+      <div class="touch"></div>
+      <div class="touch"></div>
       <div class="table"><span class="hint">stretch:</span></div>
-      <div><span class="hint">say</span><span class="say hint">watch for · technique</span></div>
-      <div><div class="ticks"><span>I move on</span><span>Answers in</span><span>Timed</span><span>Video ends</span></div></div>
     </div>
     <div class="row">
       <div class="n">&nbsp;</div>
       <div><div class="namebox"><span class="hint">name</span><span class="mins hint">mins</span></div></div>
-      <div><div class="ticks"><span>Tables</span><span>Screens</span><span>Moving</span></div><div class="ticks" style="margin-top:6px;font-size:8px;flex-direction:row;flex-wrap:wrap;gap:3px 6px"><span>L</span><span>E</span><span>A</span><span>D</span></div></div>
+      <div><div class="ticks"><span>Tables</span><span>Screens</span><span>Moving</span></div></div>
       <div class="host"></div>
-      <div class="touch"><span class="same">same on both</span></div>
+      <div class="touch"></div>
+      <div class="touch"></div>
       <div class="table"><span class="hint">stretch:</span></div>
-      <div><span class="hint">say</span><span class="say hint">watch for · technique</span></div>
-      <div><div class="ticks"><span>I move on</span><span>Answers in</span><span>Timed</span><span>Video ends</span></div></div>
     </div>
     <div class="row">
       <div class="n">&nbsp;</div>
       <div><div class="namebox"><span class="hint">name</span><span class="mins hint">mins</span></div></div>
-      <div><div class="ticks"><span>Tables</span><span>Screens</span><span>Moving</span></div><div class="ticks" style="margin-top:6px;font-size:8px;flex-direction:row;flex-wrap:wrap;gap:3px 6px"><span>L</span><span>E</span><span>A</span><span>D</span></div></div>
+      <div><div class="ticks"><span>Tables</span><span>Screens</span><span>Moving</span></div></div>
       <div class="host"></div>
-      <div class="touch"><span class="same">same on both</span></div>
+      <div class="touch"></div>
+      <div class="touch"></div>
       <div class="table"><span class="hint">stretch:</span></div>
-      <div><span class="hint">say</span><span class="say hint">watch for · technique</span></div>
-      <div><div class="ticks"><span>I move on</span><span>Answers in</span><span>Timed</span><span>Video ends</span></div></div>
     </div>
     <div class="row">
       <div class="n">&nbsp;</div>
       <div><div class="namebox"><span class="hint">name</span><span class="mins hint">mins</span></div></div>
-      <div><div class="ticks"><span>Tables</span><span>Screens</span><span>Moving</span></div><div class="ticks" style="margin-top:6px;font-size:8px;flex-direction:row;flex-wrap:wrap;gap:3px 6px"><span>L</span><span>E</span><span>A</span><span>D</span></div></div>
+      <div><div class="ticks"><span>Tables</span><span>Screens</span><span>Moving</span></div></div>
       <div class="host"></div>
-      <div class="touch"><span class="same">same on both</span></div>
+      <div class="touch"></div>
+      <div class="touch"></div>
       <div class="table"><span class="hint">stretch:</span></div>
-      <div><span class="hint">say</span><span class="say hint">watch for · technique</span></div>
-      <div><div class="ticks"><span>I move on</span><span>Answers in</span><span>Timed</span><span>Video ends</span></div></div>
     </div>
     <div class="row">
       <div class="n">&nbsp;</div>
       <div><div class="namebox"><span class="hint">name</span><span class="mins hint">mins</span></div></div>
-      <div><div class="ticks"><span>Tables</span><span>Screens</span><span>Moving</span></div><div class="ticks" style="margin-top:6px;font-size:8px;flex-direction:row;flex-wrap:wrap;gap:3px 6px"><span>L</span><span>E</span><span>A</span><span>D</span></div></div>
+      <div><div class="ticks"><span>Tables</span><span>Screens</span><span>Moving</span></div></div>
       <div class="host"></div>
-      <div class="touch"><span class="same">same on both</span></div>
+      <div class="touch"></div>
+      <div class="touch"></div>
       <div class="table"><span class="hint">stretch:</span></div>
-      <div><span class="hint">say</span><span class="say hint">watch for · technique</span></div>
-      <div><div class="ticks"><span>I move on</span><span>Answers in</span><span>Timed</span><span>Video ends</span></div></div>
     </div>
     <div class="row">
       <div class="n">&nbsp;</div>
       <div><div class="namebox"><span class="hint">name</span><span class="mins hint">mins</span></div></div>
-      <div><div class="ticks"><span>Tables</span><span>Screens</span><span>Moving</span></div><div class="ticks" style="margin-top:6px;font-size:8px;flex-direction:row;flex-wrap:wrap;gap:3px 6px"><span>L</span><span>E</span><span>A</span><span>D</span></div></div>
+      <div><div class="ticks"><span>Tables</span><span>Screens</span><span>Moving</span></div></div>
       <div class="host"></div>
-      <div class="touch"><span class="same">same on both</span></div>
+      <div class="touch"></div>
+      <div class="touch"></div>
       <div class="table"><span class="hint">stretch:</span></div>
-      <div><span class="hint">say</span><span class="say hint">watch for · technique</span></div>
-      <div><div class="ticks"><span>I move on</span><span>Answers in</span><span>Timed</span><span>Video ends</span></div></div>
     </div>
   </div>
   <div class="foot"><span>Page 3 of 5 · The plan · Number the steps yourself so pages can be added</span><span>Rule of thumb: no activity twice in a row · teach before you test · explain before it starts</span></div>
@@ -375,43 +365,39 @@
   <div class="grid-head">
     <div>#</div>
     <div>Step &amp; mins</div>
-    <div>Learners are<small>&amp; LEAD phase</small></div>
+    <div>Learners are</div>
     <div class="h-host">Big screen</div>
-    <div class="h-touch">Touch screens</div>
+    <div class="h-touch">Touch screen 1</div>
+    <div class="h-touch">Touch screen 2</div>
     <div class="h-table">Tables / away from screens</div>
-    <div>Tutor</div>
-    <div>Ends when</div>
   </div>
   <div class="rows" style="font-size:9.3px">
     <div class="row">
       <div class="n">8</div>
       <div><b>Who's in the chair?</b><br>4 min</div>
-      <div>Tables<br><span class="hint">Establish</span></div>
+      <div>Tables</div>
       <div class="host"><b>Wheel spinner:</b> Hep B, HIV, cold sores, a healthy teenager, your best friend…</div>
       <div class="touch"><b>Text slide:</b> "Plan it on your table: PPE? Cleaning? Anything different?"</div>
+      <div class="touch"><b>Text slide:</b> the same, so both sides of the room can read it.</div>
       <div class="table">Each spin, tables write the precautions for that patient. <span class="hint">stretch:</span> which link of the chain does each one break?</div>
-      <div><b>Say:</b> "Spin. That person is in your chair. Spin again." <b>Watch for:</b> wait until someone notices the answer never changes. <b>Technique:</b> discovery, a trap that sets up universal precautions.</div>
-      <div>I move on</div>
     </div>
     <div class="row">
       <div class="n">19</div>
       <div><b>Crime scene</b><br>5 min</div>
-      <div>Screens, half at each<br><span class="hint">Apply</span></div>
+      <div>Screens, half at each</div>
       <div class="host"><b>Spot the hazard:</b> each team's count, then Reveal all.</div>
-      <div class="touch"><b>Spot the hazard:</b> a surgery photo with six mistakes. Each screen finds all six.</div>
+      <div class="touch"><b>Spot the hazard:</b> a surgery photo with six mistakes. Team 1 finds all six.</div>
+      <div class="touch"><b>Spot the hazard:</b> the same photo. Team 2 races to find all six.</div>
       <div class="table">Nothing: everyone is at a screen (a planned whole-class move, grouped with two other screen steps).</div>
-      <div><b>Say:</b> "First team to six, press Finish." <b>Watch for:</b> after the reveal, ask which law each mistake breaks. <b>Technique:</b> team race, apply to a scene.</div>
-      <div>I move on</div>
     </div>
     <div class="row">
       <div class="n">23</div>
       <div><b>Write your report</b><br>7 min</div>
-      <div>Tables<br><span class="hint">Demonstrate</span></div>
+      <div>Tables</div>
       <div class="host"><b>Picture:</b> the exam question and the four tips (mode, method, through, consequences).</div>
       <div class="touch"><b>Countdown:</b> 7 minutes, "Write your answer on the table".</div>
+      <div class="touch"><b>Picture:</b> the four tips again, for the tables at that side.</div>
       <div class="table">Each table writes an exam answer on the table. Next step: rotate and mark another table's against the four tips. <span class="hint">stretch:</span> name the link it breaks.</div>
-      <div><b>Say:</b> "This is your report to the inspectors." <b>Good looks like:</b> all four tips, with a consequence. <b>Technique:</b> a product tested against criteria.</div>
-      <div>I move on</div>
     </div>
   </div>
 
@@ -423,7 +409,7 @@
     </div>
     <div class="key">T = tables · S = touch screens · → = whole-class move. Long runs of one letter are good: every move costs a minute and breaks concentration.</div>
   </div>
-  <div class="foot"><span>Page 4 of 5 · A filled-in example</span><span>Name the technique in every tutor note: the tutor leaves with approaches they can reuse</span></div>
+  <div class="foot"><span>Page 4 of 5 · A filled-in example</span><span>Fill in both touch screens: if they show the same thing, say so</span></div>
 </section>
 
 <!-- ══════════════ PAGE 5 · CHECK BEFORE HANDING OVER ══════════════ -->
