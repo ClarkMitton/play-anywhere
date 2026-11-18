@@ -70,12 +70,16 @@ const FIRST_ANSWER_MS = 45_000;
 // Which model plans and builds, chosen on the agent page. Empty means the
 // default set on the Lovable project (LESSON_AGENT_MODEL).
 export const MODEL_KEY = "lesson-agent:model";
+// The picker has gone: a choice left in a browser from testing (a slower,
+// dearer model) made builds run past the function's time limit. Every call
+// now uses the project's default, and any old choice is cleared.
 function chosenModel(): string {
   try {
-    return localStorage.getItem(MODEL_KEY) ?? "";
+    localStorage.removeItem(MODEL_KEY);
   } catch {
-    return "";
+    // nothing stored
   }
+  return "";
 }
 const SILENCE_MS = 30_000;
 const MAX_RESENDS = 3;
