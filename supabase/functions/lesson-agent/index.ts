@@ -37,11 +37,13 @@ const DAILY_CALLS = 400;
 const BURST_PER_MINUTE = 40;
 // The planning and building model can be changed without a code change.
 const MODEL = Deno.env.get("LESSON_AGENT_MODEL") ?? "google/gemini-2.5-pro";
-// Each job gets the cheapest model that does it well. The chat is many short
-// turns, so it runs on MODEL. The build is one call per lesson where a mistake
-// reaches a classroom: a stronger model caught an error in a teacher's own
-// handout (foam extinguishers labelled yellow) that the fast one passed over.
-const BUILD_MODEL = Deno.env.get("LESSON_AGENT_BUILD_MODEL") ?? "google/gemini-4-argon";
+// Lessons are made in numbers, so every job runs on the cheapest model that
+// does it well: the build uses the same fast model as the chat (about 3p a
+// build). A premium model caught a clash in a teacher's own files (foam
+// labelled yellow in a handout, cream on the slides) that the fast one passed
+// over, so the prompt now asks for that check explicitly. Set
+// LESSON_AGENT_BUILD_MODEL to try another model for builds only.
+const BUILD_MODEL = Deno.env.get("LESSON_AGENT_BUILD_MODEL") ?? MODEL;
 const DESCRIBE_MODEL = Deno.env.get("LESSON_AGENT_DESCRIBE_MODEL") ?? "google/gemini-2.5-flash";
 const MAX_IMAGES_PER_DESCRIBE = 8;
 // The page may name a model (it is only used by us). Anything that does not

@@ -67,6 +67,11 @@ const MEDIA_RULES = `
   line of your reply, name the file, and ask the teacher to save it as a PDF or paste its text.
   Never describe, summarise or claim to have used a file you could not read; do not fill the gap
   from your own knowledge and present it as theirs.
+- Check the teacher's material before building on it. Compare their files with each other and
+  with what you know: where two of their files disagree (one handout says a label is yellow,
+  the slides say cream) or a safety fact looks wrong or out of date, do not quietly pick one.
+  Say so in the chat, and when building list each one in verify_before_teaching, naming the file
+  and quoting both versions.
 - Pictures named like "<document> · slide 4" or "· page 2" came out of the teacher's own
   documents. A "page" picture is a whole page of their PDF: their slide or worksheet as designed,
   ready to show on a screen. Prefer the teacher's own pictures and pages over text slides you write.
