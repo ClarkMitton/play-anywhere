@@ -69,6 +69,24 @@ export function formatTranscript(segments: { text: string; offset: number }[], m
   return out.trim();
 }
 
+/**
+ * The Supadata key. SUPADATA_API_KEY is the expected name, but secrets added
+ * through a chat are easily saved as "SUPADATA_KEY" or "Supadata API Key", so
+ * any setting with SUPADATA in its name is accepted.
+ */
+function supadataKey(): string | null {
+  const exact = Deno.env.get("SUPADATA_API_KEY");
+  if (exact?.trim()) return exact.trim();
+  try {
+    for (const [name, value] of Object.entries(Deno.env.toObject())) {
+      if (/supadata/i.test(name) && value.trim()) return value.trim();
+    }
+  } catch {
+    // reading all settings is not allowed here; only the exact name works
+  }
+  return null;
+}
+
 async function youtube(path: string, params: Record<string, string>, key: string) {
   const res = await fetch(`https://www.googleapis.com/youtube/v3/${path}?${new URLSearchParams({ ...params, key })}`);
   if (!res.ok) throw new Error(`YouTube search failed (${res.status})`);
@@ -94,9 +112,9 @@ async function readTranscript(url: string, key: string): Promise<string | null> 
 export async function findVideos(query: string): Promise<{ videos: FoundVideo[]; note: string }> {
   const ytKey = Deno.env.get("YOUTUBE_API_KEY");
   if (!ytKey) return { videos: [], note: "Video search is not set up (YOUTUBE_API_KEY is missing)." };
-  const transcriptKey = Deno.env.get("SUPADATA_API_KEY");
+  const transcriptKey = supadataKey();
   if (!transcriptKey) {
-    return { videos: [], note: "Transcripts are not set up (SUPADATA_API_KEY is missing), so no clip can be checked and none may be suggested." };
+    return { videos: [], note: "Transcripts are not set up (no Supadata key is saved on the project), so no clip can be checked and none may be suggested." };
   }
 
   const search = await youtube("search", {
