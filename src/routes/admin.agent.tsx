@@ -538,7 +538,9 @@ function AgentPage() {
           return;
         }
         track(res.usage, res.today);
-        const checked = validateAgentBuild(res.data);
+        // Confidence checks only when the teacher has asked for one.
+        const allowConfidence = messages.some((m) => m.role === "user" && /confidence/i.test(m.content));
+        const checked = validateAgentBuild(res.data, { allowConfidence });
         if (checked.ok) {
           const s = checked.draft.session;
           const fixes = checked.draft.warnings.length;

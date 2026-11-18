@@ -296,6 +296,10 @@ const CHECKLIST = `
    six minutes, with a break in anything over 90 minutes.
 7. NO CONFIDENCE CHECKS unless the teacher asked for them. This overrides the LEAD notes, which
    mention a confidence baseline: in this room the teacher decides.
+8. ONE PICTURE PER ITEM TAUGHT. When the teacher has a picture for each item (each job, tool,
+   sign, word), show each one on its own: one slide or picture step per item, short (one or two
+   minutes), or a quick run of them. Never list several items beside one picture. For Pre-Entry
+   and Entry this matters most: the picture is how they learn the word.
 ═══════════════════════════════════════════════════════════════`;
 
 // The feel the teacher picks is a recipe, not a hint: the fast model follows

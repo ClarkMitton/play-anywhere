@@ -460,15 +460,50 @@ export async function fillStockPhotos(
   return { found, missed };
 }
 
+/**
+ * The fast model adds confidence checks whether or not anyone asked (the
+ * shared LEAD notes suggest them). Unless the teacher asked, take those steps
+ * out and give their minutes to the longest remaining step, so the lesson
+ * keeps its length.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function dropConfidenceChecks(d: any): RepairWarning[] {
+  const isCheck = (s: Record<string, unknown>) =>
+    ["host", "screen1", "screen2"].some((k) => (s?.[k] as { type?: string } | undefined)?.type === "confidence_checker");
+  const removed = d.slots.filter((s: Record<string, unknown>) => s && isCheck(s));
+  if (!removed.length || removed.length === d.slots.length) return [];
+  // Old step number to new, so each tutor note stays on its own step.
+  const newIndex = new Map<number, number>();
+  d.slots.forEach((s: Record<string, unknown>, i: number) => {
+    if (!(s && isCheck(s))) newIndex.set(i, newIndex.size);
+  });
+  d.slots = d.slots.filter((s: Record<string, unknown>) => !(s && isCheck(s)));
+  const notes = d.teaching_notes;
+  if (notes && Array.isArray(notes.run_sheet)) {
+    notes.run_sheet = notes.run_sheet
+      .filter((r: { slot_index?: number }) => newIndex.has(Number(r?.slot_index)))
+      .map((r: { slot_index: number }) => ({ ...r, slot_index: newIndex.get(Number(r.slot_index)) }));
+  }
+  const freed = removed.reduce((n: number, s: { duration_mins?: number }) => n + (Number(s.duration_mins) || 0), 0);
+  const longest = d.slots.reduce((a: { duration_mins?: number }, b: { duration_mins?: number }) =>
+    (Number(b?.duration_mins) || 0) > (Number(a?.duration_mins) || 0) ? b : a, d.slots[0]);
+  if (longest && freed) longest.duration_mins = (Number(longest.duration_mins) || 0) + freed;
+  return [{ slotIndex: null, message: `took out ${removed.length} confidence check${removed.length === 1 ? "" : "s"} nobody asked for` }];
+}
+
 /** Repair and validate the agent's JSON with the same rules the generator uses. */
-export function validateAgentBuild(raw: unknown): { ok: true; draft: AgentDraft } | { ok: false; issues: string[] } {
+export function validateAgentBuild(
+  raw: unknown,
+  opts: { allowConfidence?: boolean } = {},
+): { ok: true; draft: AgentDraft } | { ok: false; issues: string[] } {
   // Untrusted model output, so loose types on purpose.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const d = raw as any;
   if (!d || typeof d !== "object" || !Array.isArray(d.slots)) {
     return { ok: false, issues: ["the build had no steps"] };
   }
-  const roomFixes = fixRoomRules(d);
+  const roomFixes = opts.allowConfidence ? [] : dropConfidenceChecks(d);
+  roomFixes.push(...fixRoomRules(d));
   for (const s of d.slots) {
     if (s && typeof s === "object") {
       if (typeof s.recipe !== "string" || !s.recipe) s.recipe = "AGENT";
