@@ -62,7 +62,6 @@ export async function readChatCompletion(
   }
   if (!completed) throw new Error("The AI connection ended before the lesson was complete. Your chat is still saved; try Build again.");
   const toolCalls = calls.filter((c) => c && c.name);
-  if (!text.trim() && !toolCalls.length) throw new Error("The AI returned an empty reply.");
   return { text, usage, toolCalls };
 }
 

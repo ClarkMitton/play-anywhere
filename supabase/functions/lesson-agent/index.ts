@@ -16,7 +16,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { preflight, json, corsHeaders } from "../_shared/cors.ts";
-import { findVideos, type FoundVideo, videosForModel } from "./videos.ts";
+import { findVideos, type FoundVideo, readGivenVideo, videosForModel, youTubeId } from "./videos.ts";
 import { readAnthropicStream, readChatCompletion, streamEventsResponse, type ToolCall, streamJsonResponse, type AgentEvent } from "./streaming.ts";
 import {
   getClientIp,
@@ -259,7 +259,27 @@ async function handle(req: Request, body: any, emit?: (event: AgentEvent) => voi
     } else if (mode === "chat") {
       const messages = cleanMessages(body?.messages);
       if (messages.length === 0) return json({ ok: false, error: "Say what you want first." }, 400);
-      const system = chatSystemPrompt(cleanResources(body?.resources), body?.current ?? null);
+      // The teacher's own YouTube links (as files, or typed in a document) are
+      // read once, directly, so the agent never searches YouTube to find them.
+      const resources = cleanResources(body?.resources);
+      const given: FoundVideo[] = [];
+      const linked = new Set<string>();
+      for (const r of resources) {
+        if (r.kind === "link" && r.url && youTubeId(r.url) && !r.text) linked.add(r.url);
+        for (const m of (r.text ?? "").matchAll(/https?:\/\/(?:www\.)?(?:youtube\.com\/(?:watch\?v=|shorts\/)|youtu\.be\/)[\w-]{11}[^\s)"']*/g)) {
+          if (!resources.some((x) => x.url && youTubeId(x.url) === youTubeId(m[0]) && x.text)) linked.add(m[0]);
+        }
+      }
+      for (const url of [...linked].slice(0, 3)) {
+        const v = await readGivenVideo(url).catch(() => null);
+        emit?.({ type: "activity", text: v ? `Read the transcript of your clip "${v.title}"` : `Could not read captions for ${url}, so it is used without them` });
+        if (!v) continue;
+        given.push(v);
+        const known = resources.find((r) => r.url && youTubeId(r.url) === youTubeId(url));
+        if (known) known.text = v.transcript;
+        else resources.push({ id: `given-${youTubeId(url)}`, name: `YouTube: ${v.title}`, kind: "link", url, text: v.transcript });
+      }
+      const system = chatSystemPrompt(resources, body?.current ?? null);
       // The agent may search YouTube for itself, at most twice a reply. Clips
       // whose transcript could be read go back to the page, which keeps them
       // with the chat so later turns and the build see the same words.
@@ -306,8 +326,22 @@ async function handle(req: Request, body: any, emit?: (event: AgentEvent) => voi
           convo.push({ role: "tool", tool_call_id: call.id, content: videosForModel(searched) });
         }
       }
-      if (!said.length) throw new Error("The AI returned an empty reply.");
-      result = { reply: said.join("\n\n"), videos: found };
+      // Now and then the model returns nothing (most often straight after a
+      // search). Ask once more, plainly, rather than show an error.
+      if (!said.length) {
+        convo.push({ role: "user", content: "Please reply to the teacher now, following the instructions above." });
+        const again = await callModel(apiKey, {
+          model,
+          temperature: 0.5,
+          messages: convo,
+          ...(canSearch && convo.some((m) => m.role === "tool") ? { tools: TOOLS, tool_choice: "none" } : {}),
+        }, emit ? (piece) => emit({ type: "delta", text: piece }) : undefined);
+        usage.prompt_tokens += again.usage.prompt_tokens;
+        usage.completion_tokens += again.usage.completion_tokens;
+        if (again.text.trim()) said.push(again.text.trim());
+      }
+      if (!said.length) throw new Error("The agent did not manage a reply this time. Your chat is saved; send your message again.");
+      result = { reply: said.join("\n\n"), videos: [...given, ...found] };
     } else if (mode === "build") {
       const messages = cleanMessages(body?.messages);
       const system = buildSystemPrompt(cleanResources(body?.resources), body?.current ?? null);

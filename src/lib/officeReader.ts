@@ -24,7 +24,57 @@ export type ReadResult = {
   pictures: FoundPicture[];
   /** Pictures left out: clip art that cannot be shown, tiny icons, logos repeated on every slide. */
   skipped: number;
+  /** Web links in the document, typed out or hidden behind words (Wordwall, YouTube, Canva...). */
+  links?: string[];
 };
+
+const URL_IN_TEXT = /https?:\/\/[^\s<>"'\u0000-\u001f)\]]+/gi;
+// Addresses inside Office files that are part of the format, not links a teacher made.
+const FORMAT_URL = /schemas\.(openxmlformats|microsoft)\.org|purl\.org|w3\.org\/|microsoft\.com\/office|ns\.adobe\.com/i;
+
+/** Clean, de-duplicated web links. */
+export function tidyLinks(found: string[]): string[] {
+  const out = new Set<string>();
+  for (const raw of found) {
+    const url = raw.replace(/[.,;:!?'"]+$/, "").trim();
+    if (!/^https?:\/\/[^/]+\.[^/]+/i.test(url) || FORMAT_URL.test(url)) continue;
+    out.add(url);
+  }
+  return [...out].slice(0, 20);
+}
+
+/** Links typed out in any text, including the raw bytes of an old Office file. */
+function linksInText(...texts: string[]): string[] {
+  return texts.flatMap((t) => t.match(URL_IN_TEXT) ?? []);
+}
+
+/** Links hidden behind words in a .docx or .pptx: the "External" targets in its relationship files. */
+async function linksInZip(file: File): Promise<string[]> {
+  const zip = await JSZip.loadAsync(await file.arrayBuffer());
+  const found: string[] = [];
+  for (const path of Object.keys(zip.files).filter((p) => p.endsWith(".rels"))) {
+    const xml = await zip.file(path)!.async("text");
+    for (const m of xml.matchAll(/<Relationship\b[^>]*>/g)) {
+      if (!/TargetMode="External"/.test(m[0])) continue;
+      const target = /Target="([^"]+)"/.exec(m[0])?.[1];
+      if (target) found.push(target.replace(/&amp;/g, "&"));
+    }
+  }
+  return found;
+}
+
+/** Links on a PDF's pages (clickable areas). */
+async function linksInPdf(file: File): Promise<string[]> {
+  const pdf = await pdfjsLib.getDocument({ data: await file.arrayBuffer() }).promise;
+  const found: string[] = [];
+  for (let i = 1; i <= Math.min(pdf.numPages, 60); i++) {
+    const notes = await (await pdf.getPage(i)).getAnnotations();
+    for (const a of notes as { url?: string; unsafeUrl?: string }[]) {
+      if (a.url || a.unsafeUrl) found.push(String(a.url ?? a.unsafeUrl));
+    }
+  }
+  return found;
+}
 
 const MAX_PICTURES = 40;
 const MIN_PICTURE_BYTES = 6_000;
@@ -330,19 +380,22 @@ export async function readOldPowerPoint(file: File): Promise<ReadResult> {
   if (!doc) throw new Error("no slides were found in it");
   const slides = pptText(doc);
   const text = slides.map((s, i) => (s ? `--- Slide ${i + 1} ---\n${s}` : "")).filter(Boolean).join("\n\n");
+  const links = tidyLinks(linksInText(new TextDecoder("utf-16le").decode(doc), new TextDecoder("windows-1252").decode(doc)));
   const blips = streams.get("Pictures") ? findBlips(streams.get("Pictures")!) : { blobs: [], clipArt: 0 };
   const base = file.name.replace(/\.[^.]+$/, "");
   const { pictures, dropped } = keepPictures(blips.blobs.map((blob, i) => ({ name: `${base} · picture ${i + 1}`, blob })));
-  return { text, pages: slides.length, pictures, skipped: dropped + blips.clipArt };
+  return { text, pages: slides.length, pictures, skipped: dropped + blips.clipArt, links };
 }
 
 export async function readOldWord(file: File): Promise<ReadResult> {
   const streams = readCompoundFile(new Uint8Array(await file.arrayBuffer()));
   const text = docText(streams);
+  const word = streams.get("WordDocument")!;
+  const links = tidyLinks(linksInText(new TextDecoder("utf-16le").decode(word), new TextDecoder("windows-1252").decode(word)));
   const blips = streams.get("Data") ? findBlips(streams.get("Data")!) : { blobs: [], clipArt: 0 };
   const base = file.name.replace(/\.[^.]+$/, "");
   const { pictures, dropped } = keepPictures(blips.blobs.map((blob, i) => ({ name: `${base} · picture ${i + 1}`, blob })));
-  return { text, pages: 1, pictures, skipped: dropped + blips.clipArt };
+  return { text, pages: 1, pictures, skipped: dropped + blips.clipArt, links };
 }
 
 const SHOWABLE = /\.(jpe?g|png|gif|bmp|webp)$/i;
@@ -428,23 +481,29 @@ export async function pagesFromPdf(file: File, width = 1600): Promise<{ pictures
 export async function readDocument(file: File): Promise<ReadResult> {
   const name = file.name.toLowerCase();
   const { extractPdfRich, extractTextFromPowerPoint, extractWordRich } = await import("./documentParser");
-  if (/\.(txt|md|csv)$/.test(name)) return { text: await file.text(), pages: 1, pictures: [], skipped: 0 };
+  if (/\.(txt|md|csv)$/.test(name)) {
+    const text = await file.text();
+    return { text, pages: 1, pictures: [], skipped: 0, links: tidyLinks(linksInText(text)) };
+  }
   if (name.endsWith(".ppt")) return readOldPowerPoint(file);
   if (name.endsWith(".doc")) return readOldWord(file);
   if (name.endsWith(".pptx")) {
     const text = await extractTextFromPowerPoint(file);
     const { pictures, skipped } = await picturesFromPptx(file);
-    return { text, pages: (text.match(/^--- Slide/gm) ?? []).length, pictures, skipped };
+    const links = tidyLinks([...linksInText(text), ...(await linksInZip(file).catch(() => []))]);
+    return { text, pages: (text.match(/^--- Slide/gm) ?? []).length, pictures, skipped, links };
   }
   if (name.endsWith(".docx")) {
     const { text, pages } = await extractWordRich(file);
     const { pictures, skipped } = await picturesFromDocx(file);
-    return { text, pages, pictures, skipped };
+    const links = tidyLinks([...linksInText(text), ...(await linksInZip(file).catch(() => []))]);
+    return { text, pages, pictures, skipped, links };
   }
   if (name.endsWith(".pdf")) {
     const { text, pages } = await extractPdfRich(file);
     const drawn = await pagesFromPdf(file);
-    return { text, pages, pictures: drawn.pictures, skipped: drawn.skipped };
+    const links = tidyLinks([...linksInText(text), ...(await linksInPdf(file).catch(() => []))]);
+    return { text, pages, pictures: drawn.pictures, skipped: drawn.skipped, links };
   }
   throw new Error("this kind of document cannot be read");
 }

@@ -109,6 +109,35 @@ async function readTranscript(url: string, key: string): Promise<string | null> 
  * Search, then read transcripts until enough clips are found. Videos without
  * a readable transcript are left out, and the note says how many.
  */
+export function youTubeId(url: string): string | null {
+  return /(?:youtube\.com\/(?:watch\?v=|shorts\/|embed\/)|youtu\.be\/)([\w-]{11})/.exec(url)?.[1] ?? null;
+}
+
+/**
+ * A clip the teacher gave: its title, length and transcript, read directly
+ * (no search). Null when it has no readable captions.
+ */
+export async function readGivenVideo(url: string): Promise<FoundVideo | null> {
+  const id = youTubeId(url);
+  const ytKey = Deno.env.get("YOUTUBE_API_KEY");
+  const transcriptKey = supadataKey();
+  if (!id || !ytKey || !transcriptKey) return null;
+  const watch = `https://www.youtube.com/watch?v=${id}`;
+  const [details, transcript] = await Promise.all([
+    youtube("videos", { part: "snippet,contentDetails", id }, ytKey).catch(() => null),
+    readTranscript(watch, transcriptKey).catch(() => null),
+  ]);
+  if (!transcript) return null;
+  const v = details?.items?.[0];
+  return {
+    url,
+    title: v?.snippet?.title ?? "YouTube clip",
+    channel: v?.snippet?.channelTitle ?? "",
+    seconds: isoDurationSeconds(v?.contentDetails?.duration ?? ""),
+    transcript,
+  };
+}
+
 export async function findVideos(query: string): Promise<{ videos: FoundVideo[]; note: string }> {
   const ytKey = Deno.env.get("YOUTUBE_API_KEY");
   if (!ytKey) return { videos: [], note: "Video search is not set up (YOUTUBE_API_KEY is missing)." };

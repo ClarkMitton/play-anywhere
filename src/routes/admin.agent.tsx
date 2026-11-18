@@ -293,6 +293,14 @@ function AgentPage() {
       read.skipped ? `${read.skipped} left out (clip art, logos or tiny icons)` : "",
       text.length > 40_000 ? "only the first 40,000 characters are used" : "",
     ].filter(Boolean);
+    // Links in the document (typed out or behind words) become links in the chat,
+    // so a Wordwall can go on the touch screens and a clip's transcript is read.
+    const linkIds = addLinks(read.links ?? []);
+    if (linkIds.length) {
+      setPendingIds((ids) => [...ids, ...linkIds]);
+      const kinds = [...new Set((read.links ?? []).map(linkName))];
+      parts.push(`${linkIds.length} link${linkIds.length === 1 ? "" : "s"} (${kinds.slice(0, 4).join(", ")})`);
+    }
     say({ role: "activity", tone: "ok", content: `Read ${file.name}: ${parts.join(" · ")}` });
     if (!read.pictures.length) return;
     const children = read.pictures.map((p) => ({ id: crypto.randomUUID(), name: p.name, blob: p.blob }));
@@ -316,6 +324,9 @@ function AgentPage() {
   // Clips the agent found and read stay with the chat, transcript and all, so
   // the next turns and the build work from the same words.
   const keepVideos = (videos: FoundVideo[]) => {
+    // A clip you added yourself gets its transcript stored on it, so it is read only once.
+    const byUrl = new Map(videos.map((v) => [v.url, v]));
+    setResources((rs) => rs.map((r) => (r.kind === "link" && r.url && !r.text && byUrl.has(r.url) ? { ...r, text: byUrl.get(r.url)!.transcript } : r)));
     const known = new Set(resourcesRef.current.map((r) => r.url));
     const fresh = videos.filter((v) => !known.has(v.url));
     if (!fresh.length) return;
