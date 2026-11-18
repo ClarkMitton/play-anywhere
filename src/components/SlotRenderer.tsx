@@ -10,6 +10,7 @@ import { SpotDifferenceRenderer } from "@/components/SpotDifference";
 import type { SpotDifferenceContent } from "@/lib/spotDifference";
 import { AudioImageRenderer, type AudioImageContent } from "@/components/AudioImage";
 import { DesignedSlide, type DesignedSlideContent } from "@/components/DesignedSlide";
+import { useEmbedSrc } from "@/lib/wordwall";
 
 // ─────────────────────────────────────────────
 // CONFETTI — celebratory burst (wheel result, confidence improvement)
@@ -217,19 +218,7 @@ export function SlotRenderer({
     case "embed": {
       const c = content as Extract<SlotContent, { type: "embed" }>;
       if (!c.url) return <Waiting screen={screen} />;
-      return (
-        <div className="min-h-screen w-full bg-background animate-slot-in">
-          <iframe
-            key={c.url}
-            src={normalizeEmbedUrl(c.url)}
-            className="w-full h-screen border-0"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; fullscreen; gyroscope; microphone; camera; picture-in-picture; web-share"
-            allowFullScreen
-            referrerPolicy="no-referrer-when-downgrade"
-            title="Embedded content"
-          />
-        </div>
-      );
+      return <EmbedFrame url={normalizeEmbedUrl(c.url)} />;
     }
 
     // (html_upload, webpage, host_webcam removed)
@@ -325,6 +314,35 @@ export function SlotRenderer({
 // ─────────────────────────────────────────────
 
 import { extractEmbedUrl, extractYouTubeId, youTubeClipParams } from "@/lib/sessionSchema";
+
+/** An embedded page. A Wordwall share link is swapped for its embed address first. */
+function EmbedFrame({ url }: { url: string }) {
+  const { src, error } = useEmbedSrc(url);
+  if (error) {
+    return (
+      <div className="h-screen w-full bg-immersive bg-grid flex items-center justify-center p-10 text-center">
+        <div className="max-w-xl space-y-3">
+          <div className="text-2xl font-bold">This Wordwall can't be shown here</div>
+          <div className="text-muted-foreground">{error}. In Wordwall, open the activity, press Share, then Embed, and paste that embed link into this step.</div>
+        </div>
+      </div>
+    );
+  }
+  if (!src) return <div className="h-screen w-full bg-immersive bg-grid" />;
+  return (
+    <div className="min-h-screen w-full bg-background animate-slot-in">
+      <iframe
+        key={src}
+        src={src}
+        className="w-full h-screen border-0"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; fullscreen; gyroscope; microphone; camera; picture-in-picture; web-share"
+        allowFullScreen
+        referrerPolicy="no-referrer-when-downgrade"
+        title="Embedded content"
+      />
+    </div>
+  );
+}
 
 /** Turn ordinary share links (YouTube, Edpuzzle, Jigsaw Planet) into their embeddable form. */
 export function normalizeEmbedUrl(url: string): string {

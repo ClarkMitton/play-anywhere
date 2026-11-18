@@ -487,6 +487,13 @@ function AgentPage() {
     setMessages(next);
     setInput("");
     setPendingIds([]);
+    // A new lesson: stop and ask the essentials first, like a person would.
+    const firstTurn = !lessonId && !messages.some((m) => m.role === "user");
+    const asks = firstTurn ? essentialsQuestions(text) : null;
+    if (asks) {
+      setMessages([...next, { role: "assistant", content: asks }]);
+      return;
+    }
     await reply(next);
   };
 
@@ -628,6 +635,14 @@ function AgentPage() {
   const canBuild = !working && !uploading && (messages.some((m) => m.role === "user") || !!current);
   const empty = messages.length === 0;
   const lastIsError = messages[messages.length - 1]?.tone === "error";
+  // Only the newest reply's questions can still be answered by clicking.
+  const lastAssistantIndex = (() => {
+    for (let i = messages.length - 1; i >= 0; i--) {
+      if (messages[i].role === "user") return -1;
+      if (messages[i].role === "assistant") return i;
+    }
+    return -1;
+  })();
   // A reply lost to a reload or a closed tab: offer to ask again.
   const unanswered = !working && messages[messages.length - 1]?.role === "user";
 
@@ -691,13 +706,14 @@ function AgentPage() {
             {messages.map((m, i) => (
               <Line key={i} m={m} byId={byId} draft={m.showsDraft ? draft : null}
                 onCreate={create} saving={working || uploading} created={createdLessonIds.length > 0}
-                onRetry={i === messages.length - 1 && lastIsError ? retry : undefined} />
+                onRetry={i === messages.length - 1 && lastIsError ? retry : undefined}
+                onAnswer={i === lastAssistantIndex && !working && !uploading ? (t) => void send(t) : undefined} />
             ))}
 
             {unanswered && <Activity text="No reply to this yet." onRetry={retry} />}
             {busy === "describing" && <Activity running text="Looking at the pictures…" />}
             {busy === "thinking" && (live.text
-              ? <div className="text-sm leading-relaxed"><Markdownish text={live.text} /><span className="inline-block w-2 h-4 align-middle bg-[color:var(--cyan)] animate-pulse ml-0.5" /></div>
+              ? <div className="text-sm leading-relaxed"><Markdownish text={splitChoices(live.text).body} /><span className="inline-block w-2 h-4 align-middle bg-[color:var(--cyan)] animate-pulse ml-0.5" /></div>
               : <Activity running text="Thinking…" />)}
             {busy === "building" && (
               <Activity running text={live.steps ? `Building the lesson · writing step ${live.steps}…` : "Building the lesson · reading the plan…"} />
@@ -826,6 +842,123 @@ function AgentPage() {
   );
 }
 
+// ── The essentials, asked before the first plan ──
+// The page asks these itself (no AI, so it always happens), and only the ones
+// the teacher's first message has not already answered.
+const ESSENTIALS: { test: RegExp; q: string; options: string[] }[] = [
+  { test: /\b\d+\s*(min|mins|minutes|hour|hours|hr|hrs)\b|\bhalf an hour\b|\ban hour\b/i, q: "How long is the session?",
+    options: ["20 minutes", "30 minutes", "45 minutes", "1 hour", "1 hour 30", "2 hours"] },
+  { test: /pre-?entry|\bentry\s*[123e]\b|\bE[123]\b|\blevel\s*[1-3l]\b|\bL[1-3]\b|\bGCSE\b|functional skills|\bHE\b/i, q: "What level are the learners?",
+    options: ["Pre-Entry", "Entry 1", "Entry 2", "Entry 3", "Level 1", "Level 2", "Level 3"] },
+  { test: /\b\d+\s*(learners|students|people|pupils|in the group)\b/i, q: "Roughly how many learners?",
+    options: ["Up to 8", "About 10", "About 12", "About 15", "About 20", "25 or more"] },
+  { test: /\btables?\b|whiteboard/i, q: "Do you want learners writing on the whiteboard tables?",
+    options: ["Yes, use the tables", "No, screens and talk only"] },
+  { test: /\bprint/i, q: "Do you want anything printed?",
+    options: ["Nothing printed", "Printed packs for the tables"] },
+];
+
+function essentialsQuestions(firstMessage: string): string | null {
+  const missing = ESSENTIALS.filter((e) => !e.test.test(firstMessage));
+  if (!missing.length) return null;
+  const block = JSON.stringify(missing.map((e) => ({ q: e.q, multi: false, options: e.options })));
+  return `Before I plan it, a few quick picks so it fits your session.\n\n\`\`\`choices\n${block}\n\`\`\``;
+}
+
+// ── The agent's questions, answered by clicking ──
+
+type Choice = { q: string; multi: boolean; options: string[] };
+
+/**
+ * The agent ends a reply with a ```choices block (JSON) holding its
+ * questions. Split it from the words shown; while a reply is still arriving,
+ * anything from the start of the block on is hidden.
+ */
+function splitChoices(text: string): { body: string; choices: Choice[] } {
+  const start = text.indexOf("```choices");
+  if (start < 0) return { body: text, choices: [] };
+  const body = text.slice(0, start).trimEnd();
+  const end = text.indexOf("```", start + 10);
+  if (end < 0) return { body, choices: [] };
+  try {
+    const parsed = JSON.parse(text.slice(start + 10, end).trim());
+    const choices = (Array.isArray(parsed) ? parsed : [])
+      .filter((c) => c && typeof c.q === "string" && Array.isArray(c.options))
+      .map((c) => ({
+        q: String(c.q),
+        multi: c.multi === true,
+        options: c.options.map(String).filter((o: string) => o.trim() && !/^other\b/i.test(o.trim())).slice(0, 8),
+      }))
+      .filter((c) => c.options.length > 0);
+    return { body: body + text.slice(end + 3), choices };
+  } catch {
+    return { body, choices: [] };
+  }
+}
+
+function ChoicesCard({ choices, active, onSend }: { choices: Choice[]; active: boolean; onSend: (text: string) => void }) {
+  const [picked, setPicked] = useState<Record<number, string[]>>({});
+  const [other, setOther] = useState<Record<number, string>>({});
+  const [otherOpen, setOtherOpen] = useState<Record<number, boolean>>({});
+  const answers = choices.map((_, i) => [...(picked[i] ?? []), ...(other[i]?.trim() ? [other[i].trim()] : [])]);
+  const answered = answers.filter((a) => a.length).length;
+  const toggle = (i: number, option: string, multi: boolean) =>
+    setPicked((p) => {
+      const now = p[i] ?? [];
+      if (!multi) return { ...p, [i]: now[0] === option ? [] : [option] };
+      return { ...p, [i]: now.includes(option) ? now.filter((o) => o !== option) : [...now, option] };
+    });
+  const send = () => {
+    const text = choices
+      .map((c, i) => (answers[i].length ? `${c.q}\n${answers[i].map((a) => `- ${a}`).join("\n")}` : ""))
+      .filter(Boolean)
+      .join("\n\n");
+    if (text) onSend(text);
+  };
+  return (
+    <div className={`mt-3 space-y-4 rounded-xl border p-4 ${active ? "border-[color:var(--cyan)]/50" : "border-border opacity-60"}`}>
+      {choices.map((c, i) => (
+        <div key={i} className="space-y-2">
+          <div className="text-sm font-semibold">
+            {i + 1}. {c.q}
+            {c.multi && <span className="ml-2 text-[11px] font-normal text-muted-foreground">pick any</span>}
+          </div>
+          <div className="flex flex-col gap-1.5">
+            {c.options.map((o) => {
+              const on = (picked[i] ?? []).includes(o);
+              return (
+                <button key={o} disabled={!active} onClick={() => toggle(i, o, c.multi)}
+                  className={`text-left text-sm rounded-lg border px-3 py-2 transition-colors flex items-start gap-2 ${on ? "border-[color:var(--cyan)] bg-[color:var(--cyan)]/10" : "border-border hover:border-[color:var(--cyan)]/60"}`}>
+                  <span className={`mt-0.5 size-4 shrink-0 border flex items-center justify-center text-[10px] ${c.multi ? "rounded" : "rounded-full"} ${on ? "border-[color:var(--cyan)] bg-[color:var(--cyan)] text-background" : "border-muted-foreground"}`}>
+                    {on ? "✓" : ""}
+                  </span>
+                  <span>{o}</span>
+                </button>
+              );
+            })}
+            {otherOpen[i] ? (
+              <input autoFocus disabled={!active} value={other[i] ?? ""} onChange={(e) => setOther((x) => ({ ...x, [i]: e.target.value }))}
+                onKeyDown={(e) => { if (e.key === "Enter") send(); }}
+                placeholder="Type your own answer" className="rounded-lg border border-[color:var(--cyan)]/60 bg-transparent px-3 py-2 text-sm outline-none" />
+            ) : (
+              <button disabled={!active} onClick={() => setOtherOpen((x) => ({ ...x, [i]: true }))}
+                className="text-left text-sm rounded-lg border border-dashed border-border px-3 py-2 text-muted-foreground hover:text-foreground">
+                Other…
+              </button>
+            )}
+          </div>
+        </div>
+      ))}
+      {active && (
+        <div className="flex items-center gap-3">
+          <Button size="sm" onClick={send} disabled={!answered}>Send answers</Button>
+          <span className="text-[11px] text-muted-foreground">{answered} of {choices.length} answered · or type in the box below</span>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Conversation lines ─────────────────────────
 
 function youTubeId(url?: string): string | null {
@@ -860,8 +993,10 @@ function Activity({ text, running, tone, onRetry }: { text: string; running?: bo
   );
 }
 
-function Line({ m, byId, draft, onCreate, saving, created, onRetry }: {
+function Line({ m, byId, draft, onCreate, saving, created, onRetry, onAnswer }: {
   m: AgentMessage;
+  /** Set on the latest reply only: its questions can be answered by clicking. */
+  onAnswer?: (text: string) => void;
   byId: Map<string, AgentResource>;
   draft: AgentDraft | null;
   onCreate: () => void;
@@ -895,7 +1030,13 @@ function Line({ m, byId, draft, onCreate, saving, created, onRetry }: {
       </div>
     );
   }
-  return <div className="text-sm leading-relaxed"><Markdownish text={m.content} /></div>;
+  const { body, choices } = splitChoices(m.content);
+  return (
+    <div className="text-sm leading-relaxed">
+      <Markdownish text={body} />
+      {choices.length > 0 && <ChoicesCard choices={choices} active={!!onAnswer} onSend={(t) => onAnswer?.(t)} />}
+    </div>
+  );
 }
 
 function UsageChip({ session, today }: { session: { calls: number; prompt_tokens: number; completion_tokens: number }; today: AgentToday | null }) {

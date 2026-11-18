@@ -1,4 +1,4 @@
-import type { AgentDraft, AgentMessage, AgentResource } from "./lessonAgent";
+import type { AgentBrief, AgentDraft, AgentMessage, AgentResource } from "./lessonAgent";
 
 export type AgentConversation = {
   id: string;
@@ -11,6 +11,8 @@ export type AgentConversation = {
   input: string;
   sourceLessonId?: string;
   createdLessonIds: string[];
+  /** Length, level, learners, tables and printing, as picked on the page. */
+  brief?: AgentBrief;
 };
 
 export const AGENT_HISTORY_KEY = "lesson-agent:history:v1";

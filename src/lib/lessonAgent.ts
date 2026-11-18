@@ -215,15 +215,31 @@ export function describeImages(
   );
 }
 
+/** The essentials, picked on the page so the agent never has to guess them. */
+export type AgentBrief = { length?: string; level?: string; learners?: string; tables?: string; printing?: string };
+
+export function briefText(b: AgentBrief = {}): string {
+  if (!Object.values(b).some((v) => v?.trim())) return "";
+  const line = (label: string, v?: string) => `${label}: ${v?.trim() || "not set (ask)"}`;
+  return [
+    line("Length", b.length && `${b.length} minutes`),
+    line("Level", b.level),
+    line("Learners", b.learners),
+    line("Whiteboard tables", b.tables),
+    line("Printing", b.printing),
+  ].join("\n");
+}
+
 export function chatWithAgent(
   messages: AgentMessage[],
   resources: AgentResource[],
   current: unknown,
   onEvent?: (event: LiveEvent) => void,
   signal?: AbortSignal,
+  brief?: AgentBrief,
 ) {
   return streamAgent<{ reply: string; videos?: FoundVideo[] }>(
-    { mode: "chat", messages: forModel(messages, resources), resources: forServer(resources), current },
+    { mode: "chat", messages: forModel(messages, resources), resources: forServer(resources), current, brief: briefText(brief) },
     onEvent,
     signal,
   );
@@ -236,6 +252,7 @@ export function buildWithAgent(
   fixIssues: string[] = [],
   onEvent?: (event: LiveEvent) => void,
   signal?: AbortSignal,
+  brief?: AgentBrief,
 ) {
   return streamAgent<{ data: unknown }>(
     {
@@ -244,6 +261,7 @@ export function buildWithAgent(
       resources: forServer(resources),
       current,
       fix_issues: fixIssues,
+      brief: briefText(brief),
     },
     onEvent,
     signal,

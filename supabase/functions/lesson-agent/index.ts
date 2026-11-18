@@ -97,6 +97,24 @@ async function callModel(
   return claude ? await readAnthropicStream(res, onDelta) : await readChatCompletion(res, onDelta);
 }
 
+/**
+ * Wordwall pages refuse to be framed; /embed/<code> does not. The code (and
+ * the theme and template) are in the activity's public page.
+ */
+async function wordwallEmbed(url: string): Promise<{ ok: true; url: string } | { ok: false; error: string }> {
+  if (!/^https?:\/\/(?:www\.)?wordwall\.net\//i.test(url)) return { ok: false, error: "That is not a Wordwall link" };
+  if (/\/embed\/[0-9a-f]{32}/i.test(url)) return { ok: true, url };
+  const res = await fetch(url, { headers: { "User-Agent": "Mozilla/5.0" }, redirect: "follow" }).catch(() => null);
+  if (!res?.ok) return { ok: false, error: "Wordwall could not be reached" };
+  if (/\/private\//.test(res.url)) return { ok: false, error: "This Wordwall activity is private" };
+  const html = await res.text();
+  const guid = /activityGuid"\s*:\s*"([0-9a-f]{32})"/i.exec(html)?.[1];
+  if (!guid) return { ok: false, error: "This Wordwall activity could not be found (it may be private)" };
+  const theme = /themeId"\s*:\s*(\d+)/.exec(html)?.[1] ?? "1";
+  const template = /templateId"\s*:\s*(\d+)/.exec(html)?.[1];
+  return { ok: true, url: `https://wordwall.net/embed/${guid}?themeId=${theme}${template ? `&templateId=${template}` : ""}&fontStackId=0` };
+}
+
 // What the planning chat can do besides talk.
 const TOOLS = [{
   type: "function",
@@ -213,6 +231,8 @@ async function handle(req: Request, body: any, emit?: (event: AgentEvent) => voi
     const ip = getClientIp(req);
     // A college shares one address, and one lesson takes several calls.
     if (isRateLimited(ip, BURST_PER_MINUTE)) return json({ ok: false, error: "Too many requests in a row. Wait a minute." }, 429);
+    // A Wordwall share link's embed address, for the screens. No AI involved.
+    if (body?.mode === "embed") return json(await wordwallEmbed(String(body?.url ?? "")));
 
     const apiKey = Deno.env.get("LOVABLE_API_KEY");
     if (!apiKey) return json({ ok: false, error: "LOVABLE_API_KEY is not set on this project." }, 500);
@@ -279,7 +299,7 @@ async function handle(req: Request, body: any, emit?: (event: AgentEvent) => voi
         if (known) known.text = v.transcript;
         else resources.push({ id: `given-${youTubeId(url)}`, name: `YouTube: ${v.title}`, kind: "link", url, text: v.transcript });
       }
-      const system = chatSystemPrompt(resources, body?.current ?? null);
+      const system = chatSystemPrompt(resources, body?.current ?? null, typeof body?.brief === "string" ? body.brief.slice(0, 600) : "");
       // The agent may search YouTube for itself, at most twice a reply. Clips
       // whose transcript could be read go back to the page, which keeps them
       // with the chat so later turns and the build see the same words.
@@ -344,7 +364,7 @@ async function handle(req: Request, body: any, emit?: (event: AgentEvent) => voi
       result = { reply: said.join("\n\n"), videos: [...given, ...found] };
     } else if (mode === "build") {
       const messages = cleanMessages(body?.messages);
-      const system = buildSystemPrompt(cleanResources(body?.resources), body?.current ?? null);
+      const system = buildSystemPrompt(cleanResources(body?.resources), body?.current ?? null, typeof body?.brief === "string" ? body.brief.slice(0, 600) : "");
       const fixes = Array.isArray(body?.fix_issues) ? body.fix_issues.map(String).slice(0, 20) : [];
       const transcript = messages.map((m) => `${m.role === "user" ? "TEACHER" : "ASSISTANT"}: ${m.content}`).join("\n\n");
       let user = `THE CONVERSATION:\n\n${transcript || "(no conversation; build from the resources)"}\n\nBuild the lesson now. Return only the JSON.`;
