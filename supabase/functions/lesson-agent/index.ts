@@ -29,6 +29,7 @@ import {
   buildSystemPrompt,
   chatSystemPrompt,
   DESCRIBE_PROMPT,
+  reviewSystemPrompt,
   type ChatMessage,
   type Resource,
 } from "./prompt.ts";
@@ -412,6 +413,26 @@ async function handle(req: Request, body: any, emit?: (event: AgentEvent) => voi
         return json({ ok: false, error: "The build was not usable. Try Build again.", issues }, 422);
       }
       result = { data };
+    } else if (mode === "review") {
+      // A cheap second look at a built lesson; the page rebuilds once if it finds problems.
+      const messages = cleanMessages(body?.messages);
+      const transcript = messages.map((m) => `${m.role === "user" ? "TEACHER" : "ASSISTANT"}: ${m.content}`).join("\n\n");
+      const lesson = JSON.stringify(body?.lesson ?? {}).slice(0, 60_000);
+      const reply = await callModel(apiKey, {
+        model: chosen ?? MODEL,
+        temperature: 0.1,
+        response_format: { type: "json_object" },
+        messages: [
+          { role: "system", content: reviewSystemPrompt(typeof body?.brief === "string" ? body.brief.slice(0, 600) : "") },
+          { role: "user", content: `THE CONVERSATION:\n\n${transcript}\n\nTHE BUILT LESSON (JSON):\n${lesson}\n\nCheck it now. Return only the JSON.` },
+        ],
+      });
+      usage = reply.usage;
+      // deno-lint-ignore no-explicit-any
+      const parsed = parseLoosely(reply.text) as any;
+      const problems = (Array.isArray(parsed?.problems) ? parsed.problems : [])
+        .map((p: unknown) => String(p).trim()).filter(Boolean).slice(0, 8);
+      result = { problems };
     } else {
       return json({ ok: false, error: `Unknown mode "${mode}".` }, 400);
     }

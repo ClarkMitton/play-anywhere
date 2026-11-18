@@ -215,6 +215,15 @@ export function describeImages(
   );
 }
 
+/** A cheap second look at a built lesson: the problems, each naming its step and the fix. */
+export function reviewWithAgent(messages: AgentMessage[], resources: AgentResource[], lesson: unknown, onEvent?: (event: LiveEvent) => void, signal?: AbortSignal) {
+  return streamAgent<{ problems: string[] }>(
+    { mode: "review", messages: forModel(messages, resources), lesson },
+    onEvent,
+    signal,
+  );
+}
+
 /** The essentials, picked on the page so the agent never has to guess them. */
 export type AgentBrief = { length?: string; level?: string; learners?: string; tables?: string; printing?: string };
 
@@ -456,11 +465,13 @@ export async function fillStockPhotos(
   const missed: string[] = [];
   let done = 0;
   for (const [query, slides] of wanted) {
-    let res = await fetchImage("stock", query, slides[0].title ?? "");
+    // We are in the UK: ask for UK pictures unless the search already says where.
+    const where = /\b(uk|british|britain|england|english|bradford|yorkshire|london)\b/i.test(query) ? query : `${query} UK`;
+    let res = await fetchImage("stock", where, slides[0].title ?? "");
     // The photo search allows a burst of requests a minute; wait once if it is busy.
     if (!res.ok && /too many|wait a minute|429/i.test(res.error)) {
       await new Promise((r) => setTimeout(r, 15_000));
-      res = await fetchImage("stock", query, slides[0].title ?? "");
+      res = await fetchImage("stock", where, slides[0].title ?? "");
     }
     for (const s of slides) {
       if (res.ok) s.image_url = res.url;

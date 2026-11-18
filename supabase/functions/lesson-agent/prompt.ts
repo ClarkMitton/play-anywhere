@@ -78,6 +78,9 @@ PICTURES (cover, split and question only):
 - Use the teacher's own picture (its resource url) when one fits the point.
 - Otherwise write image_search: three to six plain words for a real stock photograph, with the
   people you want ("hairdresser and client, salon, diverse"). Never write an image url yourself.
+- The learners are in Bradford, so pictures of places must look British: say what makes it British
+  ("UK high street", "terraced houses", "NHS ward", "UK bus stop"). The page adds "UK" to every
+  search, but stock photos still come from everywhere, so the tutor is asked to check them.
 - At most six image_search pictures per lesson. Leave a slide without a picture rather than
   choose a vague one. For workplace topics ask for safe practice; stock photos come from other
   countries, so never rely on one to show UK labels, signs or colour codes.
@@ -388,6 +391,50 @@ ROTATION TIMER. Tables do a task, then move and check or add to another table's 
 CONFIDENCE CHECK. Only when the teacher asked (see the checklist).
 ═══════════════════════════════════════════════════════════════`;
 
+// Three lessons built by hand and taught, as worked examples. They show the
+// patterns that make a lesson good, which the rules alone do not.
+const EXAMPLES = `
+═══ WORKED EXAMPLES (copy the patterns, not the content) ═══
+EXAMPLE 1. ESOL Jobs. Pre-Entry, 60 min, tables yes, nothing printed. From the teacher's deck of
+job photos, a Wordwall and two clips.
+1 Picture "What is my job?" (predict) · 2 Clip, first 30 s only: six people say "I'm a ...";
+touch screens: "Listen. What jobs do you hear?" · 3 Slide: "I'm a ___" (recall) · 4-5 Her job
+photos one at a time: "Who is this?", then reveal · 6 Her "match" slide as a table task written
+on the table · 7 Check the answers · 8 Act it out · 9 ONE trip to the touch screens: Wordwall
+(touch screens), big screen "Read the job. Tap the picture." · 10 Quiz, five questions, while
+they are there · 11-13 Second clip as "guess the job" from a place word (school? kitchen?
+hospital?) · 14 Secret job: tables write "She can ..." sentences, another table guesses the job
+(rotation timer) · 15 Runners type one sentence on a shared board · 16 The opening picture again.
+WHY IT WORKS: her slides are the spine, in her order; each clip is cut to the part that suits the
+level and given a job; teach, then try, then check; one trip to the screens covers two things;
+the writing has a real reader; the end answers the opening question.
+
+EXAMPLE 2. Salon: who keeps us safe? Level 1 Hairdressing, 60 min, tables, nothing printed.
+1 Title: "Day One: who keeps the salon safe?" · 2 Real case: BBC clip of a barbershop infection,
+touch screens "Watch for: what happened to Jacob? What did the BBC find?" · 3 Tables judge
+before any teaching: whose fault? shut it down or stay open? Written on the table · 4 Law clip,
+"write everything the EMPLOYER must do" · 5-10 Her slides as predict then check: "The employer
+must... what must YOU do?" · 11 Draw how the infection spread · 12-17 Short teaching slides ·
+18 Quick-fire quiz · 19 Re-vote the verdict on the BBC case (did anyone change their mind?) ·
+21-23 Build a Day One induction board on the table, swap and judge another table's board ·
+24-28 Fire at station 3: which extinguisher? grid on the table, wheel "which one would you grab?"
+WHY IT WORKS: a real case first, judged before the rules are taught; one line down every table
+(EMPLOYER | ME) filled all lesson; the product is judged against criteria by peers; the closing
+vote returns to the opening case.
+
+EXAMPLE 3. The Five Parties. Level 2, 120 min with a break, tables, nothing printed.
+1 Title · 2 "Whose policy is it?" five real policies, names hidden, tables guess · 3 Answers ·
+4 Teach left and right · 5 Tables draw a line and place the parties · 6 Check against a slide ·
+7-11 One slide per party · 12-13 Match the leaders, then reveal · 14 Talk: how does a leader
+shape a party? · 15-17 Research sprints at the touch screens from policy cards · 18 Quiz on
+exactly those cards · 19-20 Word cloud then vote: which local issue matters to you? · 21 Break ·
+22 Wheel gives each table a party · 23 Rotation: plan for the chosen issue, who pays, who loses;
+then challenge another table · 25 Wheel picks a voter · 26-27 Write and post a pitch to that
+voter · 28 Vote for the pitch that best fits its voter (not the party) · 29 Buzzer final.
+WHY IT WORKS: predict before teaching; research before the quiz; learners choose the issue;
+tables argue an assigned side so nobody shares their own politics; the product has a judge.
+═══════════════════════════════════════════════════════════════`;
+
 function briefBlock(brief: string): string {
   if (!brief.trim()) return "";
   return `
@@ -465,6 +512,7 @@ ${WAYS}
 ${CHECKLIST}
 ${TOOL_CARDS}
 ${FEELS}
+${EXAMPLES}
 ${LEAD_BLOCK}
 ${STYLE_BLOCK}
 ${INCLUSION_BLOCK}
@@ -487,6 +535,7 @@ ${WAYS}
 ${CHECKLIST}
 ${TOOL_CARDS}
 ${FEELS}
+${EXAMPLES}
 ${LEAD_BLOCK}
 ${STYLE_BLOCK}
 ${SAFETY_BLOCK}
@@ -528,6 +577,29 @@ ${currentBlock(current)}
 - lead_phase never goes backwards (Launch, then Establish, then Apply, then Demonstrate).
 - One run_sheet entry per slot.
 - Do not output end_behaviour, order_index or alternatives.`;
+}
+
+/**
+ * A second, cheap look at a built lesson: the problems a teacher would hit,
+ * each with its fix, so the page can rebuild once with them listed.
+ */
+export function reviewSystemPrompt(brief = ""): string {
+  return `You check a lesson for Bradford College's Immersive Learning Room before a teacher uses it.
+Read the conversation (what the teacher asked for), then the built lesson. List only REAL problems:
+something that breaks a rule below, something the teacher asked for that is missing, a task that
+cannot be done with what is on the screens, wording above the learners' level, or a fact that is
+wrong. Do not list matters of taste. ${todayLine()}
+${briefBlock(brief)}
+${CHECKLIST}
+${TOOL_CARDS}
+${FEELS}
+
+Each problem names the step number, says plainly what is wrong, and gives the fix, in one or two
+sentences, e.g. "Step 6: the touch screens are whiteboards but the big screen is a slide, so
+drawings have nowhere to go. Fix: put the same whiteboard on the big screen." At most eight, most
+serious first. If nothing is wrong, return an empty list.
+
+Return ONLY JSON: {"problems": ["...", "..."]}`;
 }
 
 export const DESCRIBE_PROMPT = `You catalogue a teacher's lesson pictures so a lesson can be built

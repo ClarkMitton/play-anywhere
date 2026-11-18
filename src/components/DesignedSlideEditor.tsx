@@ -72,7 +72,8 @@ export function DesignedSlideEditor({
     if (!query) return;
     setBusy("search");
     setError(null);
-    const res = await fetchImage("stock", query, content.title);
+    const where = /\b(uk|british|britain|england|english|bradford|yorkshire|london)\b/i.test(query) ? query : `${query} UK`;
+    const res = await fetchImage("stock", where, content.title);
     setBusy(null);
     if (res.ok) onChange({ image_url: res.url, image_search: undefined });
     else setError(res.error);

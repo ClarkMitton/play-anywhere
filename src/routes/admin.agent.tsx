@@ -43,6 +43,7 @@ import {
   prepareImage,
   previewFromUrl,
   fillStockPhotos,
+  reviewWithAgent,
   saveAgentLesson,
   uploadToLessonMedia,
   validateAgentBuild,
@@ -138,7 +139,7 @@ function AgentPage() {
   const [input, setInput] = useState("");
   // Files added since the last message: shown in the composer, sent with the next message.
   const [pendingIds, setPendingIds] = useState<string[]>([]);
-  const [busy, setBusy] = useState<null | "describing" | "thinking" | "building" | "photos" | "saving">(null);
+  const [busy, setBusy] = useState<null | "describing" | "thinking" | "building" | "reviewing" | "photos" | "saving">(null);
   const [live, setLive] = useState<{ text: string; steps: number; total?: number }>({ text: "", steps: 0 });
   const [session, setSession] = useState({ calls: 0, prompt_tokens: 0, completion_tokens: 0 });
   const [today, setToday] = useState<AgentToday | null>(null);
@@ -526,6 +527,36 @@ function AgentPage() {
       setBusy("building");
       setLive({ text: "", steps: 0 });
       let issues: string[] = [];
+      let first: AgentDraft | null = null;
+      let reviewed: string[] = [];
+      // Show a finished draft: fill its photos, then put it in the chat.
+      const present = async (d: AgentDraft, note = "") => {
+        const s = d.session;
+        const fixes = d.warnings.length;
+        const asked = s.slots.some((slot) =>
+          [slot.host, slot.screen1, slot.screen2].some((c) => (c.type === "designed_slide" || c.type === "whiteboard") && !!(c as { image_search?: string }).image_search));
+        if (asked) {
+          setBusy("photos");
+          const photos = await fillStockPhotos(s, (done, total) => setLive((l) => ({ ...l, steps: done, total })));
+          say({
+            role: "activity",
+            tone: photos.missed.length ? undefined : "ok",
+            content: `Found ${photos.found} stock photo${photos.found === 1 ? "" : "s"} (free, from Pexels)` +
+              (photos.missed.length ? `; nothing suitable for "${photos.missed.join('", "')}", so those have no picture` : "") +
+              ". Check the people and settings suit your group.",
+          });
+        }
+        setDraft(d);
+        setMessages((m) => [
+          ...m.map((x) => (x.showsDraft ? { ...x, showsDraft: false } : x)),
+          {
+            role: "activity",
+            tone: "ok",
+            showsDraft: true,
+            content: `Built ${s.slots.length} steps · ${s.lesson.estimated_duration_mins} min${fixes ? ` · ${fixes} automatic fix${fixes === 1 ? "" : "es"}` : ""}${note}`,
+          },
+        ]);
+      };
       for (let attempt = 0; attempt < 2; attempt++) {
         const controller = new AbortController();
         abortRef.current = controller;
@@ -534,6 +565,10 @@ function AgentPage() {
           else onRetry(e);
         }, controller.signal);
         if (!res.ok) {
+          if (first) {
+            await present(first, " · the rebuild stopped, so this is the first version: check the problems above");
+            return;
+          }
           say({ role: "activity", tone: "error", content: `The build stopped: ${res.error}` });
           return;
         }
@@ -542,32 +577,41 @@ function AgentPage() {
         const allowConfidence = messages.some((m) => m.role === "user" && /confidence/i.test(m.content));
         const checked = validateAgentBuild(res.data, { allowConfidence });
         if (checked.ok) {
-          const s = checked.draft.session;
-          const fixes = checked.draft.warnings.length;
-          // Slides that asked for a photo get a free stock one before the draft is shown.
-          const asked = s.slots.some((slot) =>
-            [slot.host, slot.screen1, slot.screen2].some((c) => (c.type === "designed_slide" || c.type === "whiteboard") && !!(c as { image_search?: string }).image_search));
-          if (asked) {
-            setBusy("photos");
-            const photos = await fillStockPhotos(s, (done, total) => setLive((l) => ({ ...l, steps: done, total })));
-            say({
-              role: "activity",
-              tone: photos.missed.length ? undefined : "ok",
-              content: `Found ${photos.found} stock photo${photos.found === 1 ? "" : "s"} (free, from Pexels)` +
-                (photos.missed.length ? `; nothing suitable for "${photos.missed.join('", "')}", so those slides have no picture` : "") +
-                ". Check the people and settings suit your group.",
-            });
+          // A second, cheap look at the first good build. Real problems are
+          // fixed by building once more with them listed.
+          if (attempt === 0) {
+            setBusy("reviewing");
+            const rev = await reviewWithAgent(messages, list, {
+              objectives: checked.draft.session.teaching_notes.objectives,
+              run_sheet: checked.draft.session.teaching_notes.run_sheet,
+              slots: checked.draft.session.slots,
+            }, onRetry);
+            setBusy("building");
+            if (rev.ok) {
+              track(rev.usage, rev.today);
+              if (rev.problems.length) {
+                first = checked.draft;
+                reviewed = rev.problems;
+                issues = rev.problems;
+                say({
+                  role: "activity",
+                  content: `Checked the lesson: ${rev.problems.length} problem${rev.problems.length === 1 ? "" : "s"} to fix. Building again…\n${rev.problems.map((p) => `- ${p}`).join("\n")}`,
+                });
+                setLive({ text: "", steps: 0 });
+                continue;
+              }
+              await present(checked.draft, " · checked: no problems found");
+              return;
+            }
+            // The check could not run; the build itself passed the room's rules.
+            await present(checked.draft);
+            return;
           }
-          setDraft(checked.draft);
-          setMessages((m) => [
-            ...m.map((x) => (x.showsDraft ? { ...x, showsDraft: false } : x)),
-            {
-              role: "activity",
-              tone: "ok",
-              showsDraft: true,
-              content: `Built ${s.slots.length} steps · ${s.lesson.estimated_duration_mins} min${fixes ? ` · checked against the room's rules, ${fixes} automatic fix${fixes === 1 ? "" : "es"}` : " · passed the room's rules"}`,
-            },
-          ]);
+          await present(checked.draft, reviewed.length ? ` · rebuilt to fix ${reviewed.length} problem${reviewed.length === 1 ? "" : "s"}` : "");
+          return;
+        }
+        if (first) {
+          await present(first, " · the rebuild broke the room's rules, so this is the first version: check the problems above");
           return;
         }
         issues = checked.issues;
@@ -725,6 +769,7 @@ function AgentPage() {
             {busy === "building" && (
               <Activity running text={live.steps ? `Building the lesson · writing step ${live.steps}…` : "Building the lesson · reading the plan…"} />
             )}
+            {busy === "reviewing" && <Activity running text="Checking the lesson against the rules…" />}
             {busy === "photos" && <Activity running text={`Finding stock photos for the slides${live.total ? ` · ${live.steps} of ${live.total}` : ""}…`} />}
             {busy === "saving" && <Activity running text="Creating the lesson…" />}
 
