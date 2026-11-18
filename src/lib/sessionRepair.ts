@@ -49,6 +49,22 @@ const ENTRY_OPTION_MAX = 40;
 const ENTRY_OPTION_COUNT = 3;
 const WHEEL_ITEM_MAX = 10;
 
+/**
+ * Fit a wheel label by dropping whole words from the end. A single long word
+ * ("Firefighter") is kept whole: a slightly long label reads better than
+ * "Firefighte".
+ */
+function shortenLabel(text: string, max: number): string {
+  if (text.length <= max) return text;
+  const words = text.split(/\s+/);
+  let out = words[0];
+  for (const w of words.slice(1)) {
+    if ((out + " " + w).length > max) break;
+    out += " " + w;
+  }
+  return out;
+}
+
 function isObj(v: unknown): v is Record<string, any> {
   return typeof v === "object" && v !== null && !Array.isArray(v);
 }
@@ -250,7 +266,7 @@ function repairSlot(
       c.items = c.items
         .filter((i: unknown) => typeof i === "string" && i.trim())
         .slice(0, 12)
-        .map((i: string) => i.trim().slice(0, WHEEL_ITEM_MAX));
+        .map((i: string) => shortenLabel(i.trim(), WHEEL_ITEM_MAX));
       if (c.items.join("|") !== before) {
         warn("shortened the wheel labels so they fit without being cut off");
       }

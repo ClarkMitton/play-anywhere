@@ -286,7 +286,7 @@ async function handle(req: Request, body: any, emit?: (event: AgentEvent) => voi
       const linked = new Set<string>();
       for (const r of resources) {
         if (r.kind === "link" && r.url && youTubeId(r.url) && !r.text) linked.add(r.url);
-        for (const m of (r.text ?? "").matchAll(/https?:\/\/(?:www\.)?(?:youtube\.com\/(?:watch\?v=|shorts\/)|youtu\.be\/)[\w-]{11}[^\s)"']*/g)) {
+        for (const m of (r.text ?? "").matchAll(/https?:\/\/(?:www\.)?(?:youtube\.com\/(?:watch\?(?:[^#\s]*&)?v=|shorts\/)|youtu\.be\/)[\w-]{11}[^\s)"']*/g)) {
           if (!resources.some((x) => x.url && youTubeId(x.url) === youTubeId(m[0]) && x.text)) linked.add(m[0]);
         }
       }

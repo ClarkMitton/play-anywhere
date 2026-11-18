@@ -110,7 +110,7 @@ async function readTranscript(url: string, key: string): Promise<string | null> 
  * a readable transcript are left out, and the note says how many.
  */
 export function youTubeId(url: string): string | null {
-  return /(?:youtube\.com\/(?:watch\?v=|shorts\/|embed\/)|youtu\.be\/)([\w-]{11})/.exec(url)?.[1] ?? null;
+  return /(?:youtube\.com\/(?:watch\?(?:[^#\s]*&)?v=|shorts\/|embed\/)|youtu\.be\/)([\w-]{11})/.exec(url)?.[1] ?? null;
 }
 
 /**

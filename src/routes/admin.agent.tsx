@@ -419,16 +419,19 @@ function AgentPage() {
       const batch = pending.slice(i, i + DESCRIBE_BATCH);
       const controller = new AbortController();
       abortRef.current = controller;
-      const res = await describeImages(batch.map((r) => ({ id: r.id, name: r.name, dataUrl: r.previewDataUrl! })), onRetry, controller.signal);
+      // Numbered 1, 2, 3... rather than by their long ids: the model copies
+      // short numbers back reliably, and a mismatch lost whole batches.
+      const res = await describeImages(batch.map((r, k) => ({ id: String(k + 1), name: r.name, dataUrl: r.previewDataUrl! })), onRetry, controller.signal);
       abortRef.current = null;
       if (!res.ok) {
         say({ role: "activity", tone: "error", content: `Could not look at the pictures: ${res.error}` });
         return null;
       }
       track(res.usage, res.today);
-      const found = new Map(res.items.map((item) => {
+      const found = new Map(res.items.map((item, k) => {
         const words = item.text_on_image?.trim() ? ` Words on it: "${item.text_on_image.trim()}"` : "";
-        return [item.id, `${item.role ? `(${item.role}) ` : ""}${item.description ?? ""}${words}`] as const;
+        const n = Number(String(item.id ?? "").replace(/\D/g, "")) || k + 1;
+        return [batch[n - 1]?.id ?? "", `${item.role ? `(${item.role}) ` : ""}${item.description ?? ""}${words}`] as const;
       }));
       list = list.map((r) => (found.has(r.id) ? { ...r, description: found.get(r.id), previewDataUrl: undefined } : r));
       const merged = list;
@@ -962,7 +965,7 @@ function ChoicesCard({ choices, active, onSend }: { choices: Choice[]; active: b
 // ── Conversation lines ─────────────────────────
 
 function youTubeId(url?: string): string | null {
-  return url?.match(/(?:youtube\.com\/(?:watch\?v=|shorts\/|embed\/)|youtu\.be\/)([\w-]{11})/)?.[1] ?? null;
+  return url?.match(/(?:youtube\.com\/(?:watch\?(?:[^#\s]*&)?v=|shorts\/|embed\/)|youtu\.be\/)([\w-]{11})/)?.[1] ?? null;
 }
 
 function Thumb({ r, className }: { r: AgentResource; className: string }) {

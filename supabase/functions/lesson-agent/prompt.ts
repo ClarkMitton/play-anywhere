@@ -294,6 +294,8 @@ const CHECKLIST = `
    slide of your own.
 6. LENGTH. Step minutes add up to the length in the brief: roughly one step for every four to
    six minutes, with a break in anything over 90 minutes.
+7. NO CONFIDENCE CHECKS unless the teacher asked for them. This overrides the LEAD notes, which
+   mention a confidence baseline: in this room the teacher decides.
 ═══════════════════════════════════════════════════════════════`;
 
 function briefBlock(brief: string): string {
