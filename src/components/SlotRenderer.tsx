@@ -413,7 +413,8 @@ function YouTubeFrame({ src, onEnded }: { src: string; onEnded?: () => void }) {
     <div className="min-h-screen w-full bg-black animate-slot-in">
       <iframe ref={frameRef} src={withApi}
         className="w-full h-screen border-0"
-        allow="autoplay; fullscreen" allowFullScreen title="YouTube video" />
+        allow="autoplay; fullscreen; encrypted-media; picture-in-picture" allowFullScreen
+        referrerPolicy="strict-origin-when-cross-origin" title="YouTube video" />
     </div>
   );
 }
