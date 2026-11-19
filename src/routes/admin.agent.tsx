@@ -424,17 +424,27 @@ function AgentPage() {
       // short numbers back reliably, and a mismatch lost whole batches.
       const res = await describeImages(batch.map((r, k) => ({ id: String(k + 1), name: r.name, dataUrl: r.previewDataUrl! })), onRetry, controller.signal);
       abortRef.current = null;
+      if (!res.ok && res.error === "Stopped.") return null;
       if (!res.ok) {
-        say({ role: "activity", tone: "error", content: `Could not look at the pictures: ${res.error}` });
-        return null;
+        // Carry on without these pictures' descriptions rather than stopping the chat.
+        say({ role: "activity", tone: "error", content: `Could not look at ${batch.length} picture${batch.length === 1 ? "" : "s"} (${res.error}); the agent will go by their names.` });
+      } else {
+        track(res.usage, res.today);
       }
-      track(res.usage, res.today);
-      const found = new Map(res.items.map((item, k) => {
+      const found = new Map((res.ok ? res.items : []).map((item, k) => {
         const words = item.text_on_image?.trim() ? ` Words on it: "${item.text_on_image.trim()}"` : "";
         const n = Number(String(item.id ?? "").replace(/\D/g, "")) || k + 1;
         return [batch[n - 1]?.id ?? "", `${item.role ? `(${item.role}) ` : ""}${item.description ?? ""}${words}`] as const;
       }));
-      list = list.map((r) => (found.has(r.id) ? { ...r, description: found.get(r.id), previewDataUrl: undefined } : r));
+      // A picture that came back without a description is still marked as looked
+      // at, so the next turn does not read the same pictures all over again.
+      const inBatch = new Set(batch.map((r) => r.id));
+      list = list.map((r) =>
+        found.has(r.id) && found.get(r.id)!.trim()
+          ? { ...r, description: found.get(r.id), previewDataUrl: undefined }
+          : inBatch.has(r.id)
+            ? { ...r, description: `(could not be described; go by its name${r.from ? `, from ${r.from}` : ""})`, previewDataUrl: undefined }
+            : r);
       const merged = list;
       setResources((rs) => rs.map((r) => merged.find((m) => m.id === r.id) ?? r));
     }

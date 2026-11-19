@@ -151,6 +151,28 @@ function parseLoosely(text: string): unknown | null {
   return null;
 }
 
+/** The described pictures, whatever shape they came back in. */
+function describedItems(text: string): unknown[] {
+  // deno-lint-ignore no-explicit-any
+  const parsed = parseLoosely(text) as any;
+  if (Array.isArray(parsed)) return parsed;
+  if (parsed && typeof parsed === "object") {
+    if (Array.isArray(parsed.items)) return parsed.items;
+    const list = Object.values(parsed).find(Array.isArray);
+    if (list) return list as unknown[];
+  }
+  // Broken JSON: keep every picture whose own entry still reads.
+  const kept: unknown[] = [];
+  for (const m of text.matchAll(/\{[^{}]*"id"[^{}]*\}/g)) {
+    try {
+      kept.push(JSON.parse(m[0]));
+    } catch {
+      // that one is lost; the page describes it from its name
+    }
+  }
+  return kept;
+}
+
 function shapeIssues(data: unknown): string[] {
   // deno-lint-ignore no-explicit-any
   const d = data as any;
@@ -267,16 +289,23 @@ async function handle(req: Request, body: any, emit?: (event: AgentEvent) => voi
         content.push({ type: "text", text: `id: ${String(img.id)} (file ${String(img.name ?? "")})` });
         content.push({ type: "image_url", image_url: { url: img.dataUrl } });
       }
-      const reply = await callModel(apiKey, {
-        model,
-        temperature: 0.2,
-        response_format: { type: "json_object" },
-        messages: [{ role: "user", content }],
-      });
-      usage = reply.usage;
-      // deno-lint-ignore no-explicit-any
-      const parsed = parseLoosely(reply.text) as any;
-      result = { items: Array.isArray(parsed?.items) ? parsed.items : [] };
+      // The cheap picture model sometimes answers in another shape, or breaks the
+      // JSON by copying a quote mark off a slide. Nothing read meant the page
+      // read the same pictures again on every turn, so ask once more.
+      usage = { prompt_tokens: 0, completion_tokens: 0 };
+      let items: unknown[] = [];
+      for (let attempt = 0; attempt < 2 && !items.length; attempt++) {
+        const reply = await callModel(apiKey, {
+          model,
+          temperature: attempt ? 0 : 0.2,
+          response_format: { type: "json_object" },
+          messages: [{ role: "user", content }],
+        });
+        usage.prompt_tokens += reply.usage.prompt_tokens;
+        usage.completion_tokens += reply.usage.completion_tokens;
+        items = describedItems(reply.text);
+      }
+      result = { items };
     } else if (mode === "chat") {
       const messages = cleanMessages(body?.messages);
       if (messages.length === 0) return json({ ok: false, error: "Say what you want first." }, 400);
