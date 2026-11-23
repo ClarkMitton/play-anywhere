@@ -98,6 +98,8 @@ Only if the brief said yes to the whiteboard tables. Printed packs only if it sa
 - **Put the brief and the success criteria on the big screen** while tables work.
 - **Keep a picture on screen during a table task** by leaving the slide up and starting a timer over it from the remote (Timer, Add Timer). The rotation timer hides the slide, so use it only when the task does not need a picture.
 - **A lesson can run with no printing.** Have the tutor write the model on the board, since a slide disappears when the timer starts, and swap picture cards for "draw it, your table says it".
+- **Tutors value the independent time.** Feedback from Shamim's tutor (November 2026): the best parts are when learners work on their own at the tables. In a two-hour session plan two table tasks of about 20 minutes each.
+- **Put support on the touch screens during a long table task:** a picture dictionary, a word bank or the model. Learners walk over to look something up while the timer runs on the big screen.
 - **Capture the product at the end** on a shared board, so there is evidence of the learning.
 
 ## Slides
@@ -187,6 +189,7 @@ Nobody should be a passenger during a video. Decide which of two ways it is bein
 ## Other people's material
 
 - **Keep a teacher's slides recognisably theirs:** their order, their words, their pictures.
+- **Find Wordwalls through Google, not Wordwall's own search.** Search Google for, say, "pre entry jobs wordwall": it finds far better matches. Open and play each one before using it, and check every item suits the level.
 - **Describe every embedded page.** The lesson plan cannot see inside a Canva or a Wordwall, so write one line saying what it shows.
 - **Paste the address, not the share snippet,** when embedding.
 - **Tell the teacher what you changed,** even a corrected spelling.

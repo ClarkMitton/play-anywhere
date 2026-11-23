@@ -139,6 +139,47 @@ _To fill in after the lesson has been taught._
 
 ---
 
+## ESOL Jobs, Places and Skills
+
+- **Built:** 23 November 2026
+- **For:** Shamim Nizami, ESOL Pre-Entry (follows ESOL Jobs)
+- **Length:** 120 minutes, 25 steps, two 20-minute whiteboard table tasks plus about 10 more minutes writing on the tables, four whole-class moves
+- **Source:** Shamim's `what-is-his-job.ppt` (elcivics "Types of Jobs", 15 jobs). Her `Jobs updated.pdf` was already used in ESOL Jobs, so it was not reused. Three Wordwalls found through Google and three YouTube clips found by search.
+- **Lesson file:** [esol-jobs-skills.sql](esol-jobs-skills.sql)
+- **Slides:** five made in Canva ("What job is right for you?" deck), four composed from Shamim's wording with stock photos, in `public/lessons/esol-jobs-skills/` and the media storage
+- **Table packs:** none. Whiteboard tables yes, no printing.
+
+### WWW in the build
+
+- **The tutor's feedback shaped it.** Shamim's tutor loves the independent parts, so there are two 20-minute table tasks (Our town; The right job), each with support on the touch screens: all twelve jobs for the first, the short forms for the second.
+- **Clark chose before building:** job advert short forms (f/t, p/t, hrs, wk, Mon–Fri, p/h), two objectives (where people work; I can skills), the person-and-advert task, and keeping Shamim's good slides with Canva for the rest.
+- **Wordwalls through Google, as Clark suggested.** Searching Google for "pre entry jobs wordwall" and "wordwall job advert abbreviations" found far better matches than Wordwall's own search. Each one was opened and played before use.
+- **Every video was checked for Pre-Entry.** The Pre-entry ESOL jobs video (made for learners with little literacy) is split into its learn part and its quiz part. Only the Test yourself part of the BBC video is used, as a reset after the first long task. The job skills video says each sentence twice, slowly. A job-adverts video (engVid) was found and dropped as too hard.
+- **Shamim's clues became a guessing game.** Her slides say where each person works and what they do, so the tutor reads them as clues over numbered photos before the words appear.
+- **Her pictures were replaced, her words kept.** Her clip art was under 100 pixels wide, so each job got a stock photo through the app's own photo search, each checked by eye (one bricklayer photo was swapped).
+- **The Canva deck came back with the exact wording** and a real mix of people: a woman in a hijab, a Black chef, an older white cleaner, a Sikh mechanic, a wheelchair user at a computer, a Black woman driving, a Sikh cook, an East Asian woman, a Middle Eastern shop worker, a South Asian care worker and a Black woman cleaner.
+- **Checked before anyone runs it.** All 25 steps passed the app's content rules, the SQL ran against a real database engine, and all nine pictures load from the media storage.
+
+### Even better if (build)
+
+- The Pre-entry ESOL and BBC videos have no captions, so they were read from still frames only. The quiz answer order is a best reading.
+- Shamim's slides are mostly "He": nine men to three women. The photos are a fair mix, but her sentences set the pronouns.
+- The short forms Wordwall includes tel, K, IT and pm, which the lesson does not teach, and writes ph where the slide writes p/h.
+- The model advert pays £13 an hour; check it against the current minimum wage.
+- Both table tasks rely on the tutor writing a model on the board, because the slide goes when the timer starts.
+
+### WWW in the room
+
+_To fill in after the lesson has been taught._
+
+-
+
+### Even better if (room)
+
+-
+
+---
+
 ## ESOL Jobs
 
 - **Built:** 9 November 2026
