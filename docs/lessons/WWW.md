@@ -32,7 +32,7 @@ What proves itself here is collected in [WAYS-OF-WORKING.md](WAYS-OF-WORKING.md)
 
 ### Even better if (build)
 
-- Family Fortunes is a Canva Code game Clark is making. Step 15 shows a title slide until its link is pasted in the designer.
+- Family Fortunes is a Canva Code game. Its published my.canva.site address refuses to be framed, so the Share → Embed link (canva.com/design/.../view?embed) is used instead.
 - The pH values in the notes are textbook ranges. Phoebe offered her own values for the five practical products; ask for them.
 - Her diagrams have their labels printed in, so they are used as answers, not as the labelling activity.
 - The level was guessed from her material. Confirm with Phoebe.
