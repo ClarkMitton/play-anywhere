@@ -12,6 +12,45 @@ What proves itself here is collected in [WAYS-OF-WORKING.md](WAYS-OF-WORKING.md)
 
 ---
 
+## ESOL Me and My Home: My Dream Home, and My Neighbourhood
+
+- **Built:** 23 November 2026, for Wednesday 25 November (10:10 to 11:40 and 1:00 to 2:30)
+- **For:** two tutors (one is Heidi), ESOL Entry 1, two lessons in a "Me and my home" pair
+- **Length:** 90 minutes each. My Dream Home: 20 steps. My Neighbourhood: 19 steps. Each has two table tasks (about 15 and 20 minutes) and two whole-class moves
+- **Source:** a two-line request by email (rooms, furniture, "I have"; and "I live near a park / church / mosque / shop. It's busy / noisy"). No teacher material, so everything was found or made
+- **Lesson files:** [esol-my-home.sql](esol-my-home.sql), [esol-my-area.sql](esol-my-area.sql)
+- **Pictures:** six each, in `public/lessons/esol-my-home/`, `public/lessons/esol-my-area/` and the media storage
+- **Table packs:** none. Whiteboard tables yes, no printing, as asked.
+
+### WWW in the build
+
+- **Clark chose the objectives and turned "I have" into a dream home.** The product for both lessons is a partner interview about a dream home. This also means nobody has to describe their real home or say where they really live.
+- **The BBC carries both lessons.** "Describing your home" has Georgie with an empty new house who needs furniture room by room: a natural hook, a watching task and a quiz in one video, cut three ways around its adverts. Its "Furniture" and "Places" 10 Easy English Words videos give the vocabulary and a test-yourself race. "How to talk about your home town" opens busy versus quiet (Brighton and Petworth) before it is taught.
+- **Wordwalls found through Google and played first.** Home: a furniture Match up with real photos and sound, and a "There is a bed in the bedroom" Unjumble. Area: two Match up / Find the match games with UK photos, including a mosque and a GP surgery. A "Describe where I live" Unjumble was played through and dropped: most of its sentences are Entry 2 or above.
+- **Photo slides cost no Canva credits.** Rooms, furniture, places and busy / quiet were composed from free stock photos, with numbered "guess" versions so learners predict from mimes first. Canva made six slides (three per lesson) with the exact wording and a real mix of people.
+- **Unsuitable stock photos were caught by eye:** a man in the shower, a TV screen showing Polish text about selling drugs online, and an operating theatre for "doctor's". All replaced.
+- **Every table task has support on the touch screens:** the picture dictionary in Table task 1, the interview questions in Table task 2.
+- **Checked before anyone runs it.** Both lessons passed the app's content rules and ran against a test database (90 minutes each, Wordwalls only on the touch screens), and all twelve pictures load from the media storage.
+
+### Even better if (build)
+
+- Two BBC videos (Furniture, Places) have no captions, so their words were read from still frames. Watch them once.
+- The email gives both lessons the same two times. The build assumes My Dream Home in the morning and My Neighbourhood in the afternoon; each also works alone.
+- The text on the "My dream home" and interview Canva slides is smaller than on the others. Readable from the tables, but the tutor reads it aloud.
+- The places slide has no gurdwara or temple. The tutor note says to add the places learners name.
+
+### WWW in the room
+
+_To fill in after the lessons have been taught._
+
+-
+
+### Even better if (room)
+
+-
+
+---
+
 ## Patient Zero: Micro-organisms, Cross Infection and Patient Safety
 
 - **Built:** 16 November 2026

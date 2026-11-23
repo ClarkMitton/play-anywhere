@@ -35,6 +35,7 @@ Get these agreed first. Building without them is what produced a quiz chain.
 - **A stretch on every table task** for the groups who finish first or are working at a higher level.
 - **Close the loop.** The question opened in Launch is answered in the last step.
 - **Inclusive by design.** Pictures, names and examples reflect the college's learners, and nobody is left out by an activity that assumes money, a device, or a home set-up. See "Slides" for pictures.
+- **Make personal topics a "dream" version.** For my home, my area or my family, ask about a dream home or a dream street. Everyone can join in, nobody has to describe a home or address they would rather keep private, and the answers are more fun.
 - **A movement plan.** The whole class changes place as few times as possible, and every move is worth it. See "Where are the learners?" below.
 
 ## The design question
@@ -111,6 +112,7 @@ Only if the brief said yes to the whiteboard tables. Printed packs only if it sa
 - **Avoid stereotypes in who does what.** Vary who is shown as the expert, the one using the technology, the one in charge. Show disabled people as ordinary participants, not as the subject of the picture.
 - **Review the finished deck as a set,** not slide by slide. Count who appears. If one group dominates or is missing, regenerate before it goes in a lesson.
 - **For a picture prompt, ask Canva for a photo with no words at all** and put any words on in the lesson. Nothing to garble, and the teacher's own slides stay theirs.
+- **Check every stock photo by eye, including any writing in it.** A search for "shower" returned a man showering, "television" a screen showing a foreign-language headline about selling drugs, "doctor's surgery" an operating theatre.
 - **Check every AI picture for garbled words.** They are common. Fix them, or use them as a teaching point if the lesson is about AI.
 - **Keep on-screen text short.** The detail belongs in what the tutor says.
 
