@@ -12,6 +12,43 @@ What proves itself here is collected in [WAYS-OF-WORKING.md](WAYS-OF-WORKING.md)
 
 ---
 
+## Hair, Skin and pH (Phoebe)
+
+- **Built:** 23 November 2026
+- **For:** Phoebe, hairdressing (level not given; most likely Level 1), two teams
+- **Length:** 60 minutes, 16 steps: Launch 10, Establish and Apply 35, Demonstrate 15, exactly as in her plan
+- **Source:** Phoebe's lesson plan (pasted), `Week 9 theory - shampooing.pptx`, `pH of products.ppt`, and two community Wordwalls
+- **Lesson file:** [phoebe-hair-skin-ph.sql](phoebe-hair-skin-ph.sql)
+- **Pictures:** her hair diagram, skin diagram and Pearson pH scale, plus a blank tall pH scale for the touch-screen whiteboard, in `public/lessons/phoebe-hair-skin-ph/` and the media storage
+- **Table packs:** none. Clark asked for no printing; tables and touch-screen whiteboards are used instead.
+
+### WWW in the build
+
+- **The teacher's structure was the brief.** Phoebe sent a LEAD plan with three screens and timings. The lesson keeps her order, her apply questions and her Family Fortunes rounds word for word.
+- **No new features, by request.** "Drag the label" became two Wordwall labelled diagrams on the touch screens, one team at each, as a race. "Place products on the pH scale" became the touch-screen whiteboard over a blank 1 to 14 scale, with both teams' scales sent to the big screen and then her real scale revealed.
+- **Wordwalls were checked before use.** Each was opened in Preview: the hair shaft one has exactly her three labels, the skin one matches her skin slide. A chemistry pH scale Wordwall and a deeper induction one were left out. Wordwall's public oEmbed address gives the embed link without logging in (`/api/oembed?format=json&url=<resource page>`).
+- **Her practical is supported, not taught.** The pH practical is in another session, so the five products she tests get predicted here and saved on the shared board, ready to check against the strips.
+- **Checked before anyone runs it.** All 16 steps passed the app's content rules, the SQL ran against a real database engine, and every picture loads from the media storage.
+
+### Even better if (build)
+
+- Family Fortunes is a Canva Code game Clark is making. Step 15 shows a title slide until its link is pasted in the designer.
+- The pH values in the notes are textbook ranges. Phoebe offered her own values for the five practical products; ask for them.
+- Her diagrams have their labels printed in, so they are used as answers, not as the labelling activity.
+- The level was guessed from her material. Confirm with Phoebe.
+
+### WWW in the room
+
+_To fill in after the lesson has been taught._
+
+-
+
+### Even better if (room)
+
+-
+
+---
+
 ## ESOL Me and My Home: My Dream Home, and My Neighbourhood
 
 - **Built:** 23 November 2026, for Wednesday 25 November (10:10 to 11:40 and 1:00 to 2:30)
