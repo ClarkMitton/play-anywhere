@@ -12,6 +12,42 @@ What proves itself here is collected in [WAYS-OF-WORKING.md](WAYS-OF-WORKING.md)
 
 ---
 
+## SEND 3: ADHD, Autism and Dyslexia (Monika, staff CPD)
+
+- **Built:** 24 November 2026
+- **For:** Monika Worthington with Disability Services, staff CPD (staff are the learners), 60 minutes, one department team in pairs
+- **Length:** 44 steps. About 48 minutes at the whiteboard tables. Three whole-class moves (the carousel, to the screens for the buzzer, back)
+- **Source:** Monika's own plan, `Monika/SEND 3 · Immersive room lesson plan.pdf` (40 steps, written on our planner), her 39 presenter slides, and the cheat sheet `Side 2 · Beyond the room.pdf`
+- **Lesson file:** [send3.sql](send3.sql), plus the [Canva Code prompt](send3-canva-code-prompt.md)
+- **Slides:** all 39 exported as pictures, in `public/lessons/send3/` and the media storage
+- **Videos:** six (three learners, three reveal clips), not supplied yet. The steps point at their storage addresses.
+
+### WWW in the build
+
+- **The first session designed by a member of staff on our planner.** Monika's plan already met the standard: one idea, climbing objectives, predict before every reveal, two thirds at the tables, a product tested against six checks. The build was checking the mechanics, not redesigning.
+- **Checked against the app, not only the planner.** Video files loop unless loop is off, so all six are set not to loop and the session moves on when each ends. The vote and the wheel in one step were split. The probe questions now show before the wheel, because tables cannot read the portrait touch screens.
+- **Show and test moved to the tables.** Two pairs' Companion links could not be put into the touch screens mid-session, and only two pairs would have been tested. Tablets now pass one table on and every pair is tested.
+- **The final confidence check moved to the exit,** mirroring the arrival, so nobody queues to tap during the pledge.
+- **A Canva Code where the session was most passive.** The three "Tools" slides were photograph-and-wipe. "Sort the toolkit" runs on the tablets already on the tables (no move), before the cheat sheet, so the sheet becomes the answer.
+- **Steps under a minute** (0.25 to 0.5) are kept as Monika planned: the duration column takes decimals.
+
+### Even better if (build)
+
+- Placeholders were still on the slides: "[Companion QR]" and "[time]" on slide 1, "[Route and timescales]" and "[Route]" on slide 36.
+- The six videos and the Companion link were not in the folder, so the build cannot be fully previewed yet.
+- Step 35 asks staff new to the Companion to plan, build, scaffold and test in 7.5 minutes. Starting from a Companion made in advance would be safer.
+- The slides carry presenter labels ("Add Timer", "Word cloud") that the room will see.
+
+### WWW in the room
+
+-
+
+### Even better if (room)
+
+-
+
+---
+
 ## Hair, Skin and pH (Phoebe)
 
 - **Built:** 23 November 2026
