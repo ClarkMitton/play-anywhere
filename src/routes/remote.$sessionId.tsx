@@ -93,12 +93,23 @@ function RemotePage() {
         .maybeSingle();
       if (cancelled || !s) return;
       setSession(s as SessionRow);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [sessionId]);
 
-      if (s.lesson_id) {
+  // Slots follow the session's lesson, which changes when the Host hands over
+  // to the next planned session.
+  const lessonId = session?.lesson_id ?? null;
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      if (lessonId) {
         const { data: sl } = await supabase
           .from("slots")
           .select("id, order_index, screen_delay_secs, host_content, screen1_content, screen2_content")
-          .eq("lesson_id", s.lesson_id)
+          .eq("lesson_id", lessonId)
           .is("session_id", null)
           .order("order_index");
         // Same shared word-cloud key the Host stamps, so screens and Host agree.
@@ -118,7 +129,7 @@ function RemotePage() {
     return () => {
       cancelled = true;
     };
-  }, [sessionId]);
+  }, [lessonId]);
 
   // Realtime: stay in sync with the session row
   useEffect(() => {

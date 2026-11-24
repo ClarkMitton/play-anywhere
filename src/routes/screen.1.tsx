@@ -11,6 +11,7 @@ import { sounds } from "@/lib/audio";
 import { CodeEntry } from "@/components/CodeEntry";
 import { SlotRenderer, type SlotContent } from "@/components/SlotRenderer";
 import { SessionEndScreen } from "@/components/SessionEndScreen";
+import { HandoverWarningBanner } from "@/components/SessionHandover";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 
 export const Route = createFileRoute("/screen/1")({
@@ -64,6 +65,8 @@ export function ScreenJoin({ role, autoCode }: { role: "screen1" | "screen2"; au
   const [session, setSession] = useState<SessionRow | null>(null);
   const [lessonMeta, setLessonMeta] = useState<LessonMeta | null>(null);
   const [hostPaused, setHostPaused] = useState(false);
+  // "This session ends in 2:00" — sent by the Host when a next session is planned.
+  const [handover, setHandover] = useState<{ endsAt: number; nextTitle?: string } | null>(null);
   const channelRef = useRef<RealtimeChannel | null>(null);
 
   const codeColumn = role === "screen1" ? "screen1_code" : "screen2_code";
@@ -159,6 +162,13 @@ export function ScreenJoin({ role, autoCode }: { role: "screen1" | "screen2"; au
     ch.on("broadcast", { event: "host_visibility" }, ({ payload }: { payload: { visible: boolean } }) => {
       setHostPaused(!payload.visible);
     });
+    ch.on(
+      "broadcast",
+      { event: "handover_warning" },
+      ({ payload }: { payload: { endsAt: number; nextTitle?: string } }) => {
+        if (typeof payload?.endsAt === "number") setHandover(payload);
+      },
+    );
     ch.subscribe();
 
     markConnected(sessionId);
@@ -250,13 +260,18 @@ export function ScreenJoin({ role, autoCode }: { role: "screen1" | "screen2"; au
   }
 
   return (
-    <DelayedScreen
-      session={session}
-      role={role}
-      sessionId={sessionId ?? undefined}
-      channel={channelRef.current ?? undefined}
-      hostPaused={hostPaused}
-    />
+    <>
+      <DelayedScreen
+        session={session}
+        role={role}
+        sessionId={sessionId ?? undefined}
+        channel={channelRef.current ?? undefined}
+        hostPaused={hostPaused}
+      />
+      {handover && handover.endsAt > Date.now() && (
+        <HandoverWarningBanner endsAt={handover.endsAt} nextTitle={handover.nextTitle} />
+      )}
+    </>
   );
 }
 

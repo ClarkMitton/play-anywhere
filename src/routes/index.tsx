@@ -81,11 +81,18 @@ function Launcher() {
           <div className="text-xs uppercase tracking-[0.4em] text-[color:var(--cyan)]">Bradford College</div>
           <h1 className="text-4xl font-extrabold mt-1 text-glow">Immersive Learning</h1>
         </div>
-        <Link to="/admin">
-          <Button variant="outline" className="h-12 px-6 uppercase tracking-widest">
-            Build
-          </Button>
-        </Link>
+        <div className="flex gap-3">
+          <Link to="/day">
+            <Button variant="outline" className="h-12 px-6 uppercase tracking-widest">
+              Plan the day
+            </Button>
+          </Link>
+          <Link to="/admin">
+            <Button variant="outline" className="h-12 px-6 uppercase tracking-widest">
+              Build
+            </Button>
+          </Link>
+        </div>
       </header>
 
       <main className="px-8 pb-16 max-w-5xl mx-auto">

@@ -14,6 +14,7 @@ import { StatusDot } from "@/components/StatusDot";
 import { SlotRenderer, type SlotContent } from "@/components/SlotRenderer";
 import { SessionEndScreen } from "@/components/SessionEndScreen";
 import { HostTimerOverlay, hostTimer } from "@/components/HostTimerOverlay";
+import { SessionHandover, readDayPlan, writeDayPlan, atToday, fmtTime } from "@/components/SessionHandover";
 import { Button } from "@/components/ui/button";
 import { QRCodeSVG } from "qrcode.react";
 
@@ -533,7 +534,87 @@ function HostScreen() {
     }, 1000);
   };
 
+  // Move this same session onto another lesson's first slide. The touch screens
+  // follow the session row, so they switch too without re-entering codes.
+  const switchToLesson = async (lessonId: string): Promise<boolean> => {
+    if (!session) return false;
+    const { data: rows, error } = await supabase
+      .from("slots")
+      .select("id, order_index, name, screen_delay_secs, host_content, screen1_content, screen2_content")
+      .eq("lesson_id", lessonId)
+      .is("session_id", null)
+      .order("order_index");
+    const next = (rows ?? []) as SlotDef[];
+    if (error || next.length === 0) return false;
+    const { error: upErr } = await supabase
+      .from("sessions")
+      .update({
+        lesson_id: lessonId,
+        status: "active",
+        ended_at: null,
+        current_slot_index: 0,
+        state: {
+          slot: slotState(next[0]),
+          indices: { host: 0, screen1: 0, screen2: 0 },
+          screen_delay_secs: 0,
+        } as never,
+      })
+      .eq("id", session.id);
+    if (upErr) return false;
+    setSlots(next);
+    return true;
+  };
+
+  // A planned day can launch its first lesson by itself at its start time.
+  const [dayStart, setDayStart] = useState<{ at: string; title?: string } | null>(null);
+  useEffect(() => {
+    if (session?.status !== "waiting") return setDayStart(null);
+    const p = readDayPlan(session.id);
+    setDayStart(p?.startAt ? { at: p.startAt, title: p.firstTitle } : null);
+  }, [session?.id, session?.status]);
+  const autoLaunchRef = useRef<() => void>(() => {});
+  autoLaunchRef.current = () => {
+    if (!session || session.status !== "waiting") return;
+    if (session.screen1_connected && session.screen2_connected) launch();
+    // Give Touch Screen 2 a minute to join before going one-screen.
+    else if (session.screen1_connected && dayStart && Date.now() >= atToday(dayStart.at) + 60_000)
+      startOneScreen();
+    else return; // keep trying until the screens are there
+    const p = readDayPlan(session.id);
+    if (p) writeDayPlan(session.id, { ...p, startAt: undefined });
+  };
+  useEffect(() => {
+    if (!dayStart) return;
+    const id = window.setInterval(() => {
+      if (Date.now() >= atToday(dayStart.at)) autoLaunchRef.current();
+    }, 1000);
+    return () => window.clearInterval(id);
+  }, [dayStart]);
+
   const endSession = async () => {
+    if (!session) return;
+    // With a next session planned, ending would send every screen home and
+    // nobody would be there to start the next one. Offer to move on instead.
+    const next = readDayPlan(session.id)?.steps[0];
+    if (next && !next.end) {
+      if (
+        window.confirm(
+          `"${next.lessonTitle}" is set to start at ${fmtTime(next.at)}.
+
+OK: move all screens to it now.
+Cancel: keep this lesson running until then.`,
+        )
+      ) {
+        const plan = readDayPlan(session.id)!;
+        if (await switchToLesson(next.lessonId)) writeDayPlan(session.id, { ...plan, steps: plan.steps.slice(1) });
+        window.dispatchEvent(new Event("day-plan-changed"));
+      }
+      return;
+    }
+    await endNow();
+  };
+
+  const endNow = async () => {
     if (!session) return;
     await supabase
       .from("sessions")
@@ -624,6 +705,14 @@ function HostScreen() {
           />
         </div>
         <HostTimerOverlay channel={channelRef.current} slotIndex={session.current_slot_index} />
+        <SessionHandover
+          sessionId={session.id}
+          channel={channelRef.current}
+          currentLessonId={session.lesson_id}
+          onSwitch={switchToLesson}
+          onEnd={endNow}
+          hidden={inPreview}
+        />
         {needsFullscreenClick && !inPreview && <FullscreenPrompt onClick={enterFullscreen} />}
       </div>
     );
@@ -656,6 +745,14 @@ function HostScreen() {
           />
         </div>
         <HostTimerOverlay channel={channelRef.current} slotIndex={session.current_slot_index} />
+        <SessionHandover
+          sessionId={session.id}
+          channel={channelRef.current}
+          currentLessonId={session.lesson_id}
+          onSwitch={switchToLesson}
+          onEnd={endNow}
+          hidden={inPreview}
+        />
         {needsFullscreenClick && !inPreview && <FullscreenPrompt onClick={enterFullscreen} />}
       </div>
     );
@@ -719,6 +816,17 @@ function HostScreen() {
       {/* Step 13: timeout banner or normal launch button */}
       <div className="max-w-6xl mx-auto mt-6 text-center">
 
+        {dayStart && (
+          <div className="mx-auto max-w-xl mb-6 rounded-2xl border border-[color:var(--cyan)]/50 bg-card/60 p-4 space-y-3">
+            <div className="text-sm">
+              <span className="text-[color:var(--cyan)] font-bold uppercase tracking-widest text-xs">Day planned · </span>
+              {dayStart.title ?? "The first lesson"} starts by itself at {fmtTime(dayStart.at)}.
+            </div>
+            <Button variant="outline" onClick={enterFullscreen} className="uppercase tracking-widest text-xs">
+              ⛶ Go fullscreen now (before you leave)
+            </Button>
+          </div>
+        )}
         {countdownDone && !session?.screen2_connected ? (
           // ── Screen 2 timeout banner ──
           <div className="animate-slot-in space-y-6">
