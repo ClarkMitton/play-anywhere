@@ -12,6 +12,48 @@ What proves itself here is collected in [WAYS-OF-WORKING.md](WAYS-OF-WORKING.md)
 
 ---
 
+## ESOL Past Simple: Who Ate the Cake?
+
+- **Built:** 24 November 2026
+- **For:** Shamim Nizami, ESOL Entry 2
+- **Length:** 120 minutes, 27 steps. Two long table tasks (the party story, 18 minutes; the alibi, 22 minutes), about 55 minutes in all at the whiteboard tables, four whole-class moves
+- **Source:** Shamim's `past simple updated.ppt` (25 slides, "Rules and tools Entry 2"), plus everything found for it: the Ellii video "Simple Past", BBC Learning English "Easy English Conversations 13: What did you do at the weekend?", two Wordwalls found through Google, two Canva pictures for hotspots
+- **Lesson file:** [esol-past-simple.sql](esol-past-simple.sql)
+- **Pictures:** Shamim's slides rebuilt as eleven pictures (one tall, for the touch screens), the two Canva pictures and two composed task slides, in `public/lessons/esol-past-simple/` and the media storage
+- **Table packs:** none. Whiteboard tables yes, no printing, as asked.
+
+### WWW in the build
+
+- **Clark chose before building:** one 120-minute session, Entry 2, tables with no printing, the "party, then alibi" shape, and three objectives (form the past; say what happened; compare stories). A short follow-up question settled "1 x 120" as one session, not two.
+- **One story for two hours.** The first hour reads a living room the morning after a birthday party (what happened?). The second hour finds who ate the birthday cake in the kitchen (the alibi). The closing step answers both opening questions.
+- **Every feature has a job.** Two hotspot pictures (eight things that happened at the party, then nine clues in the kitchen, each with a detective's question), a whiteboard where learners draw lines from verbs to Shamim's spelling families, a group sort and an unjumble on the touch screens, a designed slide for the alibi rules.
+- **Shamim's seven spelling-pattern slides became verb families:** predict on the tables, draw the lines on the touch screens, then the answers. Her Yesterday / Last Saturday / This morning questions became the detectives' question bank, shown tall on the touch screens during the alibi.
+- **Two videos, five jobs.** Ellii (the series from her adjectives and comparatives lessons) is cut three ways: -ed, irregular listen-and-repeat, and its practice as a race. The BBC conversation gives the questions in real use, then its "your turn" section has learners answer in pairs. Both transcripts were read in full, and the Ellii practice gaps from still frames.
+- **Hotspot circles checked on the picture.** Each circle was drawn onto the image and looked at before building; two overlapping ones were tightened.
+- **The two pictures came back right first time:** eight clear party clues and nine kitchen clues, no people, no words.
+- **Checked before anyone runs it.** All 27 steps passed the app's content rules, the SQL ran against a real database engine, and every picture loads from the media storage.
+
+### Even better if (build)
+
+- The lesson was not clicked through in the preview. Tap every hotspot there and move any circle that misses.
+- The second hour's teaching steps are labelled Apply, because lesson phases cannot go backwards. In the room they teach questions before the alibi.
+- The kitchen clock shows about ten to eleven, not eleven.
+- The alibi needs two confident suspects per table. A table of three works with one detective.
+- The unjumble's last questions were not all read (its page shows the first seven).
+- The holder deck "ESOL Past Simple Stills" is still in Clark's Canva.
+
+### WWW in the room
+
+_To fill in after the lesson has been taught._
+
+-
+
+### Even better if (room)
+
+-
+
+---
+
 ## SEND 3: ADHD, Autism and Dyslexia (Monika, staff CPD)
 
 - **Built:** 24 November 2026
