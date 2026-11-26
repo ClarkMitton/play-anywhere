@@ -4,7 +4,9 @@
 --   step 12: the table wheel lists 4 tables;
 --   step 22: Spot the difference is done at the tables from the big screen
 --            (list the changes, tag each H / N / L, name what did not change),
---            so there is no move to the screens and no tapping.
+--            so there is no move to the screens and no tapping;
+--   steps 17 and 24: slides 8 and 14 (the carousel and plan instructions)
+--            on the touch screens, because the timers hide the big screen.
 -- Pictures: lesson-media/lessons/send3v2/ (22 slides and 2 task sheets).
 -- Replaces any earlier SEND 3 lesson with the same title.
 -- ─────────────────────────────────────────────────────────────
@@ -103,8 +105,8 @@ from new_lesson nl, (values
     '{"type": "text_slide", "title": "Start here", "text": "What does Ryan know that he can''t show?\nWhat was the task assessing: the electrics or the spelling?\nStretch: his timed test is in six weeks. What has to happen before then, and who does it?", "size": "lg"}'),
   (16, 'Carousel', 'Establish', 2, 'screen1_continue',
     '{"type": "rotation_timer", "label": "Read their four boxes. Add one idea to their Needs now box.", "details": "Then go back to your own table and read what they added. Stretch: add a Needs later idea too.", "rounds": 1, "round_secs": 105, "move_secs": 15, "move_text": "Move one table clockwise."}',
-    '{"type": "text_slide", "text": "Move one table on", "size": "xl"}',
-    '{"type": "text_slide", "text": "Move one table on", "size": "xl"}'),
+    '{"type": "image", "url": "https://sxrhecwyhqwdwwfawojn.supabase.co/storage/v1/object/public/lesson-media/lessons/send3v2/send3v2-slide-08.jpg", "file_name": "send3v2-slide-08.jpg"}',
+    '{"type": "image", "url": "https://sxrhecwyhqwdwwfawojn.supabase.co/storage/v1/object/public/lesson-media/lessons/send3v2/send3v2-slide-08.jpg", "file_name": "send3v2-slide-08.jpg"}'),
   (17, 'Ryan: reveal', 'Establish', 0.25, 'screen1_continue',
     '{"type": "embed", "url": "https://edpuzzle.com/embed/media/6b0563f7dbefec481d2c7679", "description": "Edpuzzle video: Ryan reveal clip (12 s, silent). Press Play; move on when it ends."}',
     '{"type": "text_slide", "text": "Ryan · dyslexia", "size": "xl"}',
@@ -131,8 +133,8 @@ from new_lesson nl, (values
     '{"type": "embed", "url": "https://www.canva.com/design/DAHb0XovLpo/kRah0QLTu9A3nxVpZ3wCiw/view?embed", "description": "Sort the toolkit (Canva Code): eleven college tools to sort into understand the need, adapt the lesson, and learners'' own tools, with a check button and a ''Show why'' line for each tool."}'),
   (23, 'Spin for your learner', 'Apply', 0.5, 'screen1_continue',
     '{"type": "wheel_spinner", "prompt": "Spin for your learner", "items": ["Kai", "Amira", "Ryan"]}',
-    '{"type": "text_slide", "text": "Spin for your learner", "size": "xl"}',
-    '{"type": "text_slide", "text": "Spin for your learner", "size": "xl"}'),
+    '{"type": "image", "url": "https://sxrhecwyhqwdwwfawojn.supabase.co/storage/v1/object/public/lesson-media/lessons/send3v2/send3v2-slide-14.jpg", "file_name": "send3v2-slide-14.jpg"}',
+    '{"type": "image", "url": "https://sxrhecwyhqwdwwfawojn.supabase.co/storage/v1/object/public/lesson-media/lessons/send3v2/send3v2-slide-14.jpg", "file_name": "send3v2-slide-14.jpg"}'),
   (24, 'Plan for your learner', 'Apply', 11, 'screen1_continue',
     '{"type": "countdown_timer", "label": "Plan, then adapt one task", "duration_secs": 660}',
     '{"type": "embed", "url": "https://lessonweaver.online", "description": "Lesson Weaver, for a pair without a tablet."}',
