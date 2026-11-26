@@ -1913,6 +1913,32 @@ function ContentTypeForm({
               className="bg-background/60 border-border focus-visible:border-[color:var(--cyan)] min-h-[100px] resize-y"
             />
           </div>
+          {screen === "host" && (
+            <div className="space-y-1.5">
+              <Label className="text-[10px] uppercase tracking-widest text-muted-foreground">
+                Link button (optional, big screen only: opens in a new tab, e.g. a Kahoot)
+              </Label>
+              <Input
+                value={String((content.link as { url?: string } | undefined)?.url ?? "")}
+                onChange={(e) => {
+                  const url = e.target.value.trim();
+                  const label = (content.link as { label?: string } | undefined)?.label;
+                  onChange({ link: url ? { url, ...(label ? { label } : {}) } : undefined });
+                }}
+                placeholder="https://…"
+                className="bg-background/60 border-border focus-visible:border-[color:var(--cyan)]"
+              />
+              <Input
+                value={String((content.link as { label?: string } | undefined)?.label ?? "")}
+                onChange={(e) => {
+                  const url = (content.link as { url?: string } | undefined)?.url;
+                  if (url) onChange({ link: { url, ...(e.target.value ? { label: e.target.value } : {}) } });
+                }}
+                placeholder="Button text, e.g. Open the Kahoot"
+                className="bg-background/60 border-border focus-visible:border-[color:var(--cyan)]"
+              />
+            </div>
+          )}
           <div className="space-y-1.5">
             <Label className="text-[10px] uppercase tracking-widest text-muted-foreground">
               Size

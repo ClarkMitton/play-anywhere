@@ -12,6 +12,44 @@ What proves itself here is collected in [WAYS-OF-WORKING.md](WAYS-OF-WORKING.md)
 
 ---
 
+## Customer Service and Professional Image
+
+- **Built:** 26 November 2026
+- **For:** Level 1 Hairdressing, week 1 theory
+- **Length:** 90 minutes, 26 steps: Launch 12, Establish 36, Apply 28, Demonstrate 14
+- **Source:** `Customer service ppt week 1 theory.pptx` (8 slides), `professional image ppt week 1 theory.ppt` (9 slides), and the "Presenting a professional image quiz" Kahoot
+- **Lesson file:** [salon-image-customer-service.sql](salon-image-customer-service.sql)
+- **Pictures:** her uniform, what-to-wear, body language and Equality Act pictures, composed into five slides, plus a tall slide of her six clients for the touch screens, in `public/lessons/salon-image-customer-service/` and the media storage
+- **Table packs:** none. Whiteboard tables yes, nothing printed.
+
+### WWW in the build
+
+- **The brief was agreed first.** Clark chose tables yes, no printing, all four objectives, and a salon code of conduct as the product.
+- **Her picture slides became table activities.** 'What to wear' is a numbered tick-or-cross, 'Positive or negative?' is a numbered P or N with an answer slide, and her six clients are spun on the wheel and planned, then acted at reception.
+- **Predict before every reveal.** Learners draw a professional stylist before her list, and name the laws they know before her law slides.
+- **The app gained a link button.** Kahoot refuses to be shown inside the lesson, and Clark wanted "just a clickable link". A text slide can now carry a link, shown as a big button on the big screen only (touch screens never get it), set in the designer under "Link button". It was tested in the preview on a throwaway lesson, which was then deleted.
+- **Checked before anyone runs it.** All 26 steps passed the app's content rules, the SQL ran against a real database engine, and every picture loads from the media storage.
+
+### Even better if (build)
+
+- One picture from her 'What to wear' slide was left out: a meme captioned "Latesha Ruined Casual Friday For Everyone" that mocks a Black woman's body. Worth telling the teacher.
+- Her client "A Romanian client with poor English skills" is "a client with little English" on the wheel, so no nationality is named on the big screen.
+- Her deck's pictures are mostly young white women. The salon photo and the uniform pair add some mix; a later rebuild could add more.
+- The Kahoot needs phones (one per table in Team mode). The note gives a fallback if phones are not allowed.
+- 26 steps is long; several are two-minute slides. Watch the pace in the middle.
+
+### WWW in the room
+
+_To fill in after the lesson has been taught._
+
+-
+
+### Even better if (room)
+
+-
+
+---
+
 ## ESOL Past Simple: Who Ate the Cake?
 
 - **Built:** 24 November 2026

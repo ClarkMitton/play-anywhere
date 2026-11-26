@@ -64,7 +64,7 @@ function Confetti({ count = 44 }: { count?: number }) {
 
 export type SlotContent =
   | { type: "waiting" }
-  | { type: "text_slide"; text: string; title?: string; subtitle?: string; size?: "sm" | "md" | "lg" | "xl" | "2xl"; color?: string }
+  | { type: "text_slide"; text: string; title?: string; subtitle?: string; size?: "sm" | "md" | "lg" | "xl" | "2xl"; color?: string; link?: { url: string; label?: string } }
   | { type: "youtube"; url: string }
   | { type: "video"; url: string; file_name?: string; loop?: boolean }
   | { type: "audio"; url: string; file_name?: string; title?: string }
@@ -160,6 +160,19 @@ export function SlotRenderer({
                 <div className="mt-4 text-[2.4vw] text-muted-foreground font-semibold leading-snug whitespace-pre-line">
                   {c.subtitle}
                 </div>
+              )}
+              {/* A site that refuses to be embedded (Kahoot, for one) opens in a new tab
+                  from the big screen. Touch screens never get the button: learners
+                  should not leave the lesson. */}
+              {c.link?.url && screen === "host" && (
+                <a
+                  href={c.link.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-block mt-[5vh] rounded-full bg-[color:var(--cyan)] text-black font-extrabold uppercase tracking-widest px-[3vw] py-[1.6vh] text-[2.2vw] shadow-xl hover:scale-105 transition-transform"
+                >
+                  {c.link.label || "Open"} ↗
+                </a>
               )}
             </div>
           </div>

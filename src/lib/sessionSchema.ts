@@ -67,6 +67,8 @@ const textSlide = z.object({
   subtitle: z.string().optional(),
   size: z.enum(["sm", "md", "lg", "xl", "2xl"]).optional(),
   color: z.string().optional(),
+  /** A page that cannot be embedded (Kahoot), opened in a new tab from the Host only. */
+  link: z.object({ url: z.string().min(1), label: z.string().optional() }).optional(),
 });
 
 const image = z.object({
