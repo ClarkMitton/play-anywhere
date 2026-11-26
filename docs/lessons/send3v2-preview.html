@@ -1,0 +1,390 @@
+<!doctype html>
+<html lang="en-GB"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SEND 3 Preview</title>
+<style>
+:root{--bg:#0b141a;--panel:#13222b;--ink:#e8eef2;--muted:#8ea3b0;--line:#24394a;--cyan:#22d3ee;--red:#f87171;--amber:#fbbf24}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 "Segoe UI",system-ui,sans-serif}
+.wrap{max-width:1180px;margin:0 auto;padding:20px 16px 80px}
+h1{margin:0 0 4px;font-size:26px}.lede{color:var(--muted);margin:0 0 14px}
+.todo{background:#2a1416;border:1px solid #7f1d1d;border-radius:12px;padding:14px 16px;margin-bottom:18px}
+.todo h3{margin:0 0 8px;color:var(--red);font-size:16px}.todo ol{margin:0;padding-left:20px}.todo a{color:#fecaca}
+.bar{position:sticky;top:0;z-index:5;background:rgba(11,20,26,.95);backdrop-filter:blur(4px);display:flex;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line);margin-bottom:14px;flex-wrap:wrap}
+.bar button{background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:6px 12px;font:inherit;cursor:pointer}
+.bar button.on{border-color:var(--cyan);color:var(--cyan)}.bar .count{color:var(--muted);margin-left:auto;font-size:13px}
+body.one .step{display:none}body.one .step.cur{display:block}
+.step{scroll-margin-top:60px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:16px}
+.step.flagged{border-color:#7f1d1d}
+header{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px}
+header h2{margin:0;font-size:18px}.n{width:30px;height:30px;border-radius:50%;border:2px solid var(--ink);display:grid;place-items:center;font-weight:800;font-size:13px}
+.ph{font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:2px 8px;border-radius:99px;background:#1e3a46;color:var(--cyan)}
+.ph-Establish{color:#a7f3d0;background:#14352b}.ph-Apply{color:#fde68a;background:#3a2f12}.ph-Demonstrate{color:#f5d0fe;background:#3b1a40}
+.tm{margin-left:auto;color:var(--muted);font-size:13px}
+.need{background:#2a1416;border:1px solid #7f1d1d;border-radius:8px;padding:6px 10px;color:#fecaca;font-size:13.5px;margin-bottom:10px}
+.screens{display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap}
+figure{margin:0}figcaption{font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:4px}
+.host{flex:1 1 560px;min-width:0}
+.scr{background:#05090c;border:1px solid var(--line);border-radius:8px;overflow:hidden;position:relative}
+.scr.wide{width:100%;aspect-ratio:16/9}.scr.tall{width:170px;aspect-ratio:9/16}
+.scr.img img{width:100%;height:100%;object-fit:contain;display:block}
+.txt{display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:12px;background:radial-gradient(circle at 50% 30%,#10303a,#05090c)}
+.tt{font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--cyan);border:1px solid #155e75;border-radius:6px;padding:2px 8px;margin-bottom:8px}
+.tb{font-weight:700}.wide .tb{font-size:26px}.tall .tb{font-size:15px}.tall .tb.s-xl{font-size:17px}.tall .tb.s-lg{font-size:14px}
+.vid{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;text-align:center;padding:10px}
+.play{font-size:40px;opacity:.6}.lbl{color:var(--muted);font-size:13px}.miss{color:var(--red);font-weight:800;font-size:13px;border:1px solid var(--red);border-radius:6px;padding:2px 8px}
+.emb iframe{width:100%;height:calc(100% - 26px);border:0;background:#fff;display:block}.cap{font-size:11px;color:var(--muted);padding:5px 8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.act{padding:12px;display:flex;flex-direction:column;gap:6px;background:radial-gradient(circle at 50% 0,#10303a,#05090c)}
+.kind{font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--cyan);font-weight:700}
+.q{font-weight:700}.wide .q{font-size:18px}.tall .q{font-size:13px}.sub{font-size:12.5px;color:#c9d6de}
+.note{font-size:11px;color:var(--amber)}
+.scale{display:flex;gap:5px}.scale span{flex:1;border:1px solid #155e75;border-radius:6px;text-align:center;padding:4px 0;font-weight:700}
+.input{border:1px dashed #155e75;border-radius:6px;padding:6px;font-size:12px;color:var(--muted)}
+.cloud{flex:1;display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;justify-content:center;color:#a5f3fc}
+.opt{border:1px solid #155e75;border-radius:6px;padding:4px 8px;font-size:13px}
+.notes{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;flex:1}.notes span{background:#fef3c7;opacity:.85;border-radius:4px}
+.buzz{margin:auto;width:110px;height:110px;border-radius:50%;background:#dc2626;display:grid;place-items:center;font-weight:900;font-size:20px}
+.ql{margin:0;padding-left:18px;font-size:12.5px}.ql b{color:var(--amber)}
+.wheel{display:flex;flex-wrap:wrap;gap:4px}.wheel span{border:1px solid #155e75;border-radius:99px;padding:2px 8px;font-size:12px}
+.big{font-size:44px;font-weight:800;text-align:center}
+.spot{padding:8px;display:flex;flex-direction:column;gap:5px;background:#05090c}.spotimg{position:relative}.spotimg img{width:100%;display:block;border-radius:4px}.spotimg i{position:absolute;transform:translate(-50%,-50%);border:2px solid #22c55e;border-radius:50%}
+.tutor{margin-top:10px;border-top:1px dashed var(--line);padding-top:8px;font-size:13.5px;color:#c9d6de}.tutor p{margin:0 0 4px}
+@media (max-width:700px){.host{flex-basis:100%}.scr.tall{width:140px}}
+</style></head><body>
+<div class="wrap">
+<h1>SEND 3: ADHD, Autism and Dyslexia</h1>
+<p class="lede">A preview built from <code>send3v2.sql</code>, made before it goes into the portal. 32 steps, 60 minutes. Slides, the Canva Code and Lesson Weaver are live; word clouds, votes and quizzes are drawn as stand-ins for how the app shows them.</p>
+<div class="todo"><h3>Still needed (4)</h3><ol><li><a href="#s1" data-go="1">Step 1</a>: Slide 1 still shows [Companion QR] and [time] (Monika to send)</li><li><a href="#s23" data-go="23">Step 23</a>: Cheat sheets printed two-sided, one per person, handed out at the end of this step</li><li><a href="#s25" data-go="25">Step 25</a>: Tablets logged in to Lesson Weaver, one per pair</li><li><a href="#s29" data-go="29">Step 29</a>: Slide 19 still shows [Route and timescales] and [Route] (Disability Services, via Monika)</li></ol></div>
+<div class="bar"><button id="all" class="on">All steps</button><button id="one">One at a time</button><button id="prev">◀ Prev</button><button id="next">Next ▶</button><button id="flag">Only flagged</button><span class="count" id="count"></span></div>
+<section class="step flagged" id="s1" data-phase="Launch">
+  <header><span class="n">1</span><h2>Arrival</h2><span class="ph ph-Launch">Launch</span><span class="tm">starts 0:00 · 2 min</span></header>
+  <div class="need"><div>⚠ Slide 1 still shows [Companion QR] and [time] (Monika to send)</div></div>
+  <div class="screens">
+    <figure class="host"><figcaption>Big screen</figcaption><div class="scr wide img"><img loading="lazy" src="https://sxrhecwyhqwdwwfawojn.supabase.co/storage/v1/object/public/lesson-media/lessons/send3v2/send3v2-slide-01.jpg" alt=""></div></figure>
+    <figure><figcaption>Touch Screen 1 &amp; 2</figcaption><div class="scr tall act"><div class="kind">Confidence check · start</div><div class="q">How confident are you adapting a lesson for a learner with ADHD, autism or dyslexia?</div><div class="scale"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span></div></div></figure>
+    
+  </div>
+  <div class="tutor"><p><b>Say:</b> Welcome. Scan the QR and set up your Companion, tap how confident you feel on a touch screen, then talk about the question on your table.</p><p><b>Watch for:</b> Learners: arriving past the touch screens, then at the tables. Four boxes and the arrival question already on every table: &quot;Think of a learner you found hard to reach. What did you try?&quot; No names. Technique: baseline confidence, compared on the way out.</p></div>
+</section>
+<section class="step" id="s2" data-phase="Launch">
+  <header><span class="n">2</span><h2>Welcome</h2><span class="ph ph-Launch">Launch</span><span class="tm">starts 2:00 · 0.5 min</span></header>
+  
+  <div class="screens">
+    <figure class="host"><figcaption>Big screen</figcaption><div class="scr wide img"><img loading="lazy" src="https://sxrhecwyhqwdwwfawojn.supabase.co/storage/v1/object/public/lesson-media/lessons/send3v2/send3v2-slide-02.jpg" alt=""></div></figure>
+    <figure><figcaption>Touch Screen 1 &amp; 2</figcaption><div class="scr tall txt"><div class="tb s-xl">SEND 3 · 60 minutes</div></div></figure>
+    
+  </div>
+  <div class="tutor"><p><b>Say:</b> We start with a short video of a learner, then your tables do the work.</p><p><b>Watch for:</b> Learners: at the tables. Thirty seconds. Technique: share the plan first (no surprises).</p></div>
+</section>
+<section class="step" id="s3" data-phase="Launch">
+  <header><span class="n">3</span><h2>Today's question</h2><span class="ph ph-Launch">Launch</span><span class="tm">starts 2:30 · 0.5 min</span></header>
+  
+  <div class="screens">
+    <figure class="host"><figcaption>Big screen</figcaption><div class="scr wide img"><img loading="lazy" src="https://sxrhecwyhqwdwwfawojn.supabase.co/storage/v1/object/public/lesson-media/lessons/send3v2/send3v2-slide-03.jpg" alt=""></div></figure>
+    <figure><figcaption>Touch Screen 1 &amp; 2</figcaption><div class="scr tall txt"><div class="tt">Today's question</div><div class="tb s-lg">How do you plan for a learner whose needs nobody has told you about?</div></div></figure>
+    
+  </div>
+  <div class="tutor"><p><b>Say:</b> How do you plan for a learner whose needs nobody has told you about? We answer it at the end.</p><p><b>Watch for:</b> Learners: at the tables. No answers yet. The four objectives climb; each is checked by something staff do. Technique: a hook the last step answers.</p></div>
+</section>
+<section class="step" id="s4" data-phase="Launch">
+  <header><span class="n">4</span><h2>Kai's video</h2><span class="ph ph-Launch">Launch</span><span class="tm">starts 3:00 · 2 min</span></header>
+  
+  <div class="screens">
+    <figure class="host"><figcaption>Big screen</figcaption><div class="scr wide emb"><iframe loading="lazy" src="https://edpuzzle.com/embed/media/6b056151dc89dc4886703c22"></iframe><div class="cap">Embed · Edpuzzle video: Kai, 17 (1:37). Press Play on the big screen; move on when it ends.</div></div></figure>
+    <figure><figcaption>Touch Screen 1 &amp; 2</figcaption><div class="scr tall txt"><div class="tb s-xl">Kai, 17<br>watch the big screen</div></div></figure>
+    
+  </div>
+  <div class="tutor"><p><b>Say:</b> Watch. Nobody talks until it ends.</p><p><b>Watch for:</b> Learners: at the tables, full focus. Press Play; move on when it ends. Technique: full-focus video.</p></div>
+</section>
+<section class="step" id="s5" data-phase="Launch">
+  <header><span class="n">5</span><h2>How did Kai feel?</h2><span class="ph ph-Launch">Launch</span><span class="tm">starts 5:00 · 1.5 min</span></header>
+  
+  <div class="screens">
+    <figure class="host"><figcaption>Big screen</figcaption><div class="scr wide act"><div class="kind">Word cloud</div><div class="q">One word your table agrees on: how did Kai feel?</div><div class="cloud"><span style="font-size:28px">anxious</span> <span>bored</span> <span style="font-size:22px">lost</span> <span>restless</span> <span style="font-size:18px">embarrassed</span></div><div class="note">Example words only</div></div></figure>
+    <figure><figcaption>Touch Screen 1 &amp; 2</figcaption><div class="scr tall act"><div class="kind">Word cloud</div><div class="q">One word your table agrees on: how did Kai feel?</div><div class="input">Type a word… <b>Send</b></div></div></figure>
+    
+  </div>
+  <div class="tutor"><p><b>Say:</b> Everyone write your own word for how Kai felt. Then agree one as a table, and a runner adds it on a touch screen.</p><p><b>Watch for:</b> Learners: at the tables, then one runner per table. Ask: did anyone write &quot;lazy&quot;? Stretch: which word would his teacher have chosen? Technique: think alone, agree together, send a runner.</p></div>
+</section>
+<section class="step" id="s6" data-phase="Establish">
+  <header><span class="n">6</span><h2>Round 1: Kai</h2><span class="ph ph-Establish">Establish</span><span class="tm">starts 6:30 · 3.5 min</span></header>
+  
+  <div class="screens">
+    <figure class="host"><figcaption>Big screen</figcaption><div class="scr wide img"><img loading="lazy" src="https://sxrhecwyhqwdwwfawojn.supabase.co/storage/v1/object/public/lesson-media/lessons/send3v2/send3v2-slide-04.jpg" alt=""></div></figure>
+    <figure><figcaption>Touch Screen 1 &amp; 2</figcaption><div class="scr tall txt"><div class="tt">Start here</div><div class="tb s-lg">What did Kai want when he walked in?<br>At what exact moment did the lesson stop working for him?<br>Stretch: which of his needs will still be there at work, and who needs to know?</div></div></figure>
+    
+  </div>
+  <div class="tutor"><p><b>Say:</b> Fill in the four boxes for Kai as a table. The questions are on the touch screens.</p><p><b>Watch for:</b> Learners: at the tables. Add Timer 3:30 from your phone. Circulate and push: &quot;What in his words tells you that?&quot; &quot;What are we assuming?&quot; Technique: attempt before the reveal.</p></div>
+</section>
+<section class="step" id="s7" data-phase="Establish">
+  <header><span class="n">7</span><h2>Kai: reveal</h2><span class="ph ph-Establish">Establish</span><span class="tm">starts 10:00 · 0.25 min</span></header>
+  
+  <div class="screens">
+    <figure class="host"><figcaption>Big screen</figcaption><div class="scr wide emb"><iframe loading="lazy" src="https://edpuzzle.com/embed/media/6b0563c2dc89dc488670d4dc"></iframe><div class="cap">Embed · Edpuzzle video: Kai reveal clip (12 s, silent). Press Play; move on when it ends.</div></div></figure>
+    <figure><figcaption>Touch Screen 1 &amp; 2</figcaption><div class="scr tall txt"><div class="tb s-xl">Kai · ADHD</div></div></figure>
+    
+  </div>
+  <div class="tutor"><p><b>Say:</b> (Read the reveal aloud: the clip is silent.)</p><p><b>Watch for:</b> Learners: at the tables. Technique: reveal after prediction.</p></div>
+</section>
+<section class="step" id="s8" data-phase="Establish">
+  <header><span class="n">8</span><h2>Hide the pile</h2><span class="ph ph-Establish">Establish</span><span class="tm">starts 10:15 · 1.25 min</span></header>
+  
+  <div class="screens">
+    <figure class="host"><figcaption>Big screen</figcaption><div class="scr wide img"><img loading="lazy" src="https://sxrhecwyhqwdwwfawojn.supabase.co/storage/v1/object/public/lesson-media/lessons/send3v2/send3v2-slide-05.jpg" alt=""></div></figure>
+    <figure><figcaption>Touch Screen 1 &amp; 2</figcaption><div class="scr tall txt"><div class="tb s-xl">Hide the pile</div></div></figure>
+    
+  </div>
+  <div class="tutor"><p><b>Say:</b> Hide the pile. Compare it with your Needs now box: what did you get that the card hasn't? Say it back.</p><p><b>Watch for:</b> Learners: at the tables. Kai's support agreement was already on EBS. Disability Services, one line if wanted: hyperfocus is common in ADHD. Photograph the boxes, then wipe.</p></div>
+</section>
+<section class="step" id="s9" data-phase="Establish">
+  <header><span class="n">9</span><h2>Amira's video</h2><span class="ph ph-Establish">Establish</span><span class="tm">starts 11:30 · 1.5 min</span></header>
+  
+  <div class="screens">
+    <figure class="host"><figcaption>Big screen</figcaption><div class="scr wide emb"><iframe loading="lazy" src="https://edpuzzle.com/embed/media/6b05612cdc89dc48867032af"></iframe><div class="cap">Embed · Edpuzzle video: Amira, 26 (1:31). Press Play; move on when it ends.</div></div></figure>
+    <figure><figcaption>Touch Screen 1 &amp; 2</figcaption><div class="scr tall txt"><div class="tb s-xl">Amira, 26<br>watch the big screen</div></div></figure>
+    
+  </div>
+  <div class="tutor"><p><b>Say:</b> Watch. Nobody talks until it ends.</p><p><b>Watch for:</b> Learners: at the tables, full focus.</p></div>
+</section>
+<section class="step" id="s10" data-phase="Establish">
+  <header><span class="n">10</span><h2>Round 2: Amira</h2><span class="ph ph-Establish">Establish</span><span class="tm">starts 13:00 · 3 min</span></header>
+  
+  <div class="screens">
+    <figure class="host"><figcaption>Big screen</figcaption><div class="scr wide img"><img loading="lazy" src="https://sxrhecwyhqwdwwfawojn.supabase.co/storage/v1/object/public/lesson-media/lessons/send3v2/send3v2-slide-04.jpg" alt=""></div></figure>
+    <figure><figcaption>Touch Screen 1 &amp; 2</figcaption><div class="scr tall txt"><div class="tt">Start here</div><div class="tb s-lg">What did Amira need before she walked through the door?<br>Which of the teacher's words could mean three different things?<br>Stretch: nothing was on EBS. What could her teachers have put in place anyway?</div></div></figure>
+    
+  </div>
+  <div class="tutor"><p><b>Say:</b> Fill in the four boxes for Amira.</p><p><b>Watch for:</b> Learners: at the tables. Add Timer 3:00. Technique: attempt before the reveal.</p></div>
+</section>
+<section class="step" id="s11" data-phase="Establish">
+  <header><span class="n">11</span><h2>Did Amira cope?</h2><span class="ph ph-Establish">Establish</span><span class="tm">starts 16:00 · 1 min</span></header>
+  
+  <div class="screens">
+    <figure class="host"><figcaption>Big screen</figcaption><div class="scr wide act"><div class="kind">Vote</div><div class="q">Did Amira cope?</div><div class="opt">A · Yes</div><div class="opt">B · No</div><div class="opt">C · She looked fine, but she wasn’t</div></div></figure>
+    <figure><figcaption>Touch Screen 1 &amp; 2</figcaption><div class="scr tall act"><div class="kind">Vote</div><div class="q">Did Amira cope?</div><div class="opt">A · Yes</div><div class="opt">B · No</div><div class="opt">C · She looked fine, but she wasn’t</div></div></figure>
+    
+  </div>
+  <div class="tutor"><p><b>Say:</b> Agree one answer as a table. One runner votes on a touch screen.</p><p><b>Watch for:</b> Learners: at the tables, one runner per table. A and C both look right: that is the point. Technique: best-answer vote.</p></div>
+</section>
+<section class="step" id="s12" data-phase="Establish">
+  <header><span class="n">12</span><h2>Defend your vote</h2><span class="ph ph-Establish">Establish</span><span class="tm">starts 17:00 · 1.5 min</span></header>
+  
+  <div class="screens">
+    <figure class="host"><figcaption>Big screen</figcaption><div class="scr wide act"><div class="kind">Wheel</div><div class="q">Defend your vote</div><div class="wheel"><span>Table 1</span><span>Table 2</span><span>Table 3</span><span>Table 4</span></div></div></figure>
+    <figure><figcaption>Touch Screen 1 &amp; 2</figcaption><div class="scr tall img"><img loading="lazy" src="https://sxrhecwyhqwdwwfawojn.supabase.co/storage/v1/object/public/lesson-media/lessons/send3v2/send3v2-slide-06.jpg" alt=""></div></figure>
+    
+  </div>
+  <div class="tutor"><p><b>Say:</b> The wheel picks a table: defend your vote. &quot;Don't overthink it.&quot; What did the teacher mean, and what did Amira hear?</p><p><b>Watch for:</b> Learners: at the tables. Any table can answer back. Technique: justify a position.</p></div>
+</section>
+<section class="step" id="s13" data-phase="Establish">
+  <header><span class="n">13</span><h2>Amira: reveal</h2><span class="ph ph-Establish">Establish</span><span class="tm">starts 18:30 · 0.25 min</span></header>
+  
+  <div class="screens">
+    <figure class="host"><figcaption>Big screen</figcaption><div class="scr wide emb"><iframe loading="lazy" src="https://edpuzzle.com/embed/media/6b0562a4cd9f17d1b8cf87df"></iframe><div class="cap">Embed · Edpuzzle video: Amira reveal clip (12 s, silent). Press Play; move on when it ends.</div></div></figure>
+    <figure><figcaption>Touch Screen 1 &amp; 2</figcaption><div class="scr tall txt"><div class="tb s-xl">Amira · autism</div></div></figure>
+    
+  </div>
+  <div class="tutor"><p><b>Say:</b> (Read the reveal aloud: the clip is silent.)</p><p><b>Watch for:</b> Learners: at the tables.</p></div>
+</section>
+<section class="step" id="s14" data-phase="Establish">
+  <header><span class="n">14</span><h2>No surprises</h2><span class="ph ph-Establish">Establish</span><span class="tm">starts 18:45 · 1.25 min</span></header>
+  
+  <div class="screens">
+    <figure class="host"><figcaption>Big screen</figcaption><div class="scr wide img"><img loading="lazy" src="https://sxrhecwyhqwdwwfawojn.supabase.co/storage/v1/object/public/lesson-media/lessons/send3v2/send3v2-slide-07.jpg" alt=""></div></figure>
+    <figure><figcaption>Touch Screen 1 &amp; 2</figcaption><div class="scr tall txt"><div class="tb s-xl">No surprises</div></div></figure>
+    
+  </div>
+  <div class="tutor"><p><b>Say:</b> No surprises. Compare with your boxes and say it back. This session sent its outline with the invite: who noticed?</p><p><b>Watch for:</b> Learners: at the tables. Amira chose not to disclose: nothing on EBS would have warned you. Photograph, wipe.</p></div>
+</section>
+<section class="step" id="s15" data-phase="Establish">
+  <header><span class="n">15</span><h2>Ryan's video</h2><span class="ph ph-Establish">Establish</span><span class="tm">starts 20:00 · 1.5 min</span></header>
+  
+  <div class="screens">
+    <figure class="host"><figcaption>Big screen</figcaption><div class="scr wide emb"><iframe loading="lazy" src="https://edpuzzle.com/embed/media/6b056291dbefec481d2bff1c"></iframe><div class="cap">Embed · Edpuzzle video: Ryan, 21 (1:29). Press Play; move on when it ends.</div></div></figure>
+    <figure><figcaption>Touch Screen 1 &amp; 2</figcaption><div class="scr tall txt"><div class="tb s-xl">Ryan, 21<br>watch the big screen</div></div></figure>
+    
+  </div>
+  <div class="tutor"><p><b>Say:</b> Watch. Nobody talks until it ends.</p><p><b>Watch for:</b> Learners: at the tables, full focus. Write the carousel instruction on the whiteboard now: the rotation timer hides the slide.</p></div>
+</section>
+<section class="step" id="s16" data-phase="Establish">
+  <header><span class="n">16</span><h2>Round 3: Ryan</h2><span class="ph ph-Establish">Establish</span><span class="tm">starts 21:30 · 3 min</span></header>
+  
+  <div class="screens">
+    <figure class="host"><figcaption>Big screen</figcaption><div class="scr wide img"><img loading="lazy" src="https://sxrhecwyhqwdwwfawojn.supabase.co/storage/v1/object/public/lesson-media/lessons/send3v2/send3v2-slide-04.jpg" alt=""></div></figure>
+    <figure><figcaption>Touch Screen 1 &amp; 2</figcaption><div class="scr tall txt"><div class="tt">Start here</div><div class="tb s-lg">What does Ryan know that he can't show?<br>What was the task assessing: the electrics or the spelling?<br>Stretch: his timed test is in six weeks. What has to happen before then, and who does it?</div></div></figure>
+    
+  </div>
+  <div class="tutor"><p><b>Say:</b> Fill in the four boxes for Ryan. Then wait for the carousel.</p><p><b>Watch for:</b> Learners: at the tables. Add Timer 3:00.</p></div>
+</section>
+<section class="step" id="s17" data-phase="Establish">
+  <header><span class="n">17</span><h2>Carousel</h2><span class="ph ph-Establish">Establish</span><span class="tm">starts 24:30 · 2 min</span></header>
+  
+  <div class="screens">
+    <figure class="host"><figcaption>Big screen</figcaption><div class="scr wide act"><div class="kind">Rotation timer · 1 round × 1:45</div><div class="q">Read their four boxes. Add one idea to their Needs now box.</div><div class="sub">Then go back to your own table and read what they added. Stretch: add a Needs later idea too.</div><div class="sub"><b>Move:</b> Move one table clockwise.</div><div class="note">Hides the slide while it runs</div></div></figure>
+    <figure><figcaption>Touch Screen 1 &amp; 2</figcaption><div class="scr tall txt"><div class="tb s-xl">Move one table on</div></div></figure>
+    
+  </div>
+  <div class="tutor"><p><b>Say:</b> Move one table clockwise, all together. Read their boxes and add one idea to Needs now.</p><p><b>Watch for:</b> Learners: WHOLE-CLASS MOVE 1, one table on and back. Technique: build on another table's work.</p></div>
+</section>
+<section class="step" id="s18" data-phase="Establish">
+  <header><span class="n">18</span><h2>Ryan: reveal</h2><span class="ph ph-Establish">Establish</span><span class="tm">starts 26:30 · 0.25 min</span></header>
+  
+  <div class="screens">
+    <figure class="host"><figcaption>Big screen</figcaption><div class="scr wide emb"><iframe loading="lazy" src="https://edpuzzle.com/embed/media/6b0563f7dbefec481d2c7679"></iframe><div class="cap">Embed · Edpuzzle video: Ryan reveal clip (12 s, silent). Press Play; move on when it ends.</div></div></figure>
+    <figure><figcaption>Touch Screen 1 &amp; 2</figcaption><div class="scr tall txt"><div class="tb s-xl">Ryan · dyslexia</div></div></figure>
+    
+  </div>
+  <div class="tutor"><p><b>Say:</b> (Read the reveal aloud: the clip is silent.)</p><p><b>Watch for:</b> Learners: back at their own tables.</p></div>
+</section>
+<section class="step" id="s19" data-phase="Establish">
+  <header><span class="n">19</span><h2>Lower the language</h2><span class="ph ph-Establish">Establish</span><span class="tm">starts 26:45 · 1.25 min</span></header>
+  
+  <div class="screens">
+    <figure class="host"><figcaption>Big screen</figcaption><div class="scr wide img"><img loading="lazy" src="https://sxrhecwyhqwdwwfawojn.supabase.co/storage/v1/object/public/lesson-media/lessons/send3v2/send3v2-slide-09.jpg" alt=""></div></figure>
+    <figure><figcaption>Touch Screen 1 &amp; 2</figcaption><div class="scr tall txt"><div class="tb s-xl">Lower the language, not the thinking</div></div></figure>
+    
+  </div>
+  <div class="tutor"><p><b>Say:</b> Lower the language, not the thinking. Compare and say it back.</p><p><b>Watch for:</b> Learners: at the tables. Ryan has never been assessed: only an assessment can say, so never tell a learner they are dyslexic. Disability Services, one line: exam access arrangements, refer early. Photograph, wipe.</p></div>
+</section>
+<section class="step" id="s20" data-phase="Apply">
+  <header><span class="n">20</span><h2>None needs a diagnosis</h2><span class="ph ph-Apply">Apply</span><span class="tm">starts 28:00 · 0.5 min</span></header>
+  
+  <div class="screens">
+    <figure class="host"><figcaption>Big screen</figcaption><div class="scr wide img"><img loading="lazy" src="https://sxrhecwyhqwdwwfawojn.supabase.co/storage/v1/object/public/lesson-media/lessons/send3v2/send3v2-slide-10.jpg" alt=""></div></figure>
+    <figure><figcaption>Touch Screen 1 &amp; 2</figcaption><div class="scr tall txt"><div class="tb s-xl">Ask the learner what helps</div></div></figure>
+    
+  </div>
+  <div class="tutor"><p><b>Say:</b> None of them needs a diagnosis. For every learner: ask them what helps.</p><p><b>Watch for:</b> Learners: at the tables. The turning point from the learners to your lessons.</p></div>
+</section>
+<section class="step" id="s21" data-phase="Apply">
+  <header><span class="n">21</span><h2>Spin the swap</h2><span class="ph ph-Apply">Apply</span><span class="tm">starts 28:30 · 3 min</span></header>
+  
+  <div class="screens">
+    <figure class="host"><figcaption>Big screen</figcaption><div class="scr wide act"><div class="kind">Wheel</div><div class="q">Spin the swap: rewrite it in 30 seconds</div><div class="wheel"><span>Just get started.</span><span>Any questions?</span><span>It's easy, you'll be fine.</span><span>Copy this down from the board.</span><span>We're in a different room today.</span><span>Read it out for us.</span><span>Work in groups of four.</span><span>Finish it for homework.</span></div></div></figure>
+    <figure><figcaption>Touch Screen 1 &amp; 2</figcaption><div class="scr tall img"><img loading="lazy" src="https://sxrhecwyhqwdwwfawojn.supabase.co/storage/v1/object/public/lesson-media/lessons/send3v2/send3v2-slide-11.jpg" alt=""></div></figure>
+    
+  </div>
+  <div class="tutor"><p><b>Say:</b> The wheel lands on something teachers say. Thirty seconds: rewrite it on your table, then hold it up. The room picks the best.</p><p><b>Watch for:</b> Learners: at the tables, whiteboard pens. Four or five spins. Ask the winning table which strategy it used. Technique: retrieval through rewriting, fast and competitive.</p></div>
+</section>
+<section class="step" id="s22" data-phase="Apply">
+  <header><span class="n">22</span><h2>Spot the difference</h2><span class="ph ph-Apply">Apply</span><span class="tm">starts 31:30 · 3 min</span></header>
+  
+  <div class="screens">
+    <figure class="host"><figcaption>Big screen</figcaption><div class="scr wide img"><img loading="lazy" src="https://sxrhecwyhqwdwwfawojn.supabase.co/storage/v1/object/public/lesson-media/lessons/send3v2/send3v2-slide-12.jpg" alt=""></div></figure>
+    <figure><figcaption>Touch Screen 1</figcaption><div class="scr tall img"><img loading="lazy" src="https://sxrhecwyhqwdwwfawojn.supabase.co/storage/v1/object/public/lesson-media/lessons/send3v2/send3v2-spot-before.jpg" alt=""></div></figure>
+    <figure><figcaption>Touch Screen 2</figcaption><div class="scr tall img"><img loading="lazy" src="https://sxrhecwyhqwdwwfawojn.supabase.co/storage/v1/object/public/lesson-media/lessons/send3v2/send3v2-spot-after.jpg" alt=""></div></figure>
+  </div>
+  <div class="tutor"><p><b>Say:</b> Same task sheet, before and after, on the big screen. As a table: list every change, and tag each one H (hide the pile), N (no surprises) or L (lower the language). Then: what is the one thing that did not change?</p><p><b>Watch for:</b> Learners: at the tables, no move. The touch screens show each sheet close up for a runner who wants a better look. Answers, with the strategy each uses: the plan, the time and what finished looks like at the top (N); Step 1 of 4, one step at a time (H); tick boxes (H); key words taught first (L); the matrix on the sheet, not copied from the board (L); Listen to this sheet (L); write it or record it (L); a clear layout (L). Some fit two: accept a good argument. Unchanged: the thinking (still rate, control, justify, summarise). Ask one table for its tags, then another to challenge one. Technique: analyse a worked example before building your own.</p></div>
+</section>
+<section class="step flagged" id="s23" data-phase="Apply">
+  <header><span class="n">23</span><h2>Sort the toolkit</h2><span class="ph ph-Apply">Apply</span><span class="tm">starts 34:30 · 3 min</span></header>
+  <div class="need"><div>⚠ Cheat sheets printed two-sided, one per person, handed out at the end of this step</div></div>
+  <div class="screens">
+    <figure class="host"><figcaption>Big screen</figcaption><div class="scr wide img"><img loading="lazy" src="https://sxrhecwyhqwdwwfawojn.supabase.co/storage/v1/object/public/lesson-media/lessons/send3v2/send3v2-slide-13.jpg" alt=""></div></figure>
+    <figure><figcaption>Touch Screen 1 &amp; 2</figcaption><div class="scr tall emb"><iframe loading="lazy" src="https://www.canva.com/design/DAHb0XovLpo/kRah0QLTu9A3nxVpZ3wCiw/view?embed"></iframe><div class="cap">Embed · Sort the toolkit (Canva Code): eleven college tools to sort into understand the need, adapt the lesson, and learners' own tools, with a check button and a 'Show why' line for each tool.</div></div></figure>
+    
+  </div>
+  <div class="tutor"><p><b>Say:</b> In pairs on your tablet: sort the college tools into understand the need, adapt the lesson, and learners' own tools.</p><p><b>Watch for:</b> Learners: at the tables, in pairs on tablets (link: canva.com/design/DAHb0XovLpo/kRah0QLTu9A3nxVpZ3wCiw/view). Hand out the cheat sheets at the end. Technique: retrieve before you're told.</p></div>
+</section>
+<section class="step" id="s24" data-phase="Apply">
+  <header><span class="n">24</span><h2>Spin for your learner</h2><span class="ph ph-Apply">Apply</span><span class="tm">starts 37:30 · 0.5 min</span></header>
+  
+  <div class="screens">
+    <figure class="host"><figcaption>Big screen</figcaption><div class="scr wide act"><div class="kind">Wheel</div><div class="q">Spin for your learner</div><div class="wheel"><span>Kai</span><span>Amira</span><span>Ryan</span></div></div></figure>
+    <figure><figcaption>Touch Screen 1 &amp; 2</figcaption><div class="scr tall txt"><div class="tb s-xl">Spin for your learner</div></div></figure>
+    
+  </div>
+  <div class="tutor"><p><b>Say:</b> Each table builds for the learner the wheel lands on.</p><p><b>Watch for:</b> Learners: at the tables. Spin once per table. Write the plan slide's steps on the whiteboard now: the countdown hides it.</p></div>
+</section>
+<section class="step flagged" id="s25" data-phase="Apply">
+  <header><span class="n">25</span><h2>Plan for your learner</h2><span class="ph ph-Apply">Apply</span><span class="tm">starts 38:00 · 11 min</span></header>
+  <div class="need"><div>⚠ Tablets logged in to Lesson Weaver, one per pair</div></div>
+  <div class="screens">
+    <figure class="host"><figcaption>Big screen</figcaption><div class="scr wide act"><div class="kind">Countdown</div><div class="big">11:00</div><div class="q">Plan, then adapt one task</div></div></figure>
+    <figure><figcaption>Touch Screen 1</figcaption><div class="scr tall emb"><iframe loading="lazy" src="https://lessonweaver.online"></iframe><div class="cap">Embed · Lesson Weaver, for a pair without a tablet.</div></div></figure>
+    <figure><figcaption>Touch Screen 2</figcaption><div class="scr tall img"><img loading="lazy" src="https://sxrhecwyhqwdwwfawojn.supabase.co/storage/v1/object/public/lesson-media/lessons/send3v2/send3v2-slide-15.jpg" alt=""></div></figure>
+  </div>
+  <div class="tutor"><p><b>Say:</b> In pairs, one tablet: notes box (the need, not the label, and one strategy), generate the plan, make the Companion, pick one task and up to three scaffolds, then check it in the learner view against the six checks.</p><p><b>Watch for:</b> Learners: at the tables in pairs. Touch Screen 2 shows the six checks; check 6 matters most. Stretch: plan when each scaffold comes away. Circulate: &quot;Which task, and why? What will he notice first?&quot; Technique: create, then self-check against criteria.</p></div>
+</section>
+<section class="step" id="s26" data-phase="Demonstrate">
+  <header><span class="n">26</span><h2>Post your thinking</h2><span class="ph ph-Demonstrate">Demonstrate</span><span class="tm">starts 49:00 · 1.5 min</span></header>
+  
+  <div class="screens">
+    <figure class="host"><figcaption>Big screen</figcaption><div class="scr wide act"><div class="kind">Shared board · What we planned</div><div class="q">What we took into account · How we planned it · What it changes for [your learner] · The check ours meets best</div><div class="notes"><span></span><span></span><span></span></div></div></figure>
+    <figure><figcaption>Touch Screen 1 &amp; 2</figcaption><div class="scr tall act"><div class="kind">Shared board · What we planned</div><div class="q">What we took into account · How we planned it · What it changes for [your learner] · The check ours meets best</div><div class="input">Type your post… <b>Post</b></div></div></figure>
+    
+  </div>
+  <div class="tutor"><p><b>Say:</b> One of you types your notes on a touch screen. The other keeps testing.</p><p><b>Watch for:</b> Learners: one runner per pair. As the board fills, read two posts aloud: &quot;What will that learner notice first?&quot; This board is the evidence of learning. Technique: capture the product.</p></div>
+</section>
+<section class="step" id="s27" data-phase="Demonstrate">
+  <header><span class="n">27</span><h2>Myth or truth?</h2><span class="ph ph-Demonstrate">Demonstrate</span><span class="tm">starts 50:30 · 4 min</span></header>
+  
+  <div class="screens">
+    <figure class="host"><figcaption>Big screen</figcaption><div class="scr wide act"><div class="kind">Buzzer quiz · Touch Screen 1 v Touch Screen 2</div><ol class="ql"><li>Adults don't have ADHD: people grow out of it. <b>MYTH</b></li><li>You can't spot dyslexia in someone still learning English. <b>MYTH</b></li><li>Many autistic adults aren't diagnosed until later in life. <b>TRUE</b></li><li>Autistic people don't feel empathy. <b>MYTH</b></li><li>Dyslexia can affect memory and organisation, not only reading. <b>TRUE</b></li><li>If they can focus on a game for hours, it can't be ADHD. <b>MYTH</b></li></ol></div></figure>
+    <figure><figcaption>Touch Screen 1 &amp; 2</figcaption><div class="scr tall act"><div class="kind">Buzzer quiz · Touch Screen 1 v Touch Screen 2</div><div class="buzz">BUZZ</div></div></figure>
+    
+  </div>
+  <div class="tutor"><p><b>Say:</b> Everyone to the touch screens, one team at each. Buzz, then say myth or truth. A different person buzzes each time.</p><p><b>Watch for:</b> Learners: WHOLE-CLASS MOVE 2. Disability Services add one line after each answer: this is where the condition knowledge lands. Technique: fast recall, competitive.</p></div>
+</section>
+<section class="step" id="s28" data-phase="Demonstrate">
+  <header><span class="n">28</span><h2>What would you say to Ryan?</h2><span class="ph ph-Demonstrate">Demonstrate</span><span class="tm">starts 54:30 · 3 min</span></header>
+  
+  <div class="screens">
+    <figure class="host"><figcaption>Big screen</figcaption><div class="scr wide act"><div class="kind">Vote</div><div class="q">What would you say to Ryan?</div><div class="opt">A · A: “Have you ever been tested for dyslexia?”</div><div class="opt">B · B: “I’ve noticed reading aloud seems hard work. Would it help to talk to someone about support?”</div><div class="opt">C · C: “Don’t worry, loads of people find reading hard.”</div></div></figure>
+    <figure><figcaption>Touch Screen 1 &amp; 2</figcaption><div class="scr tall act"><div class="kind">Vote</div><div class="q">What would you say to Ryan?</div><div class="opt">A · A: “Have you ever been tested for dyslexia?”</div><div class="opt">B · B: “I’ve noticed reading aloud seems hard work. Would it help to talk to someone about support?”</div><div class="opt">C · C: “Don’t worry, loads of people find reading hard.”</div></div></figure>
+    
+  </div>
+  <div class="tutor"><p><b>Say:</b> Back to your tables. Thirty seconds: write the opening line you would use with Ryan. Then a runner votes: which of these would you say?</p><p><b>Watch for:</b> Learners: at the tables, one runner per table. Disability Services: why B. In private; start with what they do well; say what you noticed, not a label; never name a condition, offer support and ask what helps. Then ask a table to read its own line. Technique: rehearse the words.</p></div>
+</section>
+<section class="step flagged" id="s29" data-phase="Demonstrate">
+  <header><span class="n">29</span><h2>Your questions</h2><span class="ph ph-Demonstrate">Demonstrate</span><span class="tm">starts 57:30 · 2 min</span></header>
+  <div class="need"><div>⚠ Slide 19 still shows [Route and timescales] and [Route] (Disability Services, via Monika)</div></div>
+  <div class="screens">
+    <figure class="host"><figcaption>Big screen</figcaption><div class="scr wide img"><img loading="lazy" src="https://sxrhecwyhqwdwwfawojn.supabase.co/storage/v1/object/public/lesson-media/lessons/send3v2/send3v2-slide-19.jpg" alt=""></div></figure>
+    <figure><figcaption>Touch Screen 1</figcaption><div class="scr tall img"><img loading="lazy" src="https://sxrhecwyhqwdwwfawojn.supabase.co/storage/v1/object/public/lesson-media/lessons/send3v2/send3v2-slide-19.jpg" alt=""></div></figure>
+    <figure><figcaption>Touch Screen 2</figcaption><div class="scr tall img"><img loading="lazy" src="https://sxrhecwyhqwdwwfawojn.supabase.co/storage/v1/object/public/lesson-media/lessons/send3v2/send3v2-slide-22.jpg" alt=""></div></figure>
+  </div>
+  <div class="tutor"><p><b>Say:</b> Disability Services: your questions from the table corners, and who to go to.</p><p><b>Watch for:</b> Learners: at the tables. Touch Screen 2 shows next steps (STEP and Big 4) to photograph. CHECK slide 19 has the real referral route and timescales before the session.</p></div>
+</section>
+<section class="step" id="s30" data-phase="Demonstrate">
+  <header><span class="n">30</span><h2>Your pledge</h2><span class="ph ph-Demonstrate">Demonstrate</span><span class="tm">starts 59:30 · 1 min</span></header>
+  
+  <div class="screens">
+    <figure class="host"><figcaption>Big screen</figcaption><div class="scr wide img"><img loading="lazy" src="https://sxrhecwyhqwdwwfawojn.supabase.co/storage/v1/object/public/lesson-media/lessons/send3v2/send3v2-slide-20.jpg" alt=""></div></figure>
+    <figure><figcaption>Touch Screen 1 &amp; 2</figcaption><div class="scr tall txt"><div class="tt">Your pledge</div><div class="tb s-xl">Start · Stop · One learner (no names)</div></div></figure>
+    
+  </div>
+  <div class="tutor"><p><b>Say:</b> Start one thing, stop one thing, and think of one learner, no names. On your table and your cheat sheet.</p><p><b>Watch for:</b> Learners: at the tables, on their own. Photograph each table.</p></div>
+</section>
+<section class="step" id="s31" data-phase="Demonstrate">
+  <header><span class="n">31</span><h2>Today's question, answered</h2><span class="ph ph-Demonstrate">Demonstrate</span><span class="tm">starts 60:30 · 0.5 min</span></header>
+  
+  <div class="screens">
+    <figure class="host"><figcaption>Big screen</figcaption><div class="scr wide img"><img loading="lazy" src="https://sxrhecwyhqwdwwfawojn.supabase.co/storage/v1/object/public/lesson-media/lessons/send3v2/send3v2-slide-21.jpg" alt=""></div></figure>
+    <figure><figcaption>Touch Screen 1 &amp; 2</figcaption><div class="scr tall txt"><div class="tb s-xl">Hide the pile.<br>No surprises.<br>Lower the language, not the thinking.</div></div></figure>
+    
+  </div>
+  <div class="tutor"><p><b>Say:</b> How do you plan for a learner whose needs nobody has told you about? Say them back. Check EBS. Use the tools. Ask the learner. Before you go: log in to ThreadWorks to accept your tag.</p><p><b>Watch for:</b> Learners: at the tables. One spare minute is built in before the exit. One week: a short quiz. Two weeks: rebuild one of your own lessons. Technique: close the loop the hook opened.</p></div>
+</section>
+<section class="step" id="s32" data-phase="Demonstrate">
+  <header><span class="n">32</span><h2>On your way out</h2><span class="ph ph-Demonstrate">Demonstrate</span><span class="tm">starts 61:00 · 1.5 min</span></header>
+  
+  <div class="screens">
+    <figure class="host"><figcaption>Big screen</figcaption><div class="scr wide act"><div class="kind">Confidence check · final</div><div class="q">How confident are you adapting a lesson for a learner with ADHD, autism or dyslexia?</div><div class="scale"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span></div><div class="note">Big screen compares Start with Final</div></div></figure>
+    <figure><figcaption>Touch Screen 1 &amp; 2</figcaption><div class="scr tall act"><div class="kind">Confidence check · final</div><div class="q">How confident are you adapting a lesson for a learner with ADHD, autism or dyslexia?</div><div class="scale"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span></div></div></figure>
+    
+  </div>
+  <div class="tutor"><p><b>Say:</b> Same question as when you arrived. Tap it on your way out.</p><p><b>Watch for:</b> Learners: leaving past the touch screens. The big screen compares Start and Final.</p></div>
+</section>
+</div>
+<script>
+const steps=[...document.querySelectorAll('.step')];let cur=0;
+const count=document.getElementById('count');
+function show(i,scroll=true){cur=Math.max(0,Math.min(steps.length-1,i));steps.forEach((s,k)=>s.classList.toggle('cur',k===cur));count.textContent='Step '+(cur+1)+' of '+steps.length;if(scroll&&!document.body.classList.contains('one'))steps[cur].scrollIntoView({behavior:'smooth',block:'start'})}
+document.getElementById('all').onclick=()=>{document.body.classList.remove('one');all.classList.add('on');one.classList.remove('on');steps.forEach(s=>s.style.display='')};
+document.getElementById('one').onclick=()=>{document.body.classList.add('one');one.classList.add('on');all.classList.remove('on');steps.forEach(s=>s.style.display='');show(cur)};
+document.getElementById('prev').onclick=()=>show(cur-1);document.getElementById('next').onclick=()=>show(cur+1);
+document.getElementById('flag').onclick=e=>{const on=e.target.classList.toggle('on');steps.forEach(s=>s.style.display=on&&!s.classList.contains('flagged')?'none':'')};
+document.querySelectorAll('[data-go]').forEach(a=>a.onclick=e=>{e.preventDefault();show(+a.dataset.go-1);if(document.body.classList.contains('one'))return;});
+document.addEventListener('keydown',e=>{if(e.key==='ArrowRight')show(cur+1);if(e.key==='ArrowLeft')show(cur-1)});
+show(0,false);
+</script>
+</body></html>
