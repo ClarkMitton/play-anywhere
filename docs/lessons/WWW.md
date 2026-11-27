@@ -34,7 +34,7 @@ What proves itself here is collected in [WAYS-OF-WORKING.md](WAYS-OF-WORKING.md)
 
 ### Even better if (build)
 
-- The Tiny AI game is still to be made in Canva Code from the prompt. Steps 3 and 10 show a placeholder until its embed link is added.
+- Tiny AI is a Canva Code game ("Tiny AI classroom demo" in Clark's Canva), embedded through its Share → Embed link. Its first version overflowed a 16:9 screen (right side and bottom cut off); fixed in Canva Code with a "fit the window" follow-up prompt.
 - The holder deck used to export the Canva pictures ("AI predicts lesson") is still in Clark's Canva.
 - AI picture results change as the tools improve; a rerun next term may get the clock right.
 
