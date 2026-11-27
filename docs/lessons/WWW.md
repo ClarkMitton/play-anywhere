@@ -12,6 +12,44 @@ What proves itself here is collected in [WAYS-OF-WORKING.md](WAYS-OF-WORKING.md)
 
 ---
 
+## AI Predicts, It Doesn't Think (Us vs AI, rebuilt)
+
+- **Built:** 27 November 2026
+- **For:** a Level 2 class, any course, staff and learners new to the room
+- **Length:** 60 minutes, 23 steps: Launch 10, Establish 18, Apply 20, Demonstrate 12
+- **Source:** the first Us vs AI lesson and `USvsAI/AI Introductions.txt`; the sandwich clip; a Canva Code "Tiny AI"; three Canva AI pictures made for the lesson
+- **Lesson file:** [ai-predicts.sql](ai-predicts.sql)
+- **Pictures:** `public/lessons/ai-predicts/` and the media storage; two slides reused from `us-vs-ai`
+- **Table packs:** none. Whiteboard tables yes, nothing printed.
+
+### WWW in the build
+
+- **One objective, not four.** Clark felt the first lesson tried to do too much. The rebuild has one idea (AI predicts from patterns, it does not think) and every step serves it. Prompting, trust and "AI in your course" are kept for follow-on lessons.
+- **The starter is Clark's idea: a word pool.** Tiny AI (Canva Code) has read three sentences, so its replies loop. Tables answer a question with only its six words, then again with a 30-sentence pool. Bigger pool, better guesses, still guesses.
+- **Written for people new to the room.** Every step tells the big screen and both touch screens what to do; touch screens say "Stay at your table" rather than going blank; every move is announced on the big screen; every tutor note starts with where learners are and what to press.
+- **Touch-screen whiteboards twice:** drawing a watch at half past three, and "Be the AI" (six sentence starters; both screens write the same words, which is the point).
+- **A hotspot game with real AI mistakes.** Canva's AI was asked for a clock at half past three, a left-handed writer and a full glass. It drew about 10:30, a right-handed writer, a three-quarters glass and scribbled writing. Four real mistakes to tap, as a race between the screens, and a correct WEDNESDAY as a trap.
+- **An honest watch slide.** The old slide's watches were asked to show 10:10, so they could not prove anything. This time both clocks are real results: the classroom clock pulled to 10, and a watch on its own came out right, which shows tools improving with a bigger pool.
+- **Checked before anyone runs it.** All 23 steps passed the app's content rules (including a new check that every tutor note starts with where learners are), the SQL ran against a real database engine, and the whiteboard and hotspot steps were opened in the preview on a throwaway lesson, which was deleted.
+
+### Even better if (build)
+
+- The Tiny AI game is still to be made in Canva Code from the prompt. Steps 3 and 10 show a placeholder until its embed link is added.
+- The holder deck used to export the Canva pictures ("AI predicts lesson") is still in Clark's Canva.
+- AI picture results change as the tools improve; a rerun next term may get the clock right.
+
+### WWW in the room
+
+_To fill in after the lesson has been taught._
+
+-
+
+### Even better if (room)
+
+-
+
+---
+
 ## Customer Service and Professional Image
 
 - **Built:** 26 November 2026
