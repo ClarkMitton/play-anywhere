@@ -704,7 +704,7 @@ Cancel: keep this lesson running until then.`,
             onEnd={endSession}
           />
         </div>
-        <HostTimerOverlay channel={channelRef.current} slotIndex={session.current_slot_index} />
+        <HostTimerOverlay channel={channelRef.current} slotIndex={session.current_slot_index} autoSeconds={(session.state?.slot?.host as { timer_secs?: number } | undefined)?.timer_secs} />
         <SessionHandover
           sessionId={session.id}
           channel={channelRef.current}
@@ -744,7 +744,7 @@ Cancel: keep this lesson running until then.`,
             onEnd={endSession}
           />
         </div>
-        <HostTimerOverlay channel={channelRef.current} slotIndex={session.current_slot_index} />
+        <HostTimerOverlay channel={channelRef.current} slotIndex={session.current_slot_index} autoSeconds={(session.state?.slot?.host as { timer_secs?: number } | undefined)?.timer_secs} />
         <SessionHandover
           sessionId={session.id}
           channel={channelRef.current}

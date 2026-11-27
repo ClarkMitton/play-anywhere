@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tiny AI</title>
+<!--
+  Tiny AI: a next-word predictor for the "AI Predicts, It Doesn't Think" lesson.
+  It counts which word follows which in a pool of training sentences (a bigram
+  model) and shows the likely next words. The tutor clicks; the class predicts.
+  Self-contained: no network, no libraries. Laid out on a 1920x1080 stage that
+  is scaled to fit any window, so nothing is ever cut off.
+-->
+<style>
+  :root { --bg:#0e1a33; --panel:#16264a; --line:#28406f; --ink:#f4f6fb; --muted:#9fb0d0; --orange:#ff8a1f; --orange2:#ffb066; --green:#3ccf8e; }
+  * { box-sizing: border-box; }
+  html, body { margin:0; height:100%; background:var(--bg); overflow:hidden; font-family:"Segoe UI", system-ui, -apple-system, Arial, sans-serif; color:var(--ink); }
+  #stage { position:absolute; left:0; top:0; width:1920px; height:1080px; transform-origin:0 0; padding:36px 56px; display:flex; flex-direction:column; gap:22px; }
+  button { font:inherit; color:inherit; cursor:pointer; border:none; }
+  header { display:flex; align-items:center; gap:28px; }
+  h1 { margin:0; font-size:50px; font-weight:800; letter-spacing:-0.5px; flex:1; }
+  h1 small { display:block; font-size:24px; font-weight:700; letter-spacing:4px; color:var(--orange); text-transform:uppercase; margin-bottom:6px; }
+  .pools { display:flex; background:var(--panel); border:3px solid var(--line); border-radius:999px; padding:6px; }
+  .pools button { font-size:30px; font-weight:800; padding:14px 34px; border-radius:999px; background:transparent; color:var(--muted); }
+  .pools button.on { background:var(--orange); color:#1b1206; }
+  .stats { display:flex; gap:16px; font-size:26px; color:var(--muted); }
+  .stats b { color:var(--orange2); font-size:30px; }
+  .icon { background:var(--panel); border:3px solid var(--line); border-radius:16px; font-size:24px; padding:12px 18px; color:var(--muted); }
+  .sentencebar { height:250px; flex:none; }
+  main { flex:1; min-height:0; display:grid; grid-template-columns: 1fr 1.15fr; gap:28px; }
+  .panel { background:var(--panel); border:3px solid var(--line); border-radius:28px; padding:22px 34px; display:flex; flex-direction:column; min-height:0; }
+  .label { font-size:24px; font-weight:800; letter-spacing:3px; color:var(--orange); text-transform:uppercase; margin-bottom:10px; }
+  #sentence { flex:1; min-height:0; font-size:66px; font-weight:800; line-height:1.15; overflow:hidden; word-wrap:break-word; }
+  #sentence .w { display:inline-block; margin-right:22px; }
+  #sentence .new { animation: pop .45s ease-out; color:var(--orange2); }
+  #sentence .placeholder { color:var(--muted); font-weight:600; font-size:56px; }
+  @keyframes pop { 0% { transform:scale(.4); opacity:0 } 70% { transform:scale(1.12) } 100% { transform:scale(1); opacity:1 } }
+  #message { font-size:30px; font-weight:800; color:var(--orange2); letter-spacing:0; text-transform:none; }
+  .starts { display:flex; flex-wrap:wrap; gap:14px; margin-top:6px; }
+  .starts button, .actions button { font-size:32px; font-weight:800; padding:18px 28px; border-radius:18px; background:#20345f; border:3px solid var(--line); }
+  .starts button:hover, .actions button:hover { border-color:var(--orange); }
+  .typebox { display:flex; gap:14px; margin-top:18px; }
+  .typebox input { flex:1; font:inherit; font-size:30px; padding:14px 20px; border-radius:16px; border:3px solid var(--line); background:#0f1c38; color:var(--ink); }
+  .typebox button { font-size:30px; font-weight:800; padding:14px 26px; border-radius:16px; background:var(--orange); color:#1b1206; }
+  #bars { flex:1; display:flex; flex-direction:column; gap:12px; justify-content:flex-start; }
+  .bar { position:relative; height:66px; flex:none; border-radius:20px; background:#0f1c38; border:3px solid var(--line); overflow:hidden; text-align:left; padding:0; }
+  .bar .fill { position:absolute; inset:0 auto 0 0; background:linear-gradient(90deg, #ff8a1f, #ffb066); opacity:.9; transition:width .5s ease-out; }
+  .bar .word { position:relative; font-size:42px; font-weight:800; padding-left:24px; line-height:60px; color:#fff; text-shadow:0 2px 6px rgba(0,0,0,.45); }
+  .bar .pct { position:absolute; right:24px; top:0; line-height:60px; font-size:34px; font-weight:800; color:#fff; text-shadow:0 2px 6px rgba(0,0,0,.45); }
+  .bar:hover { border-color:#fff; }
+  .bar.pick { outline:6px solid #fff; }
+  .empty { font-size:40px; color:var(--muted); font-weight:700; line-height:1.3; }
+  .actions { display:grid; grid-template-columns: 1.4fr 1fr 1fr; gap:24px; }
+  .actions button { font-size:38px; padding:20px; }
+  .actions .go { background:var(--orange); color:#1b1206; border-color:var(--orange); }
+  .actions .go.running { background:#7a4210; color:#fff; }
+  #learned { position:absolute; inset:150px 120px 120px; background:#0b1530; border:4px solid var(--orange); border-radius:28px; padding:34px 44px; display:none; flex-direction:column; z-index:5; box-shadow:0 30px 80px rgba(0,0,0,.6); }
+  #learned.open { display:flex; }
+  #learned h2 { margin:0 0 18px; font-size:44px; }
+  #learned ol { margin:0; padding-left:44px; columns:2; column-gap:60px; font-size:30px; line-height:1.45; overflow:hidden; }
+  #learned .close { align-self:flex-end; margin-top:16px; font-size:30px; font-weight:800; padding:14px 30px; border-radius:16px; background:var(--orange); color:#1b1206; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <header>
+    <h1><small>A classroom guessing game</small>Tiny AI: how a chatbot guesses the next word</h1>
+    <div class="stats"><span>Words I know: <b id="nWords">0</b></span><span>Sentences I learned from: <b id="nSent">0</b></span></div>
+    <div class="pools"><button id="poolSmall" class="on">SMALL POOL</button><button id="poolBig">BIG POOL</button></div>
+  </header>
+
+  <section class="panel sentencebar">
+    <div class="label" style="display:flex;gap:30px;align-items:baseline">Our sentence so far <span id="message"></span></div>
+    <div id="sentence"></div>
+  </section>
+
+  <main>
+    <section class="panel">
+      <div class="label">Choose a start</div>
+      <div class="starts" id="starts"></div>
+      <div class="typebox"><input id="typed" placeholder="Or type one word..." autocomplete="off"><button id="addTyped">Add word</button></div>
+    </section>
+    <section class="panel">
+      <div class="label">What comes next? <span style="color:var(--muted);letter-spacing:1px;text-transform:none;font-weight:600">Click a bar to add the word</span></div>
+      <div id="bars"></div>
+      <div style="display:flex;gap:14px;justify-content:flex-end">
+        <button class="icon" id="showLearned">Show what I learned from</button>
+        <button class="icon" id="mute">Sound: on</button>
+      </div>
+    </section>
+  </main>
+
+  <div class="actions">
+    <button class="go" id="auto">▶ Auto reply</button>
+    <button id="surprise">Surprise me</button>
+    <button id="reset">Start again</button>
+  </div>
+
+  <div id="learned"><h2 id="learnedTitle"></h2><ol id="learnedList"></ol><button class="close" id="closeLearned">Close</button></div>
+</div>
+
+<script>
+const SMALL = ["I like chips.", "I like my dog.", "My dog likes chips."];
+const BIG = SMALL.concat([
+  "I went to the park at the weekend.", "I went to work at the weekend.", "I went to see my friends at the weekend.",
+  "At the weekend I played football with my friends.", "At the weekend I watched a film with my family.",
+  "At the weekend I went shopping with my mum.", "I watched a film and ate pizza.", "I played games with my friends online.",
+  "My friends and I went to the cinema.", "We ate pizza and watched a film.", "I stayed at home and slept.",
+  "I went to college on Monday.", "I like college because my friends are there.", "My mum made a curry for tea.",
+  "We had chips for tea.", "I had a busy weekend.", "I had a quiet weekend at home.",
+  "My weekend was good because I saw my friends.", "My weekend was boring because it rained.",
+  "It rained all weekend so I stayed at home.", "I walked my dog in the park.", "My dog likes the park.",
+  "I went to the gym on Sunday.", "On Sunday I visited my nan.", "My nan made a big dinner.",
+  "I worked at the shop on Saturday.", "On Saturday I went to town with my friends."
+]);
+const START = "<s>";
+const PROPER = { i: "I", monday: "Monday", sunday: "Sunday", saturday: "Saturday" };
+
+const tokens = (s) => s.toLowerCase().replace(/\./g, " .").split(/\s+/).filter(Boolean);
+function train(sentences) {
+  const next = {}; const vocab = new Set();
+  for (const s of sentences) {
+    const t = [START, ...tokens(s)];
+    for (let i = 0; i < t.length - 1; i++) {
+      (next[t[i]] ??= {})[t[i + 1]] = (next[t[i]][t[i + 1]] ?? 0) + 1;
+      if (t[i + 1] !== ".") vocab.add(t[i + 1]);
+    }
+  }
+  return { next, vocab, sentences };
+}
+const MODELS = { small: train(SMALL), big: train(BIG) };
+
+let pool = new URLSearchParams(location.search).get("pool") === "big" ? "big" : "small", words = [], justAdded = -1, autoTimer = null, muted = false, message = "";
+const $ = (id) => document.getElementById(id);
+const show = (w, i) => (PROPER[w] ?? (i === 0 ? w[0].toUpperCase() + w.slice(1) : w));
+
+function options() {
+  const m = MODELS[pool];
+  const last = words.length ? words[words.length - 1] : START;
+  if (last === ".") return [];
+  const counts = m.next[last];
+  if (!counts) return null; // never seen this word
+  const total = Object.values(counts).reduce((a, b) => a + b, 0);
+  return Object.entries(counts).map(([w, c]) => ({ w, p: c / total }))
+    .sort((a, b) => b.p - a.p || (a.w === ".") - (b.w === ".") || a.w.localeCompare(b.w)).slice(0, 5);
+}
+
+function beep(f = 660) {
+  if (muted) return;
+  try {
+    const ctx = beep.ctx ??= new (window.AudioContext || window.webkitAudioContext)();
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.frequency.value = f; o.type = "triangle"; g.gain.value = 0.08;
+    o.connect(g); g.connect(ctx.destination); o.start();
+    g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.18); o.stop(ctx.currentTime + 0.2);
+  } catch {}
+}
+
+function add(w) {
+  words.push(w); justAdded = words.length - 1; beep(w === "." ? 880 : 620);
+  // Spot the loop: the same pair of words twice means it is going round in circles.
+  const pairs = new Set(); message = "";
+  for (let i = 0; i < words.length - 1; i++) {
+    const k = words[i] + " " + words[i + 1];
+    if (pairs.has(k)) { message = "It's going round in circles! It only knows these words."; break; }
+    pairs.add(k);
+  }
+  if (w === ".") message = "Full stop. Sentence finished.";
+  render();
+}
+
+function stopAuto() { clearInterval(autoTimer); autoTimer = null; $("auto").classList.remove("running"); $("auto").textContent = "▶ Auto reply"; }
+function auto() {
+  if (autoTimer) return stopAuto();
+  $("auto").classList.add("running"); $("auto").textContent = "■ Stop";
+  const step = () => {
+    const o = options();
+    if (!o || !o.length || words.length >= 14) return stopAuto();
+    add(o[0].w);
+  };
+  step(); autoTimer = setInterval(step, 1000);
+}
+function surprise() {
+  const o = options(); if (!o || !o.length) return;
+  let r = Math.random(); for (const x of o) { if ((r -= x.p) <= 0) return add(x.w); } add(o[o.length - 1].w);
+}
+function setStart(text) { stopAuto(); words = tokens(text); justAdded = words.length - 1; message = ""; beep(520); render(); }
+function reset() { stopAuto(); words = []; justAdded = -1; message = ""; render(); }
+
+function render() {
+  const m = MODELS[pool];
+  $("nWords").textContent = m.vocab.size; $("nSent").textContent = m.sentences.length;
+  $("poolSmall").classList.toggle("on", pool === "small"); $("poolBig").classList.toggle("on", pool === "big");
+
+  const s = $("sentence");
+  s.innerHTML = words.length
+    ? words.map((w, i) => `<span class="w${i === justAdded ? " new" : ""}"${w === "." ? ' style="margin-left:-22px"' : ""}>${w === "." ? "." : show(w, i)}</span>`).join("")
+    : `<span class="placeholder">Pick a start below.</span>`;
+
+  const o = options(), bars = $("bars");
+  if (o === null) {
+    message = `I have never seen "${words[words.length - 1]}". I have nothing to predict.`;
+    bars.innerHTML = `<div class="empty">No words to show.<br>It isn't in my pool.</div>`;
+  } else if (!o.length) {
+    bars.innerHTML = `<div class="empty">Sentence finished.<br>Press Start again, or pick a new start.</div>`;
+  } else {
+    bars.innerHTML = o.map((x) => `<button class="bar" data-w="${x.w}"><div class="fill" style="width:${Math.max(4, x.p * 100)}%"></div><span class="word">${x.w === "." ? "(full stop)" : show(x.w, words.length)}</span><span class="pct">${Math.round(x.p * 100)}%</span></button>`).join("");
+    bars.querySelectorAll(".bar").forEach((b) => b.onclick = () => { stopAuto(); add(b.dataset.w); });
+  }
+  $("message").textContent = message;
+  // Long sentences shrink to fit rather than being cut off.
+  let size = 66; s.style.fontSize = size + "px";
+  while (s.scrollHeight > s.clientHeight + 2 && size > 36) { size -= 4; s.style.fontSize = size + "px"; }
+}
+
+$("starts").innerHTML = ["I", "My weekend was", "At the weekend I", "My dog"].map((t) => `<button data-t="${t}">${t}</button>`).join("");
+$("starts").querySelectorAll("button").forEach((b) => b.onclick = () => setStart(b.dataset.t));
+$("poolSmall").onclick = () => { pool = "small"; reset(); };
+$("poolBig").onclick = () => { pool = "big"; reset(); };
+$("auto").onclick = auto; $("surprise").onclick = () => { stopAuto(); surprise(); }; $("reset").onclick = reset;
+$("addTyped").onclick = () => { const v = tokens($("typed").value)[0]; $("typed").value = ""; if (v) { stopAuto(); add(v); } };
+$("typed").onkeydown = (e) => { if (e.key === "Enter") $("addTyped").click(); };
+$("mute").onclick = () => { muted = !muted; $("mute").textContent = muted ? "Sound: off" : "Sound: on"; };
+$("showLearned").onclick = () => {
+  const m = MODELS[pool];
+  $("learnedTitle").textContent = `Everything I have read (${pool === "small" ? "small" : "big"} pool, ${m.sentences.length} sentences)`;
+  $("learnedList").innerHTML = m.sentences.map((x) => `<li>${x}</li>`).join("");
+  const few = m.sentences.length <= 5;
+  $("learnedList").style.columns = few ? "1" : "2"; $("learnedList").style.fontSize = few ? "72px" : "30px"; $("learnedList").style.paddingLeft = few ? "120px" : "44px";
+  $("learned").classList.add("open");
+};
+$("closeLearned").onclick = () => $("learned").classList.remove("open");
+
+// Fit the 1920x1080 stage to the window, whatever its size. Never cropped, never scrolled.
+function fit() {
+  const k = Math.min(innerWidth / 1920, innerHeight / 1080);
+  const st = $("stage");
+  st.style.transform = `scale(${k})`;
+  st.style.left = (innerWidth - 1920 * k) / 2 + "px"; st.style.top = (innerHeight - 1080 * k) / 2 + "px";
+}
+addEventListener("resize", fit); fit(); render();
+</script>
+</body>
+</html>

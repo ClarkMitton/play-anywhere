@@ -69,6 +69,8 @@ const textSlide = z.object({
   color: z.string().optional(),
   /** A page that cannot be embedded (Kahoot), opened in a new tab from the Host only. */
   link: z.object({ url: z.string().min(1), label: z.string().optional() }).optional(),
+  /** Starts the Host's corner timer when this slide opens, so the task stays on screen. */
+  timer_secs: z.number().int().positive().optional(),
 });
 
 const image = z.object({
@@ -250,6 +252,8 @@ const designedSlide = z.object({
   chip: z.string().optional(),
   image_url: z.string().optional(),
   image_search: z.string().optional(),
+  /** Starts the Host's corner timer when this slide opens. */
+  timer_secs: z.number().int().positive().optional(),
 });
 
 const whiteboard = z.object({

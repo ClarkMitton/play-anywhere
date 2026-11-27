@@ -10,6 +10,8 @@ import { sounds } from "@/lib/audio";
 type Props = {
   channel: RealtimeChannel | null | undefined;
   slotIndex: number;
+  /** A slide that carries `timer_secs` starts the timer by itself when it opens. */
+  autoSeconds?: number;
 };
 
 function fmt(secs: number): string {
@@ -19,17 +21,17 @@ function fmt(secs: number): string {
   return `${String(m).padStart(2, "0")}:${String(r).padStart(2, "0")}`;
 }
 
-export function HostTimerOverlay({ channel, slotIndex }: Props) {
+export function HostTimerOverlay({ channel, slotIndex, autoSeconds }: Props) {
   // null = no active timer. Otherwise epoch ms when it ends.
   const [endsAt, setEndsAt] = useState<number | null>(null);
   const [now, setNow] = useState<number>(() => Date.now());
   const endsAtRef = useRef<number | null>(null);
   endsAtRef.current = endsAt;
 
-  // Clear when slide changes
+  // Clear when slide changes, or start the slide's own timer if it has one.
   useEffect(() => {
-    setEndsAt(null);
-  }, [slotIndex]);
+    setEndsAt(autoSeconds && autoSeconds > 0 ? Date.now() + autoSeconds * 1000 : null);
+  }, [slotIndex, autoSeconds]);
 
   // Tick
   useEffect(() => {

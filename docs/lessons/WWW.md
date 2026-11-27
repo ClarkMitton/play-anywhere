@@ -25,7 +25,7 @@ What proves itself here is collected in [WAYS-OF-WORKING.md](WAYS-OF-WORKING.md)
 ### WWW in the build
 
 - **One objective, not four.** Clark felt the first lesson tried to do too much. The rebuild has one idea (AI predicts from patterns, it does not think) and every step serves it. Prompting, trust and "AI in your course" are kept for follow-on lessons.
-- **The starter is Clark's idea: a word pool.** Tiny AI (Canva Code) has read three sentences, so its replies loop. Tables answer a question with only its six words, then again with a 30-sentence pool. Bigger pool, better guesses, still guesses.
+- **The starter is Clark's idea: a word pool.** Tiny AI has read three sentences, so it can only talk about chips and dogs, and "My weekend was" stops dead ("I have never seen 'was'"). Tables answer a question with only its six words, then again with a 30-sentence pool, where Auto reply says "My weekend was boring because I went to the weekend." Bigger pool, better guesses, still guesses.
 - **Written for people new to the room.** Every step tells the big screen and both touch screens what to do; touch screens say "Stay at your table" rather than going blank; every move is announced on the big screen; every tutor note starts with where learners are and what to press.
 - **Touch-screen whiteboards twice:** drawing a watch at half past three, and "Be the AI" (six sentence starters; both screens write the same words, which is the point).
 - **A hotspot game with real AI mistakes.** Canva's AI was asked for a clock at half past three, a left-handed writer and a full glass. It drew about 10:30, a right-handed writer, a three-quarters glass and scribbled writing. Four real mistakes to tap, as a race between the screens, and a correct WEDNESDAY as a trap.
@@ -34,7 +34,8 @@ What proves itself here is collected in [WAYS-OF-WORKING.md](WAYS-OF-WORKING.md)
 
 ### Even better if (build)
 
-- Tiny AI is a Canva Code game ("Tiny AI classroom demo" in Clark's Canva), embedded through its Share → Embed link. Its first version overflowed a 16:9 screen (right side and bottom cut off); fixed in Canva Code with a "fit the window" follow-up prompt.
+- **Tiny AI was rebuilt inside the app** (`public/tiny-ai/`, opened at `/tiny-ai/` and `/tiny-ai/?pool=big`). The Canva Code version overflowed the screen, then froze after the first click when Clark played it through. The app version is laid out on a 1920 by 1080 stage scaled to any window, was played through at 1920 by 1080 and 1280 by 720, and its replies were simulated for every starter before use. It only appears once the app is published.
+- **Clark said "play through it": the whole lesson was stepped through** on a throwaway copy, all 23 steps. That found two things a content check cannot: the hotspot title ran over the picture, and the two timer steps hid the task (the big screen showed only a countdown). Slides can now carry `timer_secs`, which starts the corner timer over the slide, so the task stays on screen and the lesson waits for Next.
 - The holder deck used to export the Canva pictures ("AI predicts lesson") is still in Clark's Canva.
 - AI picture results change as the tools improve; a rerun next term may get the clock right.
 
